@@ -13,4 +13,8 @@ const (
 	// MetaKeyGCExpose is the meta key indicating
 	// that the service needs to be tunneled in GC
 	MetaKeyGCExpose = "gc_expose"
+
+	CatalogBackendMemory  = "memory"
+	CatalogBackendLevelDB = "leveldb"
+	StaticLocation        = "/static"
 )
