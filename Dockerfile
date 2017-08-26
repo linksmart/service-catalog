@@ -1,29 +1,17 @@
-FROM golang
-MAINTAINER Alexandr Krylovskiy "alexandr.krylovskiy@fit.fraunhofer.de"
-ENV REFRESHED_AT 2016-01-06
+FROM golang:1.8-alpine
 
-# update system
-RUN apt-get update
-RUN apt-get install -y wget git
+# copy default config file and code
+COPY sample_conf/* /conf/
+COPY . /home/src/code.linksmart.eu/sc/service-catalog
 
-# install the fraunhofer certificate
-RUN wget http://cdp1.pca.dfn.de/fraunhofer-ca/pub/cacert/cacert.pem -O /usr/local/share/ca-certificates/fhg.crt
-RUN update-ca-certificates
+# build the code
+ENV GOPATH /home
+RUN go install code.linksmart.eu/sc/service-catalog
 
-# install go tools
-RUN go get github.com/constabulary/gb/...
+WORKDIR /home
 
-# setup local connect home
-RUN mkdir /opt/lslc
-ENV LSLC_HOME /opt/lslc
-WORKDIR ${LSLC_HOME}
-
-# copy code & build
-COPY . ${LSLC_HOME}
-RUN gb build all
-
-VOLUME conf
-VOLUME data
-
-EXPOSE 8081
+VOLUME /conf /data
 EXPOSE 8082
+
+ENTRYPOINT ["./bin/service-catalog"]
+CMD ["-conf", "/conf/docker.json"]

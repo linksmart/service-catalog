@@ -1,6 +1,8 @@
-### LinkSmart LocalConnect Core
-Code of the core components of LinkSmart LocalConnect
+# LinkSmart Service Catalog
 
-See wiki on how to [get started](https://linksmart.eu/redmine/projects/linksmart-local-connect/wiki/Source_Code?parent=Wiki):
-
-
+## Compile from source
+```
+git clone https://code.linksmart.eu/scm/sc/service-catalog.git src/code.linksmart.eu/sc/service-catalog
+export GOPATH=`pwd`
+go install code.linksmart.eu/sc/service-catalog
+```
