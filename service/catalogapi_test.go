@@ -14,7 +14,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pborman/uuid"
-	utils "linksmart.eu/lc/core/catalog"
 )
 
 func setupRouter() (*mux.Router, func(), error) {
@@ -25,9 +24,9 @@ func setupRouter() (*mux.Router, func(), error) {
 			strings.Replace(os.TempDir(), "\\", "/", -1), uuid.New())
 	)
 	switch TestStorageType {
-	case utils.CatalogBackendMemory:
+	case CatalogBackendMemory:
 		storage = NewMemoryStorage()
-	case utils.CatalogBackendLevelDB:
+	case CatalogBackendLevelDB:
 		storage, err = NewLevelDBStorage(tempDir, nil)
 		if err != nil {
 			return nil, nil, err
@@ -433,7 +432,7 @@ func TestFilter(t *testing.T) {
 
 	// Services
 	// Filter many
-	url = ts.URL + TestApiLocation + "/name/" + utils.FOpPrefix + "/" + "Test"
+	url = ts.URL + TestApiLocation + "/name/" + FOpPrefix + "/" + "Test"
 	t.Log("Calling GET", url)
 	res, err := http.Get(url)
 	if err != nil {
@@ -453,7 +452,7 @@ func TestFilter(t *testing.T) {
 	}
 
 	// Filter one
-	url = ts.URL + TestApiLocation + "/name/" + utils.FOpEquals + "/" + service1.Name
+	url = ts.URL + TestApiLocation + "/name/" + FOpEquals + "/" + service1.Name
 	t.Log("Calling GET", url)
 	res, err = http.Get(url)
 	if err != nil {

@@ -10,9 +10,8 @@ import (
 	"net/url"
 	"strings"
 
-	utils "linksmart.eu/lc/core/catalog"
-
-	"linksmart.eu/lc/sec/authz"
+	"code.linksmart.eu/com/go-sec/authz"
+	"code.linksmart.eu/sc/service-catalog/service"
 )
 
 type Config struct {
@@ -33,8 +32,8 @@ type StorageConfig struct {
 }
 
 var supportedBackends = map[string]bool{
-	utils.CatalogBackendMemory:  true,
-	utils.CatalogBackendLevelDB: true,
+	service.CatalogBackendMemory:  true,
+	service.CatalogBackendLevelDB: true,
 }
 
 // GCConfig describes configuration of the GlobalConnect

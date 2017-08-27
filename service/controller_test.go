@@ -7,10 +7,9 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/pborman/uuid"
-	utils "linksmart.eu/lc/core/catalog"
-	"time"
 )
 
 func setup() (CatalogController, func(), error) {
@@ -21,9 +20,9 @@ func setup() (CatalogController, func(), error) {
 			strings.Replace(os.TempDir(), "\\", "/", -1), uuid.New())
 	)
 	switch TestStorageType {
-	case utils.CatalogBackendMemory:
+	case CatalogBackendMemory:
 		storage = NewMemoryStorage()
-	case utils.CatalogBackendLevelDB:
+	case CatalogBackendLevelDB:
 		storage, err = NewLevelDBStorage(tempDir, nil)
 		if err != nil {
 			return nil, nil, err

@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	utils "linksmart.eu/lc/core/catalog"
-	"linksmart.eu/lc/sec/auth/obtainer"
+	"code.linksmart.eu/com/go-sec/auth/obtainer"
+	discovery "code.linksmart.eu/sc/service-catalog/discovery"
 )
 
 const (
@@ -48,7 +48,7 @@ func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
 	defer wg.Done()
 	var err error
 	if discover {
-		endpoint, err = utils.DiscoverCatalogEndpoint(DNSSDServiceType)
+		endpoint, err = discovery.DiscoverCatalogEndpoint(DNSSDServiceType)
 		if err != nil {
 			logger.Printf("RegisterServiceWithKeepalive() ERROR: Failed to discover the endpoint: %v", err.Error())
 			return
@@ -94,7 +94,7 @@ func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
 			logger.Println("RegisterServiceWithKeepalive() ERROR:", e)
 			// Re-discover the endpoint if needed and start over
 			if discover {
-				endpoint, err = utils.DiscoverCatalogEndpoint(DNSSDServiceType)
+				endpoint, err = discovery.DiscoverCatalogEndpoint(DNSSDServiceType)
 				if err != nil {
 					logger.Println("RegisterServiceWithKeepalive() ERROR:", err.Error())
 					return

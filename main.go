@@ -14,16 +14,13 @@ import (
 	"syscall"
 	"time"
 
+	_ "code.linksmart.eu/com/go-sec/auth/keycloak/validator"
+	"code.linksmart.eu/com/go-sec/auth/validator"
+	"code.linksmart.eu/sc/service-catalog/service"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
 	"github.com/justinas/alice"
 	"github.com/oleksandr/bonjour"
-	utils "linksmart.eu/lc/core/catalog"
-	catalog "linksmart.eu/lc/core/catalog/service"
-
-	_ "linksmart.eu/lc/sec/auth/cas/validator"
-	_ "linksmart.eu/lc/sec/auth/keycloak/validator"
-	"linksmart.eu/lc/sec/auth/validator"
 )
 
 var (
@@ -47,7 +44,7 @@ func main() {
 	var bonjourS *bonjour.Server
 	if config.DnssdEnabled {
 		bonjourS, err = bonjour.Register(config.Description,
-			catalog.DNSSDServiceType,
+			service.DNSSDServiceType,
 			"",
 			config.BindPort,
 			[]string{fmt.Sprintf("uri=%s", config.ApiLocation)},
@@ -55,7 +52,7 @@ func main() {
 		if err != nil {
 			logger.Printf("Failed to register DNS-SD service: %s", err.Error())
 		} else {
-			logger.Println("Registered service via DNS-SD using type", catalog.DNSSDServiceType)
+			logger.Println("Registered service via DNS-SD using type", service.DNSSDServiceType)
 		}
 	}
 
@@ -100,7 +97,7 @@ func main() {
 		negroni.NewLogger(),
 		&negroni.Static{
 			Dir:       http.Dir(config.StaticDir),
-			Prefix:    utils.StaticLocation,
+			Prefix:    service.StaticLocation,
 			IndexFile: "index.html",
 		},
 	)
@@ -114,23 +111,23 @@ func main() {
 }
 
 func setupRouter(config *Config) (*router, func() error, error) {
-	var listeners []catalog.Listener
+	var listeners []service.Listener
 	// GC publisher if configured
 	if config.GC.TunnelingService != "" {
 		endpoint, _ := url.Parse(config.GC.TunnelingService)
-		listeners = append(listeners, catalog.NewGCPublisher(*endpoint))
+		listeners = append(listeners, service.NewGCPublisher(*endpoint))
 	}
 
 	// Setup API storage
 	var (
-		storage catalog.CatalogStorage
+		storage service.CatalogStorage
 		err     error
 	)
 	switch config.Storage.Type {
-	case utils.CatalogBackendMemory:
-		storage = catalog.NewMemoryStorage()
-	case utils.CatalogBackendLevelDB:
-		storage, err = catalog.NewLevelDBStorage(config.Storage.DSN, nil)
+	case service.CatalogBackendMemory:
+		storage = service.NewMemoryStorage()
+	case service.CatalogBackendLevelDB:
+		storage, err = service.NewLevelDBStorage(config.Storage.DSN, nil)
 		if err != nil {
 			return nil, nil, fmt.Errorf("Failed to start LevelDB storage: %v", err.Error())
 		}
@@ -138,17 +135,17 @@ func setupRouter(config *Config) (*router, func() error, error) {
 		return nil, nil, fmt.Errorf("Could not create catalog API storage. Unsupported type: %v", config.Storage.Type)
 	}
 
-	controller, err := catalog.NewController(storage, config.ApiLocation, listeners...)
+	controller, err := service.NewController(storage, config.ApiLocation, listeners...)
 	if err != nil {
 		storage.Close()
 		return nil, nil, fmt.Errorf("Failed to start the controller: %v", err.Error())
 	}
 
 	// Create catalog API object
-	api := catalog.NewCatalogAPI(
+	api := service.NewCatalogAPI(
 		controller,
 		config.ApiLocation,
-		utils.StaticLocation,
+		service.StaticLocation,
 		config.Description,
 	)
 

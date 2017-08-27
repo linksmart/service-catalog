@@ -5,8 +5,6 @@ package service
 import (
 	"os"
 	"testing"
-
-	utils "linksmart.eu/lc/core/catalog"
 )
 
 const (
@@ -16,8 +14,8 @@ const (
 
 var (
 	TestSupportedBackends = map[string]bool{
-		utils.CatalogBackendMemory:  true,
-		utils.CatalogBackendLevelDB: true,
+		CatalogBackendMemory:  true,
+		CatalogBackendLevelDB: true,
 	}
 	TestStorageType string
 )

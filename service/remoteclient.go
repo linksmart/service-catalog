@@ -8,10 +8,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-
-	"linksmart.eu/lc/core/catalog"
-	"linksmart.eu/lc/sec/auth/obtainer"
 	"strings"
+
+	"code.linksmart.eu/com/go-sec/auth/obtainer"
 )
 
 type RemoteCatalogClient struct {
@@ -34,7 +33,7 @@ func NewRemoteCatalogClient(serverEndpoint string, ticket *obtainer.Client) (Cat
 
 // Retrieves a service
 func (c *RemoteCatalogClient) Get(id string) (*Service, error) {
-	res, err := catalog.HTTPRequest("GET",
+	res, err := HTTPRequest("GET",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		nil,
 		nil,
@@ -81,7 +80,7 @@ func (c *RemoteCatalogClient) Add(s *Service) (string, error) {
 	)
 
 	if id == "" { // Let the system generate an id
-		res, err = catalog.HTTPRequest("POST",
+		res, err = HTTPRequest("POST",
 			c.serverEndpoint.String()+"/",
 			map[string][]string{"Content-Type": []string{"application/ld+json"}},
 			bytes.NewReader(b),
@@ -95,7 +94,7 @@ func (c *RemoteCatalogClient) Add(s *Service) (string, error) {
 	} else { // User-defined id
 
 		// Check if id is unique
-		resGet, err := catalog.HTTPRequest("GET",
+		resGet, err := HTTPRequest("GET",
 			fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 			nil,
 			nil,
@@ -122,7 +121,7 @@ func (c *RemoteCatalogClient) Add(s *Service) (string, error) {
 		}
 
 		// Now add
-		res, err = catalog.HTTPRequest("PUT",
+		res, err = HTTPRequest("PUT",
 			fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 			map[string][]string{"Content-Type": []string{"application/ld+json"}},
 			bytes.NewReader(b),
@@ -159,7 +158,7 @@ func (c *RemoteCatalogClient) Add(s *Service) (string, error) {
 // Updates a service
 func (c *RemoteCatalogClient) Update(id string, s *Service) error {
 	// Check if id is found
-	resGet, err := catalog.HTTPRequest("GET",
+	resGet, err := HTTPRequest("GET",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		nil,
 		nil,
@@ -184,7 +183,7 @@ func (c *RemoteCatalogClient) Update(id string, s *Service) error {
 	}
 
 	b, _ := json.Marshal(s)
-	res, err := catalog.HTTPRequest("PUT",
+	res, err := HTTPRequest("PUT",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		map[string][]string{"Content-Type": []string{"application/ld+json"}},
 		bytes.NewReader(b),
@@ -213,7 +212,7 @@ func (c *RemoteCatalogClient) Update(id string, s *Service) error {
 
 // Deletes a service
 func (c *RemoteCatalogClient) Delete(id string) error {
-	res, err := catalog.HTTPRequest("DELETE",
+	res, err := HTTPRequest("DELETE",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		nil,
 		bytes.NewReader([]byte{}),
@@ -242,9 +241,9 @@ func (c *RemoteCatalogClient) Delete(id string) error {
 
 // Retrieves a page from the service collection
 func (c *RemoteCatalogClient) List(page, perPage int) ([]Service, int, error) {
-	res, err := catalog.HTTPRequest("GET",
+	res, err := HTTPRequest("GET",
 		fmt.Sprintf("%v?%v=%v&%v=%v",
-			c.serverEndpoint, catalog.GetParamPage, page, catalog.GetParamPerPage, perPage),
+			c.serverEndpoint, GetParamPage, page, GetParamPerPage, perPage),
 		nil,
 		nil,
 		c.ticket,
@@ -279,9 +278,9 @@ func (c *RemoteCatalogClient) List(page, perPage int) ([]Service, int, error) {
 
 // Filter services
 func (c *RemoteCatalogClient) Filter(path, op, value string, page, perPage int) ([]Service, int, error) {
-	res, err := catalog.HTTPRequest("GET",
+	res, err := HTTPRequest("GET",
 		fmt.Sprintf("%v/%v/%v/%v?%v=%v&%v=%v",
-			c.serverEndpoint, path, op, value, catalog.GetParamPage, page, catalog.GetParamPerPage, perPage),
+			c.serverEndpoint, path, op, value, GetParamPage, page, GetParamPerPage, perPage),
 		nil,
 		nil,
 		c.ticket,
@@ -323,5 +322,5 @@ func ErrorMsg(res *http.Response) string {
 	if err != nil {
 		return res.Status
 	}
-	return fmt.Sprintf("(%d) %s",res.StatusCode ,e.Message)
+	return fmt.Sprintf("(%d) %s", res.StatusCode, e.Message)
 }

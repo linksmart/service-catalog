@@ -12,3 +12,6 @@ The following command runs service catalog with the default configurations:
 ```
 docker run -p 8082:8082 docker.linksmart.eu/sc/service-catalog
 ```
+
+## Development
+The dependencies of this package are managed by [dep](https://github.com/golang/dep).

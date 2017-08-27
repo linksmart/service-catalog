@@ -9,7 +9,6 @@ import (
 	"time"
 
 	avl "github.com/ancientlore/go-avltree"
-	"linksmart.eu/lc/core/catalog"
 )
 
 type Controller struct {
@@ -180,7 +179,7 @@ func (c *Controller) filter(path, op, value string, page, perPage int) ([]Servic
 		}
 
 		for i := range services {
-			matched, err := catalog.MatchObject(services[i], strings.Split(path, "."), op, value)
+			matched, err := MatchObject(services[i], strings.Split(path, "."), op, value)
 			if err != nil {
 				return nil, 0, err
 			}
@@ -194,7 +193,7 @@ func (c *Controller) filter(path, op, value string, page, perPage int) ([]Servic
 		}
 	}
 	// Pagination
-	offset, limit, err := catalog.GetPagingAttr(len(matches), page, perPage, MaxPerPage)
+	offset, limit, err := GetPagingAttr(len(matches), page, perPage, MaxPerPage)
 	if err != nil {
 		return nil, 0, &BadRequestError{fmt.Sprintf("Unable to paginate: %s", err)}
 	}

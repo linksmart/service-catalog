@@ -7,8 +7,6 @@ import (
 	"sync"
 
 	avl "github.com/ancientlore/go-avltree"
-
-	"linksmart.eu/lc/core/catalog"
 )
 
 // In-memory storage
@@ -81,7 +79,7 @@ func (ms *MemoryStorage) list(page int, perPage int) ([]Service, int, error) {
 	defer ms.RUnlock()
 
 	total := ms.services.Len()
-	offset, limit, err := catalog.GetPagingAttr(total, page, perPage, MaxPerPage)
+	offset, limit, err := GetPagingAttr(total, page, perPage, MaxPerPage)
 	if err != nil {
 		return nil, 0, &BadRequestError{fmt.Sprintf("Unable to paginate: %s", err)}
 	}

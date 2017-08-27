@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"linksmart.eu/lc/core/catalog"
 )
 
 const (
@@ -56,8 +55,8 @@ func (a *CatalogAPI) List(w http.ResponseWriter, req *http.Request) {
 		ErrorResponse(w, http.StatusBadRequest, "Error parsing the query:", err.Error())
 		return
 	}
-	page, perPage, err := catalog.ParsePagingParams(
-		req.Form.Get(catalog.GetParamPage), req.Form.Get(catalog.GetParamPerPage), MaxPerPage)
+	page, perPage, err := ParsePagingParams(
+		req.Form.Get(GetParamPage), req.Form.Get(GetParamPerPage), MaxPerPage)
 	if err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "Error parsing query parameters:", err.Error())
 		return
@@ -102,8 +101,8 @@ func (a *CatalogAPI) Filter(w http.ResponseWriter, req *http.Request) {
 		ErrorResponse(w, http.StatusBadRequest, "Error parsing the query:", err.Error())
 		return
 	}
-	page, perPage, err := catalog.ParsePagingParams(
-		req.Form.Get(catalog.GetParamPage), req.Form.Get(catalog.GetParamPerPage), MaxPerPage)
+	page, perPage, err := ParsePagingParams(
+		req.Form.Get(GetParamPage), req.Form.Get(GetParamPerPage), MaxPerPage)
 	if err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "Error parsing query parameters:", err.Error())
 		return
