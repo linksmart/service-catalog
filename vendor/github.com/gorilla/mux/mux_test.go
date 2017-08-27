@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -1383,55 +1382,11 @@ func TestWalkNested(t *testing.T) {
 	l2 := l1.PathPrefix("/l").Subrouter()
 	l2.Path("/a")
 
-	testCases := []struct {
-		path      string
-		ancestors []*Route
-	}{
-		{"/g", []*Route{}},
-		{"/g/o", []*Route{g.parent.(*Route)}},
-		{"/g/o/r", []*Route{g.parent.(*Route), o.parent.(*Route)}},
-		{"/g/o/r/i", []*Route{g.parent.(*Route), o.parent.(*Route), r.parent.(*Route)}},
-		{"/g/o/r/i/l", []*Route{g.parent.(*Route), o.parent.(*Route), r.parent.(*Route), i.parent.(*Route)}},
-		{"/g/o/r/i/l/l", []*Route{g.parent.(*Route), o.parent.(*Route), r.parent.(*Route), i.parent.(*Route), l1.parent.(*Route)}},
-		{"/g/o/r/i/l/l/a", []*Route{g.parent.(*Route), o.parent.(*Route), r.parent.(*Route), i.parent.(*Route), l1.parent.(*Route), l2.parent.(*Route)}},
-	}
-
-	idx := 0
-	err := router.Walk(func(route *Route, router *Router, ancestors []*Route) error {
-		path := testCases[idx].path
-		tpl := route.regexp.path.template
-		if tpl != path {
-			t.Errorf(`Expected %s got %s`, path, tpl)
-		}
-		currWantAncestors := testCases[idx].ancestors
-		if !reflect.DeepEqual(currWantAncestors, ancestors) {
-			t.Errorf(`Expected %+v got %+v`, currWantAncestors, ancestors)
-		}
-		idx++
-		return nil
-	})
-	if err != nil {
-		panic(err)
-	}
-	if idx != len(testCases) {
-		t.Errorf("Expected %d routes, found %d", len(testCases), idx)
-	}
-}
-
-func TestWalkSubrouters(t *testing.T) {
-	router := NewRouter()
-
-	g := router.Path("/g").Subrouter()
-	o := g.PathPrefix("/o").Subrouter()
-	o.Methods("GET")
-	o.Methods("PUT")
-
-	// all 4 routes should be matched, but final 2 routes do not have path templates
-	paths := []string{"/g", "/g/o", "", ""}
+	paths := []string{"/g", "/g/o", "/g/o/r", "/g/o/r/i", "/g/o/r/i/l", "/g/o/r/i/l/l", "/g/o/r/i/l/l/a"}
 	idx := 0
 	err := router.Walk(func(route *Route, router *Router, ancestors []*Route) error {
 		path := paths[idx]
-		tpl, _ := route.GetPathTemplate()
+		tpl := route.regexp.path.template
 		if tpl != path {
 			t.Errorf(`Expected %s got %s`, path, tpl)
 		}
