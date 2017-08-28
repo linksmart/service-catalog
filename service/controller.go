@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"code.linksmart.eu/sc/service-catalog/utils"
 	avl "github.com/ancientlore/go-avltree"
 )
 
@@ -179,7 +180,7 @@ func (c *Controller) filter(path, op, value string, page, perPage int) ([]Servic
 		}
 
 		for i := range services {
-			matched, err := MatchObject(services[i], strings.Split(path, "."), op, value)
+			matched, err := utils.MatchObject(services[i], strings.Split(path, "."), op, value)
 			if err != nil {
 				return nil, 0, err
 			}
@@ -193,7 +194,7 @@ func (c *Controller) filter(path, op, value string, page, perPage int) ([]Servic
 		}
 	}
 	// Pagination
-	offset, limit, err := GetPagingAttr(len(matches), page, perPage, MaxPerPage)
+	offset, limit, err := utils.GetPagingAttr(len(matches), page, perPage, MaxPerPage)
 	if err != nil {
 		return nil, 0, &BadRequestError{fmt.Sprintf("Unable to paginate: %s", err)}
 	}

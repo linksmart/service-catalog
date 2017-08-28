@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
+	"strings"
 
+	"code.linksmart.eu/sc/service-catalog/utils"
 	"github.com/gorilla/mux"
 )
 
@@ -55,8 +58,8 @@ func (a *CatalogAPI) List(w http.ResponseWriter, req *http.Request) {
 		ErrorResponse(w, http.StatusBadRequest, "Error parsing the query:", err.Error())
 		return
 	}
-	page, perPage, err := ParsePagingParams(
-		req.Form.Get(GetParamPage), req.Form.Get(GetParamPerPage), MaxPerPage)
+	page, perPage, err := utils.ParsePagingParams(
+		req.Form.Get(utils.GetParamPage), req.Form.Get(utils.GetParamPerPage), MaxPerPage)
 	if err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "Error parsing query parameters:", err.Error())
 		return
@@ -101,8 +104,8 @@ func (a *CatalogAPI) Filter(w http.ResponseWriter, req *http.Request) {
 		ErrorResponse(w, http.StatusBadRequest, "Error parsing the query:", err.Error())
 		return
 	}
-	page, perPage, err := ParsePagingParams(
-		req.Form.Get(GetParamPage), req.Form.Get(GetParamPerPage), MaxPerPage)
+	page, perPage, err := utils.ParsePagingParams(
+		req.Form.Get(utils.GetParamPage), req.Form.Get(utils.GetParamPerPage), MaxPerPage)
 	if err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "Error parsing query parameters:", err.Error())
 		return
@@ -272,4 +275,15 @@ func (a *CatalogAPI) Delete(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", "application/ld+json;version="+ApiVersion)
 	w.WriteHeader(http.StatusOK)
+}
+
+// Serves static and all /static/ctx files as ld+json
+func NewStaticHandler(staticDir string) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		if strings.HasPrefix(req.RequestURI, StaticLocation+"/ctx/") {
+			w.Header().Set("Content-Type", "application/ld+json")
+		}
+		urlParts := strings.Split(req.URL.Path, "/")
+		http.ServeFile(w, req, filepath.Join(staticDir, strings.Join(urlParts[2:], "/")))
+	}
 }

@@ -1,27 +1,15 @@
 // Copyright 2014-2016 Fraunhofer Institute for Applied Information Technology FIT
 
-package service
+package utils
 
 import (
 	"errors"
 	"io"
 	"net/http"
-	"path/filepath"
 	"strings"
 
 	"code.linksmart.eu/com/go-sec/auth/obtainer"
 )
-
-// Serves static and all /static/ctx files as ld+json
-func NewStaticHandler(staticDir string) http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		if strings.HasPrefix(req.RequestURI, StaticLocation+"/ctx/") {
-			w.Header().Set("Content-Type", "application/ld+json")
-		}
-		urlParts := strings.Split(req.URL.Path, "/")
-		http.ServeFile(w, req, filepath.Join(staticDir, strings.Join(urlParts[2:], "/")))
-	}
-}
 
 // Constructs and submits an HTTP request and returns the response
 func HTTPRequest(method string, url string, headers map[string][]string, body io.Reader,

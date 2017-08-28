@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"code.linksmart.eu/com/go-sec/auth/obtainer"
+	"code.linksmart.eu/sc/service-catalog/utils"
 )
 
 type RemoteCatalogClient struct {
@@ -33,7 +34,7 @@ func NewRemoteCatalogClient(serverEndpoint string, ticket *obtainer.Client) (Cat
 
 // Retrieves a service
 func (c *RemoteCatalogClient) Get(id string) (*Service, error) {
-	res, err := HTTPRequest("GET",
+	res, err := utils.HTTPRequest("GET",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		nil,
 		nil,
@@ -80,7 +81,7 @@ func (c *RemoteCatalogClient) Add(s *Service) (string, error) {
 	)
 
 	if id == "" { // Let the system generate an id
-		res, err = HTTPRequest("POST",
+		res, err = utils.HTTPRequest("POST",
 			c.serverEndpoint.String()+"/",
 			map[string][]string{"Content-Type": []string{"application/ld+json"}},
 			bytes.NewReader(b),
@@ -94,7 +95,7 @@ func (c *RemoteCatalogClient) Add(s *Service) (string, error) {
 	} else { // User-defined id
 
 		// Check if id is unique
-		resGet, err := HTTPRequest("GET",
+		resGet, err := utils.HTTPRequest("GET",
 			fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 			nil,
 			nil,
@@ -121,7 +122,7 @@ func (c *RemoteCatalogClient) Add(s *Service) (string, error) {
 		}
 
 		// Now add
-		res, err = HTTPRequest("PUT",
+		res, err = utils.HTTPRequest("PUT",
 			fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 			map[string][]string{"Content-Type": []string{"application/ld+json"}},
 			bytes.NewReader(b),
@@ -158,7 +159,7 @@ func (c *RemoteCatalogClient) Add(s *Service) (string, error) {
 // Updates a service
 func (c *RemoteCatalogClient) Update(id string, s *Service) error {
 	// Check if id is found
-	resGet, err := HTTPRequest("GET",
+	resGet, err := utils.HTTPRequest("GET",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		nil,
 		nil,
@@ -183,7 +184,7 @@ func (c *RemoteCatalogClient) Update(id string, s *Service) error {
 	}
 
 	b, _ := json.Marshal(s)
-	res, err := HTTPRequest("PUT",
+	res, err := utils.HTTPRequest("PUT",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		map[string][]string{"Content-Type": []string{"application/ld+json"}},
 		bytes.NewReader(b),
@@ -212,7 +213,7 @@ func (c *RemoteCatalogClient) Update(id string, s *Service) error {
 
 // Deletes a service
 func (c *RemoteCatalogClient) Delete(id string) error {
-	res, err := HTTPRequest("DELETE",
+	res, err := utils.HTTPRequest("DELETE",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		nil,
 		bytes.NewReader([]byte{}),
@@ -241,9 +242,9 @@ func (c *RemoteCatalogClient) Delete(id string) error {
 
 // Retrieves a page from the service collection
 func (c *RemoteCatalogClient) List(page, perPage int) ([]Service, int, error) {
-	res, err := HTTPRequest("GET",
+	res, err := utils.HTTPRequest("GET",
 		fmt.Sprintf("%v?%v=%v&%v=%v",
-			c.serverEndpoint, GetParamPage, page, GetParamPerPage, perPage),
+			c.serverEndpoint, utils.GetParamPage, page, utils.GetParamPerPage, perPage),
 		nil,
 		nil,
 		c.ticket,
@@ -278,9 +279,9 @@ func (c *RemoteCatalogClient) List(page, perPage int) ([]Service, int, error) {
 
 // Filter services
 func (c *RemoteCatalogClient) Filter(path, op, value string, page, perPage int) ([]Service, int, error) {
-	res, err := HTTPRequest("GET",
+	res, err := utils.HTTPRequest("GET",
 		fmt.Sprintf("%v/%v/%v/%v?%v=%v&%v=%v",
-			c.serverEndpoint, path, op, value, GetParamPage, page, GetParamPerPage, perPage),
+			c.serverEndpoint, path, op, value, utils.GetParamPage, page, utils.GetParamPerPage, perPage),
 		nil,
 		nil,
 		c.ticket,

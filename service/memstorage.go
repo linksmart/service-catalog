@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sync"
 
+	"code.linksmart.eu/sc/service-catalog/utils"
+
 	avl "github.com/ancientlore/go-avltree"
 )
 
@@ -79,7 +81,7 @@ func (ms *MemoryStorage) list(page int, perPage int) ([]Service, int, error) {
 	defer ms.RUnlock()
 
 	total := ms.services.Len()
-	offset, limit, err := GetPagingAttr(total, page, perPage, MaxPerPage)
+	offset, limit, err := utils.GetPagingAttr(total, page, perPage, MaxPerPage)
 	if err != nil {
 		return nil, 0, &BadRequestError{fmt.Sprintf("Unable to paginate: %s", err)}
 	}
