@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"mime"
 	"net/http"
+	_ "net/http/pprof"
 	"net/url"
 	"os"
 	"os/signal"
@@ -25,10 +26,15 @@ import (
 
 var (
 	confPath = flag.String("conf", "conf/service-catalog.json", "Service catalog configuration file path")
+	profile  = flag.Bool("profile", false, "Enable the HTTP server for runtime profiling")
 )
 
 func main() {
 	flag.Parse()
+	if *profile {
+		logger.Println("Starting runtime profiling server")
+		go func() { logger.Println(http.ListenAndServe("0.0.0.0:6060", nil)) }()
+	}
 
 	config, err := loadConfig(*confPath)
 	if err != nil {
