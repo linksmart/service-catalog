@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"syscall"
 	"time"
 
 	_ "code.linksmart.eu/com/go-sec/auth/keycloak/validator"
@@ -70,34 +69,27 @@ func main() {
 		}
 	}
 
-	// Setup signal catcher for the server's proper shutdown
-	c := make(chan os.Signal, 1)
-	signal.Notify(c,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT)
+	// Ctrl+C / Kill handling
+	handler := make(chan os.Signal, 1)
+	signal.Notify(handler, os.Interrupt, os.Kill)
 	go func() {
-		for _ = range c {
-			// sig is a ^C, handle it
+		<-handler
+		// Place last will logic here
 
-			//TODO: put here the last will logic
-
-			// Stop bonjour registration
-			if bonjourS != nil {
-				bonjourS.Shutdown()
-				time.Sleep(1e9)
-			}
-
-			// Shutdown catalog API
-			err := shutdownAPI()
-			if err != nil {
-				logger.Println(err.Error())
-			}
-
-			logger.Println("Stopped")
-			os.Exit(0)
+		// Stop bonjour registration
+		if bonjourS != nil {
+			bonjourS.Shutdown()
+			time.Sleep(1e9)
 		}
+
+		// Shutdown catalog API
+		err := shutdownAPI()
+		if err != nil {
+			logger.Println(err.Error())
+		}
+
+		logger.Println("Stopped")
+		os.Exit(0)
 	}()
 
 	err = mime.AddExtensionType(".jsonld", "application/ld+json")
