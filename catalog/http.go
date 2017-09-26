@@ -88,7 +88,7 @@ func (a *CatalogAPI) List(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/ld+json;version="+ApiVersion)
+	w.Header().Set("Content-Type", "application/ld+json;version="+APIVersion)
 	w.Write(b)
 }
 
@@ -133,7 +133,7 @@ func (a *CatalogAPI) Filter(w http.ResponseWriter, req *http.Request) {
 		ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/ld+json;version="+ApiVersion)
+	w.Header().Set("Content-Type", "application/ld+json;version="+APIVersion)
 	w.Write(b)
 }
 
@@ -164,7 +164,7 @@ func (a *CatalogAPI) Get(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/ld+json;version="+ApiVersion)
+	w.Header().Set("Content-Type", "application/ld+json;version="+APIVersion)
 	w.Write(b)
 }
 
@@ -203,7 +203,7 @@ func (a *CatalogAPI) Post(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/ld+json;version="+ApiVersion)
+	w.Header().Set("Content-Type", "application/ld+json;version="+APIVersion)
 	w.Header().Set("Location", fmt.Sprintf("%s/%s", a.apiLocation, id))
 	w.WriteHeader(http.StatusCreated)
 }
@@ -237,7 +237,7 @@ func (a *CatalogAPI) Put(w http.ResponseWriter, req *http.Request) {
 				ErrorResponse(w, http.StatusInternalServerError, "Error creating the registration:", err.Error())
 				return
 			}
-			w.Header().Set("Content-Type", "application/ld+json;version="+ApiVersion)
+			w.Header().Set("Content-Type", "application/ld+json;version="+APIVersion)
 			w.Header().Set("Location", fmt.Sprintf("%s/%s", a.apiLocation, id))
 			w.WriteHeader(http.StatusCreated)
 			return
@@ -253,7 +253,7 @@ func (a *CatalogAPI) Put(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/ld+json;version="+ApiVersion)
+	w.Header().Set("Content-Type", "application/ld+json;version="+APIVersion)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -273,7 +273,7 @@ func (a *CatalogAPI) Delete(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/ld+json;version="+ApiVersion)
+	w.Header().Set("Content-Type", "application/ld+json;version="+APIVersion)
 	w.WriteHeader(http.StatusOK)
 }
 

@@ -28,8 +28,17 @@ var (
 	profile  = flag.Bool("profile", false, "Enable the HTTP server for runtime profiling")
 )
 
+const LINKSMART = `
+╦   ╦ ╔╗╔ ╦╔═  ╔═╗ ╔╦╗ ╔═╗ ╦═╗ ╔╦╗ R
+║   ║ ║║║ ╠╩╗  ╚═╗ ║║║ ╠═╣ ╠╦╝  ║
+╩═╝ ╩ ╝╚╝ ╩ ╩  ╚═╝ ╩ ╩ ╩ ╩ ╩╚═  ╩
+`
+
 func main() {
 	flag.Parse()
+	fmt.Print(LINKSMART)
+	logger.Printf("Starting Service Catalog - Version %s", catalog.APIVersion)
+
 	if *profile {
 		logger.Println("Starting runtime profiling server")
 		go func() { logger.Println(http.ListenAndServe("0.0.0.0:6060", nil)) }()
@@ -111,7 +120,7 @@ func main() {
 
 	// Start listener
 	endpoint := fmt.Sprintf("%s:%s", config.BindAddr, strconv.Itoa(config.BindPort))
-	logger.Printf("Starting standalone Service Catalog at %v%v", endpoint, config.ApiLocation)
+	//logger.Printf("Listening on %v%v", endpoint, config.ApiLocation)
 	n.Run(endpoint)
 }
 
