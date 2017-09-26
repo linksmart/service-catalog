@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"code.linksmart.eu/sc/service-catalog/utils"
 	"github.com/gorilla/mux"
 	"github.com/pborman/uuid"
 )
@@ -432,7 +433,7 @@ func TestFilter(t *testing.T) {
 
 	// Services
 	// Filter many
-	url = ts.URL + TestApiLocation + "/name/" + FOpPrefix + "/" + "Test"
+	url = ts.URL + TestApiLocation + "/name/" + utils.FOpPrefix + "/" + "Test"
 	t.Log("Calling GET", url)
 	res, err := http.Get(url)
 	if err != nil {
@@ -452,7 +453,7 @@ func TestFilter(t *testing.T) {
 	}
 
 	// Filter one
-	url = ts.URL + TestApiLocation + "/name/" + FOpEquals + "/" + service1.Name
+	url = ts.URL + TestApiLocation + "/name/" + utils.FOpEquals + "/" + service1.Name
 	t.Log("Calling GET", url)
 	res, err = http.Get(url)
 	if err != nil {
