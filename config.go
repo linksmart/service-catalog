@@ -22,7 +22,6 @@ type Config struct {
 	ApiLocation  string        `json:"apiLocation"`
 	StaticDir    string        `json:"staticDir"`
 	Storage      StorageConfig `json:"storage"`
-	GC           GCConfig      `js:"gc"`
 	Auth         ValidatorConf `json:"auth"`
 }
 
@@ -34,12 +33,6 @@ type StorageConfig struct {
 var supportedBackends = map[string]bool{
 	service.CatalogBackendMemory:  true,
 	service.CatalogBackendLevelDB: true,
-}
-
-// GCConfig describes configuration of the GlobalConnect
-type GCConfig struct {
-	// URL of the Tunneling Service endpoint (aka NM REST API)
-	TunnelingService string `json:"tunnelingService"`
 }
 
 func (c *Config) Validate() error {
@@ -59,12 +52,6 @@ func (c *Config) Validate() error {
 	}
 	if strings.HasSuffix(c.StaticDir, "/") {
 		err = fmt.Errorf("staticDir must not have a trailing slash")
-	}
-	if c.GC.TunnelingService != "" {
-		_, err := url.Parse(c.GC.TunnelingService)
-		if err != nil {
-			err = fmt.Errorf("gc tunnelingService must be a valid URL")
-		}
 	}
 	if c.Auth.Enabled {
 		// Validate ticket validator config

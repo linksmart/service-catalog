@@ -7,10 +7,7 @@
   "staticDir": "./static",
   "storage": {
     "type": "memory"
-  },
-  "gc": {
-    "tunnelingService": "http://localhost:8082/NetworkManager"
-  },
+  }
   "auth": {
     "enabled": true,
     "provider": "provider-name",

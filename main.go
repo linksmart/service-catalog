@@ -8,7 +8,6 @@ import (
 	"mime"
 	"net/http"
 	_ "net/http/pprof"
-	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -118,11 +117,6 @@ func main() {
 
 func setupRouter(config *Config) (*router, func() error, error) {
 	var listeners []service.Listener
-	// GC publisher if configured
-	if config.GC.TunnelingService != "" {
-		endpoint, _ := url.Parse(config.GC.TunnelingService)
-		listeners = append(listeners, service.NewGCPublisher(*endpoint))
-	}
 
 	// Setup API storage
 	var (
