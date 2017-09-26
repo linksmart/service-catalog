@@ -1,6 +1,6 @@
 // Copyright 2014-2016 Fraunhofer Institute for Applied Information Technology FIT
 
-package service
+package catalog
 
 // ServiceConfig is a wrapper for Service to be used by
 // clients to configure a Service (e.g., read from file)

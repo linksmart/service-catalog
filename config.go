@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"code.linksmart.eu/com/go-sec/authz"
-	"code.linksmart.eu/sc/service-catalog/service"
+	"code.linksmart.eu/sc/service-catalog/catalog"
 )
 
 type Config struct {
@@ -31,8 +31,8 @@ type StorageConfig struct {
 }
 
 var supportedBackends = map[string]bool{
-	service.CatalogBackendMemory:  true,
-	service.CatalogBackendLevelDB: true,
+	catalog.CatalogBackendMemory:  true,
+	catalog.CatalogBackendLevelDB: true,
 }
 
 func (c *Config) Validate() error {

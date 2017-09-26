@@ -1,6 +1,6 @@
 // Copyright 2014-2016 Fraunhofer Institute for Applied Information Technology FIT
 
-package service
+package catalog
 
 const (
 	DNSSDServiceType    = "_linksmart-sc._tcp"

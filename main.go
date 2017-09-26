@@ -16,7 +16,7 @@ import (
 
 	_ "code.linksmart.eu/com/go-sec/auth/keycloak/validator"
 	"code.linksmart.eu/com/go-sec/auth/validator"
-	"code.linksmart.eu/sc/service-catalog/service"
+	"code.linksmart.eu/sc/service-catalog/catalog"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
 	"github.com/justinas/alice"
@@ -49,7 +49,7 @@ func main() {
 	var bonjourS *bonjour.Server
 	if config.DnssdEnabled {
 		bonjourS, err = bonjour.Register(config.Description,
-			service.DNSSDServiceType,
+			catalog.DNSSDServiceType,
 			"",
 			config.BindPort,
 			[]string{fmt.Sprintf("uri=%s", config.ApiLocation)},
@@ -57,7 +57,7 @@ func main() {
 		if err != nil {
 			logger.Printf("Failed to register DNS-SD service: %s", err.Error())
 		} else {
-			logger.Println("Registered service via DNS-SD using type", service.DNSSDServiceType)
+			logger.Println("Registered service via DNS-SD using type", catalog.DNSSDServiceType)
 		}
 	}
 
@@ -102,7 +102,7 @@ func main() {
 		negroni.NewLogger(),
 		&negroni.Static{
 			Dir:       http.Dir(config.StaticDir),
-			Prefix:    service.StaticLocation,
+			Prefix:    catalog.StaticLocation,
 			IndexFile: "index.html",
 		},
 	)
@@ -116,18 +116,18 @@ func main() {
 }
 
 func setupRouter(config *Config) (*router, func() error, error) {
-	var listeners []service.Listener
+	var listeners []catalog.Listener
 
 	// Setup API storage
 	var (
-		storage service.CatalogStorage
+		storage catalog.CatalogStorage
 		err     error
 	)
 	switch config.Storage.Type {
-	case service.CatalogBackendMemory:
-		storage = service.NewMemoryStorage()
-	case service.CatalogBackendLevelDB:
-		storage, err = service.NewLevelDBStorage(config.Storage.DSN, nil)
+	case catalog.CatalogBackendMemory:
+		storage = catalog.NewMemoryStorage()
+	case catalog.CatalogBackendLevelDB:
+		storage, err = catalog.NewLevelDBStorage(config.Storage.DSN, nil)
 		if err != nil {
 			return nil, nil, fmt.Errorf("Failed to start LevelDB storage: %v", err.Error())
 		}
@@ -135,17 +135,17 @@ func setupRouter(config *Config) (*router, func() error, error) {
 		return nil, nil, fmt.Errorf("Could not create catalog API storage. Unsupported type: %v", config.Storage.Type)
 	}
 
-	controller, err := service.NewController(storage, config.ApiLocation, listeners...)
+	controller, err := catalog.NewController(storage, config.ApiLocation, listeners...)
 	if err != nil {
 		storage.Close()
 		return nil, nil, fmt.Errorf("Failed to start the controller: %v", err.Error())
 	}
 
 	// Create catalog API object
-	api := service.NewCatalogAPI(
+	api := catalog.NewCatalogAPI(
 		controller,
 		config.ApiLocation,
-		service.StaticLocation,
+		catalog.StaticLocation,
 		config.Description,
 	)
 
