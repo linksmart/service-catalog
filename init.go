@@ -6,12 +6,14 @@ import (
 	"log"
 	"os"
 	"strconv"
+
+	"code.linksmart.eu/sc/service-catalog/service"
 )
 
 var logger *log.Logger
 
 func init() {
-	logger = log.New(os.Stdout, "[main] ", 0)
+	logger = log.New(os.Stdout, service.LoggerPrefix, 0)
 
 	v, err := strconv.Atoi(os.Getenv("DEBUG"))
 	if err == nil && v == 1 {

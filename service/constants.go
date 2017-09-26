@@ -8,7 +8,7 @@ const (
 	ApiVersion          = "1.0.0"
 	ApiCollectionType   = "ServiceCatalog"
 	ApiRegistrationType = "Service"
-	loggerPrefix        = "[sc] "
+	LoggerPrefix        = "[sc] "
 
 	// MetaKeyGCExpose is the meta key indicating
 	// that the service needs to be tunneled in GC
