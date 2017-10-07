@@ -12,15 +12,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Collection is the paginated list of services
-type Collection struct {
-	Description string    `json:"description"`
-	Services    []Service `json:"services"`
-	Page        int       `json:"page"`
-	PerPage     int       `json:"per_page"`
-	Total       int       `json:"total"`
-}
-
 type httpAPI struct {
 	controller  *Controller
 	description string
@@ -32,6 +23,15 @@ func NewHTTPAPI(controller *Controller, description string) *httpAPI {
 		controller:  controller,
 		description: description,
 	}
+}
+
+// Collection is the paginated list of services
+type Collection struct {
+	Description string    `json:"description"`
+	Services    []Service `json:"services"`
+	Page        int       `json:"page"`
+	PerPage     int       `json:"per_page"`
+	Total       int       `json:"total"`
 }
 
 // API Index: Lists services
@@ -140,6 +140,34 @@ func (a *httpAPI) Get(w http.ResponseWriter, req *http.Request) {
 	w.Write(b)
 }
 
+func (a *httpAPI) createService(w http.ResponseWriter, s *Service) {
+	addedS, err := a.controller.add(*s)
+	if err != nil {
+		switch err.(type) {
+		case *ConflictError:
+			ErrorResponse(w, http.StatusConflict, "Error creating the registration:", err.Error())
+			return
+		case *BadRequestError:
+			ErrorResponse(w, http.StatusBadRequest, "Invalid service registration:", err.Error())
+			return
+		default:
+			ErrorResponse(w, http.StatusInternalServerError, "Error creating the registration:", err.Error())
+			return
+		}
+	}
+
+	b, err := json.Marshal(addedS)
+	if err != nil {
+		ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json;version="+APIVersion)
+	w.Header().Set("Location", fmt.Sprintf("/%s", addedS.ID))
+	w.WriteHeader(http.StatusCreated)
+	w.Write(b)
+}
+
 // Adds a service
 func (a *httpAPI) Post(w http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
@@ -160,24 +188,8 @@ func (a *httpAPI) Post(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	id, err := a.controller.add(s)
-	if err != nil {
-		switch err.(type) {
-		case *ConflictError:
-			ErrorResponse(w, http.StatusConflict, "Error creating the registration:", err.Error())
-			return
-		case *BadRequestError:
-			ErrorResponse(w, http.StatusBadRequest, "Invalid service registration:", err.Error())
-			return
-		default:
-			ErrorResponse(w, http.StatusInternalServerError, "Error creating the registration:", err.Error())
-			return
-		}
-	}
-
-	w.Header().Set("Content-Type", "application/json;version="+APIVersion)
-	w.Header().Set("Location", fmt.Sprintf("/%s", id))
-	w.WriteHeader(http.StatusCreated)
+	a.createService(w, &s)
+	return
 }
 
 // Updates an existing service (Response: StatusOK)
@@ -198,30 +210,13 @@ func (a *httpAPI) Put(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = a.controller.update(params["id"], s)
+	updatedS, err := a.controller.update(params["id"], s)
 	if err != nil {
 		switch err.(type) {
 		case *NotFoundError:
 			// Create a new service with the given id
 			s.ID = params["id"]
-			id, err := a.controller.add(s)
-			if err != nil {
-				switch err.(type) {
-				case *ConflictError:
-					ErrorResponse(w, http.StatusConflict, "Error creating the registration:", err.Error())
-					return
-				case *BadRequestError:
-					ErrorResponse(w, http.StatusBadRequest, "Invalid service registration:", err.Error())
-					return
-				default:
-					ErrorResponse(w, http.StatusInternalServerError, "Error creating the registration:", err.Error())
-					return
-				}
-			}
-
-			w.Header().Set("Content-Type", "application/json;version="+APIVersion)
-			w.Header().Set("Location", fmt.Sprintf("/%s", id))
-			w.WriteHeader(http.StatusCreated)
+			a.createService(w, &s)
 			return
 		case *ConflictError:
 			ErrorResponse(w, http.StatusConflict, "Error updating the service:", err.Error())
@@ -235,8 +230,15 @@ func (a *httpAPI) Put(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+	b, err := json.Marshal(updatedS)
+	if err != nil {
+		ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json;version="+APIVersion)
 	w.WriteHeader(http.StatusOK)
+	w.Write(b)
 }
 
 // Deletes a service

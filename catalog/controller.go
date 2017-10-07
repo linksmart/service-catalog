@@ -47,9 +47,9 @@ func NewController(storage Storage, listeners ...Listener) (*Controller, error) 
 	return &c, nil
 }
 
-func (c *Controller) add(s Service) (string, error) {
+func (c *Controller) add(s Service) (*Service, error) {
 	if err := s.validate(); err != nil {
-		return "", &BadRequestError{err.Error()}
+		return nil, &BadRequestError{err.Error()}
 	}
 
 	c.Lock()
@@ -70,7 +70,7 @@ func (c *Controller) add(s Service) (string, error) {
 
 	err := c.storage.add(&s)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Add secondary indices
@@ -81,16 +81,16 @@ func (c *Controller) add(s Service) (string, error) {
 		go l.added(s)
 	}
 
-	return s.ID, nil
+	return &s, nil
 }
 
 func (c *Controller) get(id string) (*Service, error) {
 	return c.storage.get(id)
 }
 
-func (c *Controller) update(id string, s Service) error {
+func (c *Controller) update(id string, s Service) (*Service, error) {
 	if err := s.validate(); err != nil {
-		return &BadRequestError{err.Error()}
+		return nil, &BadRequestError{err.Error()}
 	}
 
 	c.Lock()
@@ -99,7 +99,7 @@ func (c *Controller) update(id string, s Service) error {
 	// Get the stored service
 	ss, err := c.storage.get(id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Shallow copy
@@ -119,7 +119,7 @@ func (c *Controller) update(id string, s Service) error {
 
 	err = c.storage.update(id, ss)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Update secondary indices
@@ -131,7 +131,7 @@ func (c *Controller) update(id string, s Service) error {
 		go l.updated(s)
 	}
 
-	return nil
+	return ss, nil
 }
 
 func (c *Controller) delete(id string) error {
