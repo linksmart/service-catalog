@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
-	"strings"
 
 	"code.linksmart.eu/com/go-sec/authz"
 	"code.linksmart.eu/sc/service-catalog/catalog"
@@ -19,8 +18,6 @@ type Config struct {
 	DnssdEnabled bool          `json:"dnssdEnabled"`
 	BindAddr     string        `json:"bindAddr"`
 	BindPort     int           `json:"bindPort"`
-	ApiLocation  string        `json:"apiLocation"`
-	StaticDir    string        `json:"staticDir"`
 	Storage      StorageConfig `json:"storage"`
 	Auth         ValidatorConf `json:"auth"`
 }
@@ -47,12 +44,6 @@ func (c *Config) Validate() error {
 	if err != nil {
 		err = fmt.Errorf("storage DSN should be a valid URL")
 	}
-	if c.StaticDir == "" {
-		err = fmt.Errorf("staticDir must be defined")
-	}
-	if strings.HasSuffix(c.StaticDir, "/") {
-		err = fmt.Errorf("staticDir must not have a trailing slash")
-	}
 	if c.Auth.Enabled {
 		// Validate ticket validator config
 		err = c.Auth.Validate()
@@ -74,10 +65,6 @@ func loadConfig(confPath string) (*Config, error) {
 	err = json.Unmarshal(file, config)
 	if err != nil {
 		return nil, err
-	}
-
-	if strings.HasSuffix(config.ApiLocation, "/") {
-		config.ApiLocation = strings.TrimSuffix(config.ApiLocation, "/")
 	}
 
 	if err = config.Validate(); err != nil {

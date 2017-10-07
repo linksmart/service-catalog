@@ -20,7 +20,7 @@ type LevelDBStorage struct {
 	wg sync.WaitGroup
 }
 
-func NewLevelDBStorage(dsn string, opts *opt.Options) (CatalogStorage, error) {
+func NewLevelDBStorage(dsn string, opts *opt.Options) (Storage, error) {
 	url, err := url.Parse(dsn)
 	if err != nil {
 		return &LevelDBStorage{}, err
@@ -43,14 +43,14 @@ func (ls *LevelDBStorage) add(s *Service) error {
 		return err
 	}
 
-	_, err = ls.db.Get([]byte(s.Id), nil)
+	_, err = ls.db.Get([]byte(s.ID), nil)
 	if err == nil {
 		return &ConflictError{"Service id is not unique."}
 	} else if err != leveldb.ErrNotFound {
 		return err
 	}
 
-	err = ls.db.Put([]byte(s.Id), bytes, nil)
+	err = ls.db.Put([]byte(s.ID), bytes, nil)
 	if err != nil {
 		return err
 	}

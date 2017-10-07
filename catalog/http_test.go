@@ -19,7 +19,7 @@ import (
 
 func setupRouter() (*mux.Router, func(), error) {
 	var (
-		storage CatalogStorage
+		storage Storage
 		err     error
 		tempDir string = fmt.Sprintf("%s/lslc/test-%s.ldb",
 			strings.Replace(os.TempDir(), "\\", "/", -1), uuid.New())
@@ -40,7 +40,7 @@ func setupRouter() (*mux.Router, func(), error) {
 		return nil, nil, fmt.Errorf("Failed to start the controller: %v", err.Error())
 	}
 
-	api := NewCatalogAPI(
+	api := NewHTTPAPI(
 		controller,
 		TestApiLocation,
 		TestStaticLocation,
@@ -65,7 +65,7 @@ func setupRouter() (*mux.Router, func(), error) {
 
 func mockedService(id string) *Service {
 	return &Service{
-		Id:          "TestHost/TestService" + id,
+		ID:          "TestHost/TestService" + id,
 		Type:        ApiRegistrationType,
 		Name:        "TestService" + id,
 		Meta:        map[string]interface{}{"test-id": id},
@@ -77,14 +77,14 @@ func mockedService(id string) *Service {
 			ContentTypes: []string{"application/json"},
 		}},
 		Representation: map[string]interface{}{"application/json": "{}"},
-		Ttl:            30,
+		TTL:            30,
 	}
 }
 
 func sameServices(s1, s2 *Service, checkID bool) bool {
 	// Compare IDs if specified
 	if checkID {
-		if s1.Id != s2.Type {
+		if s1.ID != s2.Type {
 			return false
 		}
 	}
@@ -109,7 +109,7 @@ func sameServices(s1, s2 *Service, checkID bool) bool {
 	}
 
 	// Compare all other attributes
-	if s1.Type != s2.Type || s1.Name != s2.Name || s1.Description != s2.Description || s1.Ttl != s2.Ttl {
+	if s1.Type != s2.Type || s1.Name != s2.Name || s1.Description != s2.Description || s1.TTL != s2.TTL {
 		return false
 	}
 
@@ -164,7 +164,7 @@ func TestCreate(t *testing.T) {
 	defer shutdown()
 
 	service := mockedService("1")
-	service.Id = ""
+	service.ID = ""
 	b, _ := json.Marshal(service)
 
 	// Create
@@ -228,7 +228,7 @@ func TestRetrieve(t *testing.T) {
 	b, _ := json.Marshal(service)
 
 	// Create
-	url := ts.URL + TestApiLocation + "/" + service.Id
+	url := ts.URL + TestApiLocation + "/" + service.ID
 	t.Log("Calling PUT", url)
 	res, err := httpPut(url, bytes.NewReader(b))
 	if err != nil {
@@ -280,7 +280,7 @@ func TestUpdate(t *testing.T) {
 	b, _ := json.Marshal(service)
 
 	// Create
-	url := ts.URL + TestApiLocation + "/" + service.Id
+	url := ts.URL + TestApiLocation + "/" + service.ID
 	t.Log("Calling PUT", url)
 	res, err := httpPut(url, bytes.NewReader(b))
 	if err != nil {
@@ -360,7 +360,7 @@ func TestDelete(t *testing.T) {
 	b, _ := json.Marshal(service)
 
 	// Create
-	url := ts.URL + TestApiLocation + "/" + service.Id
+	url := ts.URL + TestApiLocation + "/" + service.ID
 	t.Log("Calling PUT", url)
 	res, err := httpPut(url, bytes.NewReader(b))
 	if err != nil {
@@ -422,7 +422,7 @@ func TestFilter(t *testing.T) {
 	// Add
 	url := ts.URL + TestApiLocation + "/"
 	for _, s := range []*Service{service1, service2, service3} {
-		s.Id = ""
+		s.ID = ""
 		b, _ := json.Marshal(s)
 
 		_, err := http.Post(url, "application/ld+json", bytes.NewReader(b))

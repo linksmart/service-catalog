@@ -12,9 +12,9 @@ import (
 	"github.com/pborman/uuid"
 )
 
-func setup() (CatalogController, func(), error) {
+func setup() (Controller, func(), error) {
 	var (
-		storage CatalogStorage
+		storage Storage
 		err     error
 		tempDir string = fmt.Sprintf("%s/lslc/test-%s.ldb",
 			strings.Replace(os.TempDir(), "\\", "/", -1), uuid.New())
@@ -53,16 +53,16 @@ func TestAddService(t *testing.T) {
 	var r Service
 	uuid := "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
 	r.Name = "ServiceName"
-	r.Id = uuid + "/" + r.Name
-	r.Ttl = 30
+	r.ID = uuid + "/" + r.Name
+	r.TTL = 30
 	r.Protocols = []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}}
 
 	id, err := controller.add(r)
 	if err != nil {
 		t.Fatalf("Unexpected error on add: %v", err.Error())
 	}
-	if id != r.Id {
-		t.Fatalf("User defined ID is not returned. Getting %v instead of %v\n", id, r.Id)
+	if id != r.ID {
+		t.Fatalf("User defined ID is not returned. Getting %v instead of %v\n", id, r.ID)
 	}
 
 	_, err = controller.add(r)
@@ -95,8 +95,8 @@ func TestUpdateService(t *testing.T) {
 	var r Service
 	uuid := "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
 	r.Name = "ServiceName"
-	r.Id = uuid + "/" + r.Name
-	r.Ttl = 30
+	r.ID = uuid + "/" + r.Name
+	r.TTL = 30
 	r.Protocols = []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}}
 
 	_, err = controller.add(r)
@@ -105,12 +105,12 @@ func TestUpdateService(t *testing.T) {
 	}
 	r.Name = "UpdatedName"
 
-	err = controller.update(r.Id, r)
+	err = controller.update(r.ID, r)
 	if err != nil {
 		t.Errorf("Unexpected error on update: %v", err.Error())
 	}
 
-	rg, err := controller.get(r.Id)
+	rg, err := controller.get(r.ID)
 	if err != nil {
 		t.Error("Unexpected error on get: %v", err.Error())
 	}
@@ -133,8 +133,8 @@ func TestGetService(t *testing.T) {
 	}
 	uuid := "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
 	r.Name = "ServiceName"
-	r.Id = uuid + "/" + r.Name
-	r.Ttl = 30
+	r.ID = uuid + "/" + r.Name
+	r.TTL = 30
 	r.Protocols = []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}}
 
 	_, err = controller.add(r)
@@ -142,12 +142,12 @@ func TestGetService(t *testing.T) {
 		t.Errorf("Unexpected error on add: %v", err.Error())
 	}
 
-	rg, err := controller.get(r.Id)
+	rg, err := controller.get(r.ID)
 	if err != nil {
 		t.Error("Unexpected error on get: %v", err.Error())
 	}
 
-	if rg.Id != r.Id || rg.Name != r.Name || rg.Ttl != r.Ttl {
+	if rg.ID != r.ID || rg.Name != r.Name || rg.TTL != r.TTL {
 		t.Fail()
 	}
 }
@@ -163,8 +163,8 @@ func TestDeleteService(t *testing.T) {
 	var r Service
 	uuid := "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
 	r.Name = "ServiceName"
-	r.Id = uuid + "/" + r.Name
-	r.Ttl = 30
+	r.ID = uuid + "/" + r.Name
+	r.TTL = 30
 	r.Protocols = []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}}
 
 	_, err = controller.add(r)
@@ -172,12 +172,12 @@ func TestDeleteService(t *testing.T) {
 		t.Errorf("Unexpected error on add: %v", err.Error())
 	}
 
-	err = controller.delete(r.Id)
+	err = controller.delete(r.ID)
 	if err != nil {
 		t.Error("Unexpected error on delete: %v", err.Error())
 	}
 
-	err = controller.delete(r.Id)
+	err = controller.delete(r.ID)
 	if err == nil {
 		t.Error("Didn't get any error when deleting a deleted service.")
 	}
@@ -196,8 +196,8 @@ func TestListServices(t *testing.T) {
 	// Add 10 entries
 	for i := 0; i < 11; i++ {
 		r.Name = string(i)
-		r.Id = "TestID" + "/" + r.Name
-		r.Ttl = 30
+		r.ID = "TestID" + "/" + r.Name
+		r.TTL = 30
 		r.Protocols = []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}}
 		_, err := controller.add(r)
 
@@ -282,7 +282,7 @@ func TestCleanExpired(t *testing.T) {
 
 	var d = Service{
 		Name:      "my_service",
-		Ttl:       1,
+		TTL:       1,
 		Protocols: []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}},
 	}
 
@@ -305,7 +305,7 @@ func TestCleanExpired(t *testing.T) {
 		}
 	} else {
 		t.Fatalf("Service was not removed after 1 seconds. \nTTL: %v \nCreated: %v \nExpiry: %v \nNot deleted after: %v at %v\n",
-			dd.Ttl,
+			dd.TTL,
 			dd.Created,
 			dd.Expires,
 			checkingTime.Sub(addingTime),

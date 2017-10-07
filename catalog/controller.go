@@ -15,10 +15,9 @@ import (
 type Controller struct {
 	wg sync.WaitGroup
 	sync.RWMutex
-	storage     CatalogStorage
-	apiLocation string
-	listeners   []Listener
-	ticker      *time.Ticker
+	storage   Storage
+	listeners []Listener
+	ticker    *time.Ticker
 
 	// startTime and counter for ID generation
 	startTime int64
@@ -28,13 +27,12 @@ type Controller struct {
 	exp_sid *avl.Tree
 }
 
-func NewController(storage CatalogStorage, apiLocation string, listeners ...Listener) (CatalogController, error) {
+func NewController(storage Storage, listeners ...Listener) (*Controller, error) {
 	c := Controller{
-		storage:     storage,
-		apiLocation: apiLocation,
-		exp_sid:     avl.New(timeKeys, avl.AllowDuplicates), // allows more than one service with the same expiry time
-		startTime:   time.Now().UTC().Unix(),
-		listeners:   listeners,
+		storage:   storage,
+		exp_sid:   avl.New(timeKeys, avl.AllowDuplicates), // allows more than one service with the same expiry time
+		startTime: time.Now().UTC().Unix(),
+		listeners: listeners,
 	}
 
 	// Initialize secondary indices (if a persistent storage backend is present)
@@ -57,18 +55,16 @@ func (c *Controller) add(s Service) (string, error) {
 	c.Lock()
 	defer c.Unlock()
 
-	if s.Id == "" {
+	if s.ID == "" {
 		// System generated id
-		s.Id = c.newURN()
+		s.ID = c.newURN()
 	}
-	s.URL = fmt.Sprintf("%s/%s", c.apiLocation, s.Id)
-	s.Type = ApiRegistrationType
 	s.Created = time.Now().UTC()
 	s.Updated = s.Created
-	if s.Ttl == 0 {
+	if s.TTL == 0 {
 		s.Expires = nil
 	} else {
-		expires := s.Created.Add(time.Duration(s.Ttl) * time.Second)
+		expires := s.Created.Add(time.Duration(s.TTL) * time.Second)
 		s.Expires = &expires
 	}
 
@@ -85,7 +81,7 @@ func (c *Controller) add(s Service) (string, error) {
 		go l.added(s)
 	}
 
-	return s.Id, nil
+	return s.ID, nil
 }
 
 func (c *Controller) get(id string) (*Service, error) {
@@ -109,15 +105,15 @@ func (c *Controller) update(id string, s Service) error {
 	// Shallow copy
 	var cp Service = *ss
 
-	ss.Name = s.Name
 	ss.Description = s.Description
+	ss.ExternalDocs = s.ExternalDocs
 	ss.Meta = s.Meta
-	ss.Ttl = s.Ttl
+	ss.TTL = s.TTL
 	ss.Updated = time.Now().UTC()
-	if ss.Ttl == 0 {
+	if ss.TTL == 0 {
 		ss.Expires = nil
 	} else {
-		expires := ss.Updated.Add(time.Duration(ss.Ttl) * time.Second)
+		expires := ss.Updated.Add(time.Duration(ss.TTL) * time.Second)
 		ss.Expires = &expires
 	}
 
@@ -157,7 +153,7 @@ func (c *Controller) delete(id string) error {
 
 	// notify listeners
 	for _, l := range c.listeners {
-		go l.deleted(old.Id)
+		go l.deleted(old.ID)
 	}
 
 	return nil
@@ -284,8 +280,8 @@ func (c *Controller) initIndices() error {
 func (c *Controller) addIndices(s *Service) {
 
 	// Add expiry time index
-	if s.Ttl != 0 {
-		c.exp_sid.Add(Map{*s.Expires, s.Id})
+	if s.TTL != 0 {
+		c.exp_sid.Add(Map{*s.Expires, s.ID})
 	}
 }
 
@@ -299,17 +295,17 @@ func (c *Controller) removeIndices(s *Service) {
 	//	which leads to non-unique keys in the maps.
 	// This code removes keys with that expiry time (keeping them in a temp) until the
 	// 	desired target is reached. It then adds the items in the temp back to the tree.
-	if s.Ttl != 0 {
+	if s.TTL != 0 {
 		var temp []Map
 		for m := range c.exp_sid.Iter() {
 			id := m.(Map).value.(string)
-			if id == s.Id {
+			if id == s.ID {
 				for { // go through all duplicates (same expiry times)
 					r := c.exp_sid.Remove(m)
 					if r == nil {
 						break
 					}
-					if id != s.Id {
+					if id != s.ID {
 						temp = append(temp, r.(Map))
 					}
 				}

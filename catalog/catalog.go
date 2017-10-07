@@ -4,6 +4,8 @@ package catalog
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
 	"time"
 )
 
@@ -11,65 +13,47 @@ import (
 
 // Service is a service entry in the catalog
 type Service struct {
-	Id             string                 `json:"id"`
-	URL            string                 `json:"url"`
-	Type           string                 `json:"type"`
-	Name           string                 `json:"name,omitempty"`
-	Description    string                 `json:"description,omitempty"`
-	Meta           map[string]interface{} `json:"meta,omitempty"`
-	Protocols      []Protocol             `json:"protocols"`
-	Representation map[string]interface{} `json:"representation,omitempty"`
-	Ttl            int                    `json:"ttl,omitempty"`
-	Created        time.Time              `json:"created"`
-	Updated        time.Time              `json:"updated"`
-	Expires        *time.Time             `json:"expires,omitempty"`
+	ID           string                 `json:"id"`
+	Description  string                 `json:"description"`
+	ExternalDocs []ExternalDoc          `json:"externalDocs"`
+	Meta         map[string]interface{} `json:"meta"`
+	TTL          uint                   `json:"ttl,omitempty"`
+	Created      time.Time              `json:"created"`
+	Updated      time.Time              `json:"updated"`
+	// Expires is the time when service will be removed from the system (Only when TTL is set)
+	Expires *time.Time `json:"expires,omitempty"`
+}
+
+// ExternalDoc is an external resource for extended documentation. E.g. OpenAPI specs, Wiki page
+type ExternalDoc struct {
+	Description string `json:"description"`
+	URL         string `json:"url"`
 }
 
 // Validates the Service configuration
-func (s *Service) validate() error {
+func (s Service) validate() error {
 
-	// Validate protocols
-	if len(s.Protocols) == 0 {
-		return fmt.Errorf("At least one protocol must be defined")
+	if strings.ContainsAny(s.ID, " ") {
+		return fmt.Errorf("id must not contain spaces")
 	}
-	for _, protocol := range s.Protocols {
-		if protocol.Type == "" {
-			return fmt.Errorf("Each protocol must have a type")
-		}
-		if len(protocol.Endpoint) == 0 {
-			return fmt.Errorf("Each protocol must have at least one endpoint")
+	_, err := url.Parse("http://example.com/" + s.ID)
+	if err != nil {
+		return fmt.Errorf("invalid service id: %v", err)
+	}
+
+	for _, ed := range s.ExternalDocs {
+		if _, err := url.Parse(ed.URL); err != nil {
+			return fmt.Errorf("invalid external doc url: %s", ed.URL)
 		}
 	}
 
 	return nil
 }
 
-// Protocol describes the service API
-type Protocol struct {
-	Type         string                 `json:"type"`
-	Endpoint     map[string]interface{} `json:"endpoint"`
-	Methods      []string               `json:"methods,omitempty"`
-	ContentTypes []string               `json:"content-types,omitempty"`
-}
-
 // Interfaces
 
-// Controller interface
-type CatalogController interface {
-	add(s Service) (string, error)
-	get(id string) (*Service, error)
-	update(id string, s Service) error
-	delete(id string) error
-	list(page, perPage int) ([]Service, int, error)
-	filter(path, op, value string, page, perPage int) ([]Service, int, error)
-	total() (int, error)
-	cleanExpired()
-
-	Stop() error
-}
-
 // Storage interface
-type CatalogStorage interface {
+type Storage interface {
 	add(s *Service) error
 	get(id string) (*Service, error)
 	update(id string, s *Service) error
