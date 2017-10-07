@@ -34,7 +34,7 @@ func setupRouter() (*mux.Router, func(), error) {
 		}
 	}
 
-	controller, err := NewController(storage, TestApiLocation)
+	controller, err := NewController(storage)
 	if err != nil {
 		storage.Close()
 		return nil, nil, fmt.Errorf("Failed to start the controller: %v", err.Error())
@@ -42,20 +42,18 @@ func setupRouter() (*mux.Router, func(), error) {
 
 	api := NewHTTPAPI(
 		controller,
-		TestApiLocation,
-		TestStaticLocation,
 		"Test catalog",
 	)
 
 	r := mux.NewRouter().StrictSlash(true)
 	// CRUD
-	r.Methods("POST").Path(TestApiLocation + "/").HandlerFunc(api.Post)
-	r.Methods("GET").Path(TestApiLocation + "/{id:[^/]+/?[^/]*}").HandlerFunc(api.Get)
-	r.Methods("PUT").Path(TestApiLocation + "/{id:[^/]+/?[^/]*}").HandlerFunc(api.Put)
-	r.Methods("DELETE").Path(TestApiLocation + "/{id:[^/]+/?[^/]*}").HandlerFunc(api.Delete)
+	r.Methods("POST").Path("/").HandlerFunc(api.Post)
+	r.Methods("GET").Path("/{id:[^/]+/?[^/]*}").HandlerFunc(api.Get)
+	r.Methods("PUT").Path("/{id:[^/]+/?[^/]*}").HandlerFunc(api.Put)
+	r.Methods("DELETE").Path("/{id:[^/]+/?[^/]*}").HandlerFunc(api.Delete)
 	// List, Filter
-	r.Methods("GET").Path(TestApiLocation).HandlerFunc(api.List)
-	r.Methods("GET").Path(TestApiLocation + "/{path}/{op}/{value:.*}").HandlerFunc(api.Filter)
+	r.Methods("GET").Path("/").HandlerFunc(api.List)
+	r.Methods("GET").Path("/{path}/{op}/{value:.*}").HandlerFunc(api.Filter)
 
 	return r, func() {
 		controller.Stop()
@@ -66,25 +64,20 @@ func setupRouter() (*mux.Router, func(), error) {
 func mockedService(id string) *Service {
 	return &Service{
 		ID:          "TestHost/TestService" + id,
-		Type:        ApiRegistrationType,
-		Name:        "TestService" + id,
 		Meta:        map[string]interface{}{"test-id": id},
 		Description: "Test Service",
-		Protocols: []Protocol{Protocol{
-			Type:         "REST",
-			Endpoint:     map[string]interface{}{"url": "http://localhost:9000/api"},
-			Methods:      []string{"GET"},
-			ContentTypes: []string{"application/json"},
+		ExternalDocs: []ExternalDoc{{
+			Description: "REST",
+			URL:         "http://link-to-openapi-specs.json",
 		}},
-		Representation: map[string]interface{}{"application/json": "{}"},
-		TTL:            30,
+		TTL: 30,
 	}
 }
 
 func sameServices(s1, s2 *Service, checkID bool) bool {
 	// Compare IDs if specified
 	if checkID {
-		if s1.ID != s2.Type {
+		if s1.ID != s2.ID {
 			return false
 		}
 	}
@@ -104,12 +97,12 @@ func sameServices(s1, s2 *Service, checkID bool) bool {
 	}
 
 	// Compare number of protocols
-	if len(s1.Protocols) != len(s2.Protocols) {
+	if len(s1.ExternalDocs) != len(s2.ExternalDocs) {
 		return false
 	}
 
 	// Compare all other attributes
-	if s1.Type != s2.Type || s1.Name != s2.Name || s1.Description != s2.Description || s1.TTL != s2.TTL {
+	if s1.Description != s2.Description || s1.TTL != s2.TTL {
 		return false
 	}
 
@@ -125,7 +118,7 @@ func TestList(t *testing.T) {
 	defer ts.Close()
 	defer shutdown()
 
-	url := ts.URL + TestApiLocation
+	url := ts.URL
 	t.Log("Calling GET", url)
 	res, err := http.Get(url)
 	if err != nil {
@@ -136,7 +129,7 @@ func TestList(t *testing.T) {
 		t.Fatalf("Server should return %v, got instead: %v (%s)", http.StatusOK, res.StatusCode, res.Status)
 	}
 
-	if !strings.HasPrefix(res.Header.Get("Content-Type"), "application/ld+json") {
+	if !strings.HasPrefix(res.Header.Get("Content-Type"), "application/json") {
 		t.Fatalf("Response should have Content-Type: application/ld+json, got instead %s", res.Header.Get("Content-Type"))
 	}
 
@@ -168,7 +161,7 @@ func TestCreate(t *testing.T) {
 	b, _ := json.Marshal(service)
 
 	// Create
-	url := ts.URL + TestApiLocation + "/"
+	url := ts.URL + "/"
 	t.Log("Calling POST", url)
 	res, err := http.Post(url, "application/ld+json", bytes.NewReader(b))
 	if err != nil {
@@ -179,7 +172,7 @@ func TestCreate(t *testing.T) {
 		t.Fatalf("Server should return %v, got instead: %v (%s)", http.StatusCreated, res.StatusCode, res.Status)
 	}
 
-	if !strings.HasPrefix(res.Header.Get("Content-Type"), "application/ld+json") {
+	if !strings.HasPrefix(res.Header.Get("Content-Type"), "application/json") {
 		t.Fatalf("Response should have Content-Type: application/ld+json, got instead %s", res.Header.Get("Content-Type"))
 	}
 
@@ -194,8 +187,8 @@ func TestCreate(t *testing.T) {
 	}
 
 	// Retrieve whole collection
-	t.Log("Calling GET", ts.URL+TestApiLocation)
-	res, err = http.Get(ts.URL + TestApiLocation)
+	t.Log("Calling GET", ts.URL)
+	res, err = http.Get(ts.URL)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -228,7 +221,7 @@ func TestRetrieve(t *testing.T) {
 	b, _ := json.Marshal(service)
 
 	// Create
-	url := ts.URL + TestApiLocation + "/" + service.ID
+	url := ts.URL + "/" + service.ID
 	t.Log("Calling PUT", url)
 	res, err := httpPut(url, bytes.NewReader(b))
 	if err != nil {
@@ -246,7 +239,7 @@ func TestRetrieve(t *testing.T) {
 		t.Fatalf("Server should return %v, got instead: %v (%s)", http.StatusOK, res.StatusCode, res.Status)
 	}
 
-	if !strings.HasPrefix(res.Header.Get("Content-Type"), "application/ld+json") {
+	if !strings.HasPrefix(res.Header.Get("Content-Type"), "application/json") {
 		t.Fatalf("Response should have Content-Type: application/ld+json, got instead %s", res.Header.Get("Content-Type"))
 	}
 
@@ -259,9 +252,6 @@ func TestRetrieve(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	if !strings.HasPrefix(service2.URL, TestApiLocation) {
-		t.Fatalf("Service URL should have been prefixed with %v by catalog, retrieved URL: %v", TestApiLocation, service2.URL)
-	}
 	if !sameServices(service, service2, false) {
 		t.Fatalf("The retrieved service is not the same as the added one:\n Added:\n %v \n Retrieved: \n %v", service, service2)
 	}
@@ -280,7 +270,7 @@ func TestUpdate(t *testing.T) {
 	b, _ := json.Marshal(service)
 
 	// Create
-	url := ts.URL + TestApiLocation + "/" + service.ID
+	url := ts.URL + "/" + service.ID
 	t.Log("Calling PUT", url)
 	res, err := httpPut(url, bytes.NewReader(b))
 	if err != nil {
@@ -325,7 +315,7 @@ func TestUpdate(t *testing.T) {
 	// Create with user-defined ID (PUT for creation)
 	service4 := mockedService("1")
 	b, _ = json.Marshal(service4)
-	url = ts.URL + TestApiLocation + "/service123"
+	url = ts.URL + "/service123"
 	t.Log("Calling PUT", url)
 	res, err = httpPut(url, bytes.NewReader(b))
 	if err != nil {
@@ -360,7 +350,7 @@ func TestDelete(t *testing.T) {
 	b, _ := json.Marshal(service)
 
 	// Create
-	url := ts.URL + TestApiLocation + "/" + service.ID
+	url := ts.URL + "/" + service.ID
 	t.Log("Calling PUT", url)
 	res, err := httpPut(url, bytes.NewReader(b))
 	if err != nil {
@@ -383,8 +373,8 @@ func TestDelete(t *testing.T) {
 	}
 
 	// Retrieve whole collection
-	t.Log("Calling GET", ts.URL+TestApiLocation)
-	res, err = http.Get(ts.URL + TestApiLocation)
+	t.Log("Calling GET", ts.URL)
+	res, err = http.Get(ts.URL)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -420,12 +410,12 @@ func TestFilter(t *testing.T) {
 	service3 := mockedService("3")
 
 	// Add
-	url := ts.URL + TestApiLocation + "/"
+	url := ts.URL + "/"
 	for _, s := range []*Service{service1, service2, service3} {
 		s.ID = ""
 		b, _ := json.Marshal(s)
 
-		_, err := http.Post(url, "application/ld+json", bytes.NewReader(b))
+		_, err := http.Post(url, "application/json", bytes.NewReader(b))
 		if err != nil {
 			t.Fatal(err.Error())
 		}
@@ -433,7 +423,7 @@ func TestFilter(t *testing.T) {
 
 	// Services
 	// Filter many
-	url = ts.URL + TestApiLocation + "/name/" + utils.FOpPrefix + "/" + "Test"
+	url = ts.URL + "/description/" + utils.FOpPrefix + "/" + "Test"
 	t.Log("Calling GET", url)
 	res, err := http.Get(url)
 	if err != nil {
@@ -449,11 +439,11 @@ func TestFilter(t *testing.T) {
 	}
 
 	if collection.Total != 3 {
-		t.Fatal("Server should return a collection of *3* resources, but got total", collection.Total)
+		t.Fatal("Server should return a collection of 3 resources, but got total", collection.Total)
 	}
 
 	// Filter one
-	url = ts.URL + TestApiLocation + "/name/" + utils.FOpEquals + "/" + service1.Name
+	url = ts.URL + "/description/" + utils.FOpEquals + "/" + service1.Description
 	t.Log("Calling GET", url)
 	res, err = http.Get(url)
 	if err != nil {
