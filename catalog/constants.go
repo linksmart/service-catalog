@@ -10,5 +10,4 @@ const (
 
 	CatalogBackendMemory  = "memory"
 	CatalogBackendLevelDB = "leveldb"
-	StaticLocation        = "/static"
 )

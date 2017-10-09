@@ -3,20 +3,14 @@
 package main
 
 import (
-	"log"
-	"os"
-	"strconv"
-
 	"code.linksmart.eu/sc/service-catalog/catalog"
+	"github.com/farshidtz/elog"
 )
 
-var logger *log.Logger
+var logger *elog.Logger
 
 func init() {
-	logger = log.New(os.Stdout, catalog.LoggerPrefix, 0)
-
-	v, err := strconv.Atoi(os.Getenv("DEBUG"))
-	if err == nil && v == 1 {
-		logger.SetFlags(log.Ltime | log.Lshortfile)
-	}
+	logger = elog.New(catalog.LoggerPrefix, &elog.Config{
+		DebugPrefix: "[sc-debug] ",
+	})
 }

@@ -100,7 +100,7 @@ func main() {
 	// Configure the middleware
 	n := negroni.New(
 		negroni.NewRecovery(),
-		negroni.NewLogger(),
+		logger,
 	)
 	// Mount router
 	n.UseHandler(r)
