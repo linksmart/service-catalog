@@ -10,6 +10,7 @@ import (
 
 	"code.linksmart.eu/sc/service-catalog/utils"
 	avl "github.com/ancientlore/go-avltree"
+	"github.com/satori/go.uuid"
 )
 
 type Controller struct {
@@ -19,10 +20,6 @@ type Controller struct {
 	listeners []Listener
 	ticker    *time.Ticker
 
-	// startTime and counter for ID generation
-	startTime int64
-	counter   int64
-
 	// sorted expiryTime->serviceID maps
 	exp_sid *avl.Tree
 }
@@ -31,7 +28,6 @@ func NewController(storage Storage, listeners ...Listener) (*Controller, error) 
 	c := Controller{
 		storage:   storage,
 		exp_sid:   avl.New(timeKeys, avl.AllowDuplicates), // allows more than one service with the same expiry time
-		startTime: time.Now().UTC().Unix(),
 		listeners: listeners,
 	}
 
@@ -57,7 +53,7 @@ func (c *Controller) add(s Service) (*Service, error) {
 
 	if s.ID == "" {
 		// System generated id
-		s.ID = c.newURN()
+		s.ID = uuid.NewV4().String()
 	}
 	for i, api := range s.APIs {
 		s.APIs[i].Protocol = strings.ToUpper(api.Protocol)
@@ -253,14 +249,6 @@ func (c *Controller) Stop() error {
 }
 
 // UTILITY FUNCTIONS
-
-// Generate a new unique urn for service
-// Format: urn:ls_service:id, where id is the timestamp(s) of the controller startTime+counter in hex
-// WARNING: the caller must obtain the lock before calling
-func (c *Controller) newURN() string {
-	c.counter++
-	return fmt.Sprintf("urn:ls_service:%x", c.startTime+c.counter)
-}
 
 // Initialize secondary indices (from a persistent storage backend)
 func (c *Controller) initIndices() error {
