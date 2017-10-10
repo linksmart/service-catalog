@@ -25,6 +25,7 @@ import (
 var (
 	confPath = flag.String("conf", "conf/service-catalog.json", "Service catalog configuration file path")
 	profile  = flag.Bool("profile", false, "Enable the HTTP server for runtime profiling")
+	version  = flag.Bool("version", false, "Show the Service Catalog API version")
 )
 
 const LINKSMART = `
@@ -35,6 +36,10 @@ const LINKSMART = `
 
 func main() {
 	flag.Parse()
+	if *version {
+		fmt.Println(catalog.APIVersion)
+		return
+	}
 	fmt.Print(LINKSMART)
 	logger.Printf("Starting Service Catalog - Version %s", catalog.APIVersion)
 
