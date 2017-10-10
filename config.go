@@ -27,17 +27,12 @@ type StorageConfig struct {
 	DSN  string `json:"dsn"`
 }
 
-var supportedBackends = map[string]bool{
-	catalog.CatalogBackendMemory:  true,
-	catalog.CatalogBackendLevelDB: true,
-}
-
 func (c *Config) Validate() error {
 	var err error
 	if c.BindAddr == "" || c.BindPort == 0 {
 		err = fmt.Errorf("Empty host or port")
 	}
-	if !supportedBackends[c.Storage.Type] {
+	if !catalog.SupportedBackends[c.Storage.Type] {
 		err = fmt.Errorf("Unsupported storage backend")
 	}
 	_, err = url.Parse(c.Storage.DSN)

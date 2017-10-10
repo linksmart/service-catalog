@@ -15,6 +15,7 @@ import (
 type Service struct {
 	ID           string                 `json:"id"`
 	Description  string                 `json:"description"`
+	APIs         []API                  `json:"apis"`
 	ExternalDocs []ExternalDoc          `json:"externalDocs"`
 	Meta         map[string]interface{} `json:"meta"`
 	TTL          uint                   `json:"ttl,omitempty"`
@@ -22,6 +23,12 @@ type Service struct {
 	Updated      time.Time              `json:"updated"`
 	// Expires is the time when service will be removed from the system (Only when TTL is set)
 	Expires *time.Time `json:"expires,omitempty"`
+}
+
+// API is representation of service's API
+type API struct {
+	Protocol string `json:"protocol"`
+	URL      string `json:"url"`
 }
 
 // ExternalDoc is an external resource for extended documentation. E.g. OpenAPI specs, Wiki page
@@ -39,6 +46,15 @@ func (s Service) validate() error {
 	_, err := url.Parse("http://example.com/" + s.ID)
 	if err != nil {
 		return fmt.Errorf("invalid service id: %v", err)
+	}
+
+	for _, api := range s.APIs {
+		if !SupportedProtocols[strings.ToUpper(api.Protocol)] {
+			return fmt.Errorf("unsupported API protocol: %s", api.Protocol)
+		}
+		if _, err := url.Parse(api.URL); err != nil {
+			return fmt.Errorf("invalid external doc url: %s", api.URL)
+		}
 	}
 
 	for _, ed := range s.ExternalDocs {

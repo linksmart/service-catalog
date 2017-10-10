@@ -59,6 +59,9 @@ func (c *Controller) add(s Service) (*Service, error) {
 		// System generated id
 		s.ID = c.newURN()
 	}
+	for i, api := range s.APIs {
+		s.APIs[i].Protocol = strings.ToUpper(api.Protocol)
+	}
 	s.Created = time.Now().UTC()
 	s.Updated = s.Created
 	if s.TTL == 0 {
@@ -106,6 +109,10 @@ func (c *Controller) update(id string, s Service) (*Service, error) {
 	var cp Service = *ss
 
 	ss.Description = s.Description
+	ss.APIs = s.APIs
+	for i, api := range ss.APIs {
+		ss.APIs[i].Protocol = strings.ToUpper(api.Protocol)
+	}
 	ss.ExternalDocs = s.ExternalDocs
 	ss.Meta = s.Meta
 	ss.TTL = s.TTL

@@ -11,3 +11,14 @@ const (
 	CatalogBackendMemory  = "memory"
 	CatalogBackendLevelDB = "leveldb"
 )
+
+var SupportedBackends = map[string]bool{
+	CatalogBackendMemory:  true,
+	CatalogBackendLevelDB: true,
+}
+
+var SupportedProtocols = map[string]bool{
+	"HTTP": true,
+	"MQTT": true,
+	"AMQP": true,
+}
