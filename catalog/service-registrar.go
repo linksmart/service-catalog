@@ -15,9 +15,9 @@ const (
 	keepaliveRetries = 5
 )
 
-// Registers service given a configured Catalog Client
-func RegisterService(client CatalogClient, s *Service) error {
-	err := client.Update(s.Id, s)
+// Registers service given a configured Remote Client
+func RegisterService(client *RemoteClient, s *Service) error {
+	err := client.Update(s.ID, s)
 	if err != nil {
 		switch err.(type) {
 		case *NotFoundError:
@@ -27,13 +27,13 @@ func RegisterService(client CatalogClient, s *Service) error {
 				logger.Printf("RegisterService() Error adding registration: %v", err)
 				return err
 			}
-			logger.Printf("RegisterService() Added Service registration %v", s.Id)
+			logger.Printf("RegisterService() Added Service registration %v", s.ID)
 		default:
 			logger.Printf("RegisterService() Error updating registration: %v", err)
 			return err
 		}
 	} else {
-		logger.Printf("RegisterService() Updated Service registration %v", s.Id)
+		logger.Printf("RegisterService() Updated Service registration %v", s.ID)
 	}
 	return nil
 }
@@ -63,14 +63,14 @@ func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
 	}
 
 	// Will not keepalive registration with a negative TTL
-	if s.Ttl <= 0 {
+	if s.TTL <= 0 {
 		logger.Println("RegisterServiceWithKeepalive() WARNING: Registration has ttl <= 0. Will not start the keepalive routine")
 		RegisterService(client, &s)
 
 		// catch a shutdown signal from the upstream
 		for _ = range sigCh {
-			logger.Printf("RegisterServiceWithKeepalive() Removing the registration %v/%v...", endpoint, s.Id)
-			client.Delete(s.Id)
+			logger.Printf("RegisterServiceWithKeepalive() Removing the registration %v/%v...", endpoint, s.ID)
+			client.Delete(s.ID)
 			if ticket != nil {
 				err := ticket.Delete()
 				if err != nil {
@@ -80,7 +80,7 @@ func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
 			return
 		}
 	}
-	logger.Printf("RegisterServiceWithKeepalive() Will register and update registration periodically: %v/%v", endpoint, s.Id)
+	logger.Printf("RegisterServiceWithKeepalive() Will register and update registration periodically: %v/%v", endpoint, s.ID)
 
 	// Configure & start the keepalive routine
 	ksigCh := make(chan bool)
@@ -110,12 +110,12 @@ func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
 
 		// catch a shutdown signal from the upstream
 		case <-sigCh:
-			logger.Printf("RegisterServiceWithKeepalive() Removing the registration %v/%v...", endpoint, s.Id)
+			logger.Printf("RegisterServiceWithKeepalive() Removing the registration %v/%v...", endpoint, s.ID)
 			// signal shutdown to the keepAlive routine & close channels
 			select {
 			case ksigCh <- true:
 				// delete entry in the remote catalog
-				client.Delete(s.Id)
+				client.Delete(s.ID)
 				if ticket != nil {
 					err := ticket.Delete()
 					if err != nil {
@@ -123,7 +123,7 @@ func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
 					}
 				}
 			case <-time.After(1 * time.Second):
-				logger.Printf("RegisterDeviceWithKeepalive(): timeout removing registration %v/%v: catalog unreachable", endpoint, s.Id)
+				logger.Printf("RegisterDeviceWithKeepalive(): timeout removing registration %v/%v: catalog unreachable", endpoint, s.ID)
 			}
 
 			close(ksigCh)
@@ -138,8 +138,8 @@ func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
 // s: registration to be kept alive
 // sigCh: channel for shutdown signalisation from upstream
 // errCh: channel for error signalisation to upstream
-func keepAlive(client CatalogClient, s *Service, sigCh <-chan bool, errCh chan<- error) {
-	dur := (time.Duration(s.Ttl) * time.Second) / 2
+func keepAlive(client *RemoteClient, s *Service, sigCh <-chan bool, errCh chan<- error) {
+	dur := (time.Duration(s.TTL) * time.Second) / 2
 	ticker := time.NewTicker(dur)
 	errTries := 0
 
@@ -149,18 +149,18 @@ func keepAlive(client CatalogClient, s *Service, sigCh <-chan bool, errCh chan<-
 	for {
 		select {
 		case <-ticker.C:
-			err := client.Update(s.Id, s)
+			err := client.Update(s.ID, s)
 			if err != nil {
 				switch err.(type) {
 				case *NotFoundError:
 					// If not in the catalog - add
-					logger.Printf("keepAlive() ERROR: Registration %v not found in the remote catalog. TTL expired?", s.Id)
+					logger.Printf("keepAlive() ERROR: Registration %v not found in the remote catalog. TTL expired?", s.ID)
 					_, err = client.Add(s)
 					if err != nil {
 						logger.Printf("keepAlive() Error adding registration: %v", err)
 						errTries += 1
 					} else {
-						logger.Printf("keepAlive() Added Service registration %v", s.Id)
+						logger.Printf("keepAlive() Added Service registration %v", s.ID)
 						errTries = 0
 					}
 				default:
@@ -168,7 +168,7 @@ func keepAlive(client CatalogClient, s *Service, sigCh <-chan bool, errCh chan<-
 					errTries += 1
 				}
 			} else {
-				logger.Printf("keepAlive() Updated Service registration %v", s.Id)
+				logger.Printf("keepAlive() Updated Service registration %v", s.ID)
 				errTries = 0
 			}
 

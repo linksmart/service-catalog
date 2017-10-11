@@ -31,7 +31,7 @@ func (ms *MemoryStorage) add(s *Service) error {
 
 	_, duplicate := ms.services.Add(*s)
 	if duplicate {
-		return &ConflictError{fmt.Sprintf("Service id %s is not unique", s.Id)}
+		return &ConflictError{fmt.Sprintf("Service id %s is not unique", s.ID)}
 	}
 
 	return nil
@@ -41,7 +41,7 @@ func (ms *MemoryStorage) get(id string) (*Service, error) {
 	ms.RLock()
 	defer ms.RUnlock()
 
-	s := ms.services.Find(Service{Id: id})
+	s := ms.services.Find(Service{ID: id})
 	if s == nil {
 		return nil, &NotFoundError{fmt.Sprintf("Service with id %s is not found", id)}
 	}
@@ -54,7 +54,7 @@ func (ms *MemoryStorage) update(id string, s *Service) error {
 	ms.Lock()
 	defer ms.Unlock()
 
-	r := ms.services.Remove(Service{Id: id})
+	r := ms.services.Remove(Service{ID: id})
 	if r == nil {
 		return &NotFoundError{fmt.Sprintf("Service with id %s is not found", id)}
 	}
@@ -68,7 +68,7 @@ func (ms *MemoryStorage) delete(id string) error {
 	ms.Lock()
 	defer ms.Unlock()
 
-	r := ms.services.Remove(Service{Id: id})
+	r := ms.services.Remove(Service{ID: id})
 	if r == nil {
 		return &NotFoundError{fmt.Sprintf("Service with id %s is not found", id)}
 	}
@@ -113,9 +113,9 @@ func (ms *MemoryStorage) Close() error {
 
 // Comparison operator for AVL Tree
 func operator(a interface{}, b interface{}) int {
-	if a.(Service).Id < b.(Service).Id {
+	if a.(Service).ID < b.(Service).ID {
 		return -1
-	} else if a.(Service).Id > b.(Service).Id {
+	} else if a.(Service).ID > b.(Service).ID {
 		return 1
 	}
 	return 0

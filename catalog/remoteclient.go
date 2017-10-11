@@ -14,26 +14,26 @@ import (
 	"code.linksmart.eu/sc/service-catalog/utils"
 )
 
-type RemoteCatalogClient struct {
+type RemoteClient struct {
 	serverEndpoint *url.URL
 	ticket         *obtainer.Client
 }
 
-func NewRemoteCatalogClient(serverEndpoint string, ticket *obtainer.Client) (CatalogClient, error) {
+func NewRemoteCatalogClient(serverEndpoint string, ticket *obtainer.Client) (*RemoteClient, error) {
 	// Check if serverEndpoint is a correct URL
 	endpointUrl, err := url.Parse(serverEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing catalog endpoint url: %s", err)
 	}
 
-	return &RemoteCatalogClient{
+	return &RemoteClient{
 		serverEndpoint: endpointUrl,
 		ticket:         ticket,
 	}, nil
 }
 
 // Retrieves a service
-func (c *RemoteCatalogClient) Get(id string) (*Service, error) {
+func (c *RemoteClient) Get(id string) (*Service, error) {
 	res, err := utils.HTTPRequest("GET",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		nil,
@@ -69,10 +69,10 @@ func (c *RemoteCatalogClient) Get(id string) (*Service, error) {
 }
 
 // Adds a service
-func (c *RemoteCatalogClient) Add(s *Service) (string, error) {
-	id := s.Id
+func (c *RemoteClient) Add(s *Service) (string, error) {
+	id := s.ID
 	service := *s
-	service.Id = ""
+	service.ID = ""
 	b, _ := json.Marshal(service)
 
 	var (
@@ -157,7 +157,7 @@ func (c *RemoteCatalogClient) Add(s *Service) (string, error) {
 }
 
 // Updates a service
-func (c *RemoteCatalogClient) Update(id string, s *Service) error {
+func (c *RemoteClient) Update(id string, s *Service) error {
 	// Check if id is found
 	resGet, err := utils.HTTPRequest("GET",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
@@ -212,7 +212,7 @@ func (c *RemoteCatalogClient) Update(id string, s *Service) error {
 }
 
 // Deletes a service
-func (c *RemoteCatalogClient) Delete(id string) error {
+func (c *RemoteClient) Delete(id string) error {
 	res, err := utils.HTTPRequest("DELETE",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		nil,
@@ -241,7 +241,7 @@ func (c *RemoteCatalogClient) Delete(id string) error {
 }
 
 // Retrieves a page from the service collection
-func (c *RemoteCatalogClient) List(page, perPage int) ([]Service, int, error) {
+func (c *RemoteClient) List(page, perPage int) ([]Service, int, error) {
 	res, err := utils.HTTPRequest("GET",
 		fmt.Sprintf("%v?%v=%v&%v=%v",
 			c.serverEndpoint, utils.GetParamPage, page, utils.GetParamPerPage, perPage),
@@ -278,7 +278,7 @@ func (c *RemoteCatalogClient) List(page, perPage int) ([]Service, int, error) {
 }
 
 // Filter services
-func (c *RemoteCatalogClient) Filter(path, op, value string, page, perPage int) ([]Service, int, error) {
+func (c *RemoteClient) Filter(path, op, value string, page, perPage int) ([]Service, int, error) {
 	res, err := utils.HTTPRequest("GET",
 		fmt.Sprintf("%v/%v/%v/%v?%v=%v&%v=%v",
 			c.serverEndpoint, path, op, value, utils.GetParamPage, page, utils.GetParamPerPage, perPage),

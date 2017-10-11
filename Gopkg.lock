@@ -27,6 +27,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/farshidtz/elog"
+  packages = ["."]
+  revision = "b9fdc31674819500a6b4abe0d32e676c1a9c4a17"
+
+[[projects]]
+  branch = "master"
   name = "github.com/golang/snappy"
   packages = ["."]
   revision = "553a641470496b2327abcac10b36396bd98e45c9"
@@ -68,6 +74,12 @@
   version = "v1.1"
 
 [[projects]]
+  name = "github.com/satori/go.uuid"
+  packages = ["."]
+  revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/syndtr/goleveldb"
   packages = ["leveldb","leveldb/cache","leveldb/comparer","leveldb/errors","leveldb/filter","leveldb/iterator","leveldb/journal","leveldb/memdb","leveldb/opt","leveldb/storage","leveldb/table","leveldb/util"]
@@ -82,6 +94,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c1cb082c037aef0889c23ef4ac1f916437b5aacba72b77cf331f35396dc45d04"
+  inputs-digest = "9a838ac76f3941b24bb00a8a63acb69068572725f83d120af6ea48def28fbb05"
   solver-name = "gps-cdcl"
   solver-version = 1

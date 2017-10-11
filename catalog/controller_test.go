@@ -9,12 +9,13 @@ import (
 	"testing"
 	"time"
 
+	"code.linksmart.eu/sc/service-catalog/utils"
 	"github.com/pborman/uuid"
 )
 
-func setup() (CatalogController, func(), error) {
+func setup() (*Controller, func(), error) {
 	var (
-		storage CatalogStorage
+		storage Storage
 		err     error
 		tempDir string = fmt.Sprintf("%s/lslc/test-%s.ldb",
 			strings.Replace(os.TempDir(), "\\", "/", -1), uuid.New())
@@ -29,7 +30,7 @@ func setup() (CatalogController, func(), error) {
 		}
 	}
 
-	controller, err := NewController(storage, TestApiLocation)
+	controller, err := NewController(storage)
 	if err != nil {
 		storage.Close()
 		return nil, nil, err
@@ -51,18 +52,15 @@ func TestAddService(t *testing.T) {
 
 	// User-defined id
 	var r Service
-	uuid := "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
-	r.Name = "ServiceName"
-	r.Id = uuid + "/" + r.Name
-	r.Ttl = 30
-	r.Protocols = []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}}
+	r.ID = "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
+	r.TTL = 30
 
-	id, err := controller.add(r)
+	s, err := controller.add(r)
 	if err != nil {
 		t.Fatalf("Unexpected error on add: %v", err.Error())
 	}
-	if id != r.Id {
-		t.Fatalf("User defined ID is not returned. Getting %v instead of %v\n", id, r.Id)
+	if s.ID != r.ID {
+		t.Fatalf("User defined ID is not returned. Getting %v instead of %v\n", s.ID, r.ID)
 	}
 
 	_, err = controller.add(r)
@@ -72,15 +70,12 @@ func TestAddService(t *testing.T) {
 
 	// System-generated id
 	var r2 Service
-	r2.Name = "ServiceName"
-	r2.Protocols = []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}}
-
-	id, err = controller.add(r2)
+	s, err = controller.add(r2)
 	if err != nil {
 		t.Fatalf("Unexpected error on add: %v", err.Error())
 	}
-	if !strings.HasPrefix(id, "urn:ls_service:") {
-		t.Fatalf("System-generated URN doesn't have `urn:ls_service:` as prefix. Getting location: %v\n", id)
+	if !strings.HasPrefix(s.ID, "urn:ls_service:") {
+		t.Fatalf("System-generated URN doesn't have `urn:ls_service:` as prefix. Getting location: %v\n", s.ID)
 	}
 }
 
@@ -93,29 +88,26 @@ func TestUpdateService(t *testing.T) {
 	defer shutdown()
 
 	var r Service
-	uuid := "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
-	r.Name = "ServiceName"
-	r.Id = uuid + "/" + r.Name
-	r.Ttl = 30
-	r.Protocols = []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}}
+	r.ID = "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
+	r.TTL = 30
 
 	_, err = controller.add(r)
 	if err != nil {
 		t.Errorf("Unexpected error on add: %v", err.Error())
 	}
-	r.Name = "UpdatedName"
+	r.Description = "new description"
 
-	err = controller.update(r.Id, r)
+	_, err = controller.update(r.ID, r)
 	if err != nil {
 		t.Errorf("Unexpected error on update: %v", err.Error())
 	}
 
-	rg, err := controller.get(r.Id)
+	rg, err := controller.get(r.ID)
 	if err != nil {
 		t.Error("Unexpected error on get: %v", err.Error())
 	}
 
-	if rg.Name != r.Name {
+	if rg.Description != r.Description {
 		t.Fail()
 	}
 }
@@ -128,26 +120,22 @@ func TestGetService(t *testing.T) {
 	}
 	defer shutdown()
 
-	r := Service{
-		Name: "TestName",
-	}
-	uuid := "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
-	r.Name = "ServiceName"
-	r.Id = uuid + "/" + r.Name
-	r.Ttl = 30
-	r.Protocols = []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}}
+	var r Service
+	r.Description = "some description"
+	r.ID = "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
+	r.TTL = 30
 
 	_, err = controller.add(r)
 	if err != nil {
 		t.Errorf("Unexpected error on add: %v", err.Error())
 	}
 
-	rg, err := controller.get(r.Id)
+	rg, err := controller.get(r.ID)
 	if err != nil {
 		t.Error("Unexpected error on get: %v", err.Error())
 	}
 
-	if rg.Id != r.Id || rg.Name != r.Name || rg.Ttl != r.Ttl {
+	if rg.ID != r.ID || rg.Description != r.Description || rg.TTL != r.TTL {
 		t.Fail()
 	}
 }
@@ -161,23 +149,20 @@ func TestDeleteService(t *testing.T) {
 	defer shutdown()
 
 	var r Service
-	uuid := "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
-	r.Name = "ServiceName"
-	r.Id = uuid + "/" + r.Name
-	r.Ttl = 30
-	r.Protocols = []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}}
+	r.ID = "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
+	r.TTL = 30
 
 	_, err = controller.add(r)
 	if err != nil {
 		t.Errorf("Unexpected error on add: %v", err.Error())
 	}
 
-	err = controller.delete(r.Id)
+	err = controller.delete(r.ID)
 	if err != nil {
 		t.Error("Unexpected error on delete: %v", err.Error())
 	}
 
-	err = controller.delete(r.Id)
+	err = controller.delete(r.ID)
 	if err == nil {
 		t.Error("Didn't get any error when deleting a deleted service.")
 	}
@@ -195,10 +180,8 @@ func TestListServices(t *testing.T) {
 
 	// Add 10 entries
 	for i := 0; i < 11; i++ {
-		r.Name = string(i)
-		r.Id = "TestID" + "/" + r.Name
-		r.Ttl = 30
-		r.Protocols = []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}}
+		r.ID = "TestID_" + string(i)
+		r.TTL = 30
 		_, err := controller.add(r)
 
 		if err != nil {
@@ -241,8 +224,7 @@ func TestFilterService(t *testing.T) {
 
 	for i := 0; i < 5; i++ {
 		_, err := controller.add(Service{
-			Name:      fmt.Sprintf("boring_%d", i),
-			Protocols: []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}},
+			Description: fmt.Sprintf("boring_%d", i),
 		})
 		if err != nil {
 			t.Fatal("Error adding a service:", err.Error())
@@ -250,15 +232,13 @@ func TestFilterService(t *testing.T) {
 	}
 
 	controller.add(Service{
-		Name:      "interesting_1",
-		Protocols: []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}},
+		Description: "interesting_1",
 	})
 	controller.add(Service{
-		Name:      "interesting_2",
-		Protocols: []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}},
+		Description: "interesting_2",
 	})
 
-	services, total, err := controller.filter("name", "prefix", "interesting", 1, 10)
+	services, total, err := controller.filter("description", utils.FOpPrefix, "interesting", 1, 10)
 	if err != nil {
 		t.Fatal("Error filtering services:", err.Error())
 	}
@@ -266,7 +246,7 @@ func TestFilterService(t *testing.T) {
 		t.Fatalf("Returned %d instead of 2 services when filtering name/prefix/interesting: \n%v", total, services)
 	}
 	for _, s := range services {
-		if !strings.Contains(s.Name, "interesting") {
+		if !strings.Contains(s.Description, "interesting") {
 			t.Fatal("Wrong results when filtering name/prefix/interesting:\n", s)
 		}
 	}
@@ -281,12 +261,11 @@ func TestCleanExpired(t *testing.T) {
 	defer shutdown()
 
 	var d = Service{
-		Name:      "my_service",
-		Ttl:       1,
-		Protocols: []Protocol{Protocol{Type: "REST", Endpoint: map[string]interface{}{"url": "http://localhost:9000/api"}}},
+		Description: "my_service",
+		TTL:         1,
 	}
 
-	id, err := controller.add(d)
+	s, err := controller.add(d)
 	if err != nil {
 		t.Fatal("Error adding a service:", err.Error())
 	}
@@ -295,7 +274,7 @@ func TestCleanExpired(t *testing.T) {
 	time.Sleep(6 * time.Second)
 
 	checkingTime := time.Now()
-	dd, err := controller.get(id)
+	dd, err := controller.get(s.ID)
 	if err != nil {
 		switch err.(type) {
 		case *NotFoundError:
@@ -305,7 +284,7 @@ func TestCleanExpired(t *testing.T) {
 		}
 	} else {
 		t.Fatalf("Service was not removed after 1 seconds. \nTTL: %v \nCreated: %v \nExpiry: %v \nNot deleted after: %v at %v\n",
-			dd.Ttl,
+			dd.TTL,
 			dd.Created,
 			dd.Expires,
 			checkingTime.Sub(addingTime),

@@ -3,18 +3,13 @@
 package catalog
 
 import (
-	"log"
-	"os"
-	"strconv"
+	"github.com/farshidtz/elog"
 )
 
-var logger *log.Logger
+var logger *elog.Logger
 
 func init() {
-	logger = log.New(os.Stdout, LoggerPrefix, 0)
-
-	v, err := strconv.Atoi(os.Getenv("DEBUG"))
-	if err == nil && v == 1 {
-		logger.SetFlags(log.Ltime | log.Lshortfile)
-	}
+	logger = elog.New(LoggerPrefix, &elog.Config{
+		DebugPrefix: LoggerPrefix,
+	})
 }

@@ -3,18 +3,21 @@
 package catalog
 
 const (
-	DNSSDServiceType    = "_linksmart-sc._tcp"
-	MaxPerPage          = 100
-	APIVersion          = "1.0.0"
-	ApiCollectionType   = "ServiceCatalog"
-	ApiRegistrationType = "Service"
-	LoggerPrefix        = "[sc] "
-
-	// MetaKeyGCExpose is the meta key indicating
-	// that the service needs to be tunneled in GC
-	MetaKeyGCExpose = "gc_expose"
+	DNSSDServiceType = "_linksmart-sc._tcp"
+	MaxPerPage       = 100
+	LoggerPrefix     = "[sc] "
 
 	CatalogBackendMemory  = "memory"
 	CatalogBackendLevelDB = "leveldb"
-	StaticLocation        = "/static"
 )
+
+var SupportedBackends = map[string]bool{
+	CatalogBackendMemory:  true,
+	CatalogBackendLevelDB: true,
+}
+
+var SupportedProtocols = map[string]bool{
+	"HTTP": true,
+	"MQTT": true,
+	"AMQP": true,
+}

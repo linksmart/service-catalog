@@ -34,14 +34,16 @@ const LINKSMART = `
 ╩═╝ ╩ ╝╚╝ ╩ ╩  ╚═╝ ╩ ╩ ╩ ╩ ╩╚═  ╩
 `
 
+var Version = "MAJOR.MINOR.PATCH Not Provided"
+
 func main() {
 	flag.Parse()
 	if *version {
-		fmt.Println(catalog.APIVersion)
+		fmt.Println(Version)
 		return
 	}
 	fmt.Print(LINKSMART)
-	logger.Printf("Starting Service Catalog - Version %s", catalog.APIVersion)
+	logger.Printf("Starting Service Catalog - Version %s", Version)
 
 	if *profile {
 		logger.Println("Starting runtime profiling server")
@@ -65,7 +67,7 @@ func main() {
 			catalog.DNSSDServiceType,
 			"",
 			config.BindPort,
-			[]string{fmt.Sprintf("uri=%s", config.ApiLocation)},
+			[]string{"uri=/"},
 			nil)
 		if err != nil {
 			logger.Printf("Failed to register DNS-SD service: %s", err.Error())
@@ -105,12 +107,7 @@ func main() {
 	// Configure the middleware
 	n := negroni.New(
 		negroni.NewRecovery(),
-		negroni.NewLogger(),
-		&negroni.Static{
-			Dir:       http.Dir(config.StaticDir),
-			Prefix:    catalog.StaticLocation,
-			IndexFile: "index.html",
-		},
+		logger,
 	)
 	// Mount router
 	n.UseHandler(r)
@@ -126,7 +123,7 @@ func setupRouter(config *Config) (*router, func() error, error) {
 
 	// Setup API storage
 	var (
-		storage catalog.CatalogStorage
+		storage catalog.Storage
 		err     error
 	)
 	switch config.Storage.Type {
@@ -141,19 +138,14 @@ func setupRouter(config *Config) (*router, func() error, error) {
 		return nil, nil, fmt.Errorf("Could not create catalog API storage. Unsupported type: %v", config.Storage.Type)
 	}
 
-	controller, err := catalog.NewController(storage, config.ApiLocation, listeners...)
+	controller, err := catalog.NewController(storage, listeners...)
 	if err != nil {
 		storage.Close()
 		return nil, nil, fmt.Errorf("Failed to start the controller: %v", err.Error())
 	}
 
 	// Create catalog API object
-	api := catalog.NewCatalogAPI(
-		controller,
-		config.ApiLocation,
-		catalog.StaticLocation,
-		config.Description,
-	)
+	api := catalog.NewHTTPAPI(controller, config.Description, Version)
 
 	commonHandlers := alice.New(
 		context.ClearHandler,
@@ -178,14 +170,14 @@ func setupRouter(config *Config) (*router, func() error, error) {
 	// Configure http api router
 	r := newRouter()
 	// Handlers
-	r.get(config.ApiLocation, commonHandlers.ThenFunc(api.List))
-	r.post(config.ApiLocation, commonHandlers.ThenFunc(api.Post))
+	r.get("/", commonHandlers.ThenFunc(api.List))
+	r.post("/", commonHandlers.ThenFunc(api.Post))
 	// Accept an id with zero or one slash: [^/]+/?[^/]*
 	// -> [^/]+ one or more of anything but slashes /? optional slash [^/]* zero or more of anything but slashes
-	r.get(config.ApiLocation+"/{id:[^/]+/?[^/]*}", commonHandlers.ThenFunc(api.Get))
-	r.put(config.ApiLocation+"/{id:[^/]+/?[^/]*}", commonHandlers.ThenFunc(api.Put))
-	r.delete(config.ApiLocation+"/{id:[^/]+/?[^/]*}", commonHandlers.ThenFunc(api.Delete))
-	r.get(config.ApiLocation+"/{path}/{op}/{value:.*}", commonHandlers.ThenFunc(api.Filter))
+	r.get("/{id:[^/]+/?[^/]*}", commonHandlers.ThenFunc(api.Get))
+	r.put("/{id:[^/]+/?[^/]*}", commonHandlers.ThenFunc(api.Put))
+	r.delete("/{id:[^/]+/?[^/]*}", commonHandlers.ThenFunc(api.Delete))
+	r.get("/{path}/{op}/{value:.*}", commonHandlers.ThenFunc(api.Filter))
 
 	return r, controller.Stop, nil
 }

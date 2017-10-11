@@ -7,11 +7,6 @@ import (
 	"testing"
 )
 
-const (
-	TestApiLocation    = "/sc"
-	TestStaticLocation = "/static"
-)
-
 var (
 	TestSupportedBackends = map[string]bool{
 		CatalogBackendMemory:  true,
