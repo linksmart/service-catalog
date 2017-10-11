@@ -74,8 +74,8 @@ func TestAddService(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error on add: %v", err.Error())
 	}
-	if !strings.HasPrefix(s.ID, "urn:ls_service:") {
-		t.Fatalf("System-generated URN doesn't have `urn:ls_service:` as prefix. Getting location: %v\n", s.ID)
+	if !strings.ContainsAny(s.ID, "-") {
+		t.Fatalf("System-generated ID does not look like a UUID. Getting location: %v\n", s.ID)
 	}
 }
 

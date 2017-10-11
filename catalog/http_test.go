@@ -43,6 +43,7 @@ func setupRouter() (*mux.Router, func(), error) {
 	api := NewHTTPAPI(
 		controller,
 		"Test catalog",
+		"MAJOR.MINOR.PATCH",
 	)
 
 	r := mux.NewRouter().StrictSlash(true)
@@ -65,7 +66,7 @@ func mockedService(id string) *Service {
 	return &Service{
 		ID:          "TestHost/TestService" + id,
 		Meta:        map[string]interface{}{"test-id": id},
-		Description: "Test Service",
+		Description: "Test Service " + id,
 		ExternalDocs: []ExternalDoc{{
 			Description: "REST",
 			URL:         "http://link-to-openapi-specs.json",
@@ -182,8 +183,8 @@ func TestCreate(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	parts := strings.Split(location.String(), "/")
-	if !strings.HasPrefix(parts[len(parts)-1], "urn:ls_service:") {
-		t.Fatalf("System-generated URN doesn't have `urn:ls_service:` as prefix. Getting location: %v\n", location.String())
+	if !strings.ContainsAny(parts[len(parts)-1], "-") {
+		t.Fatalf("System-generated ID doesn't look like a UUID. Getting location: %v\n", location.String())
 	}
 
 	// Retrieve whole collection
