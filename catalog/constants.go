@@ -5,7 +5,6 @@ package catalog
 const (
 	DNSSDServiceType = "_linksmart-sc._tcp"
 	MaxPerPage       = 100
-	APIVersion       = "2.0.0"
 	LoggerPrefix     = "[sc] "
 
 	CatalogBackendMemory  = "memory"

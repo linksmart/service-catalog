@@ -66,6 +66,14 @@ func (s Service) validate() error {
 	return nil
 }
 
+// Error describes an API error (serializable in JSON)
+type Error struct {
+	// Code is the (http) code of the error
+	Code int `json:"code"`
+	// Message is the (human-readable) error message
+	Message string `json:"message"`
+}
+
 // Interfaces
 
 // Storage interface

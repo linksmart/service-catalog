@@ -34,14 +34,16 @@ const LINKSMART = `
 ╩═╝ ╩ ╝╚╝ ╩ ╩  ╚═╝ ╩ ╩ ╩ ╩ ╩╚═  ╩
 `
 
+var Version = "MAJOR.MINOR.PATCH Not Provided"
+
 func main() {
 	flag.Parse()
 	if *version {
-		fmt.Println(catalog.APIVersion)
+		fmt.Println(Version)
 		return
 	}
 	fmt.Print(LINKSMART)
-	logger.Printf("Starting Service Catalog - Version %s", catalog.APIVersion)
+	logger.Printf("Starting Service Catalog - Version %s", Version)
 
 	if *profile {
 		logger.Println("Starting runtime profiling server")
@@ -143,10 +145,7 @@ func setupRouter(config *Config) (*router, func() error, error) {
 	}
 
 	// Create catalog API object
-	api := catalog.NewHTTPAPI(
-		controller,
-		config.Description,
-	)
+	api := catalog.NewHTTPAPI(controller, config.Description, Version)
 
 	commonHandlers := alice.New(
 		context.ClearHandler,

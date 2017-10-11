@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"strings"
+
 	"code.linksmart.eu/sc/service-catalog/utils"
 	"github.com/gorilla/mux"
 )
@@ -15,13 +17,15 @@ import (
 type httpAPI struct {
 	controller  *Controller
 	description string
+	version     string
 }
 
 // NewHTTPAPI creates a RESTful HTTP API
-func NewHTTPAPI(controller *Controller, description string) *httpAPI {
+func NewHTTPAPI(controller *Controller, description, version string) *httpAPI {
 	return &httpAPI{
 		controller:  controller,
 		description: description,
+		version:     version,
 	}
 }
 
@@ -38,19 +42,19 @@ type Collection struct {
 func (a *httpAPI) List(w http.ResponseWriter, req *http.Request) {
 	err := req.ParseForm()
 	if err != nil {
-		ErrorResponse(w, http.StatusBadRequest, "Error parsing the query:", err.Error())
+		a.ErrorResponse(w, http.StatusBadRequest, "Error parsing the query:", err.Error())
 		return
 	}
 	page, perPage, err := utils.ParsePagingParams(
 		req.Form.Get(utils.GetParamPage), req.Form.Get(utils.GetParamPerPage), MaxPerPage)
 	if err != nil {
-		ErrorResponse(w, http.StatusBadRequest, "Error parsing query parameters:", err.Error())
+		a.ErrorResponse(w, http.StatusBadRequest, "Error parsing query parameters:", err.Error())
 		return
 	}
 
 	services, total, err := a.controller.list(page, perPage)
 	if err != nil {
-		ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		a.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -64,11 +68,11 @@ func (a *httpAPI) List(w http.ResponseWriter, req *http.Request) {
 
 	b, err := json.Marshal(coll)
 	if err != nil {
-		ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		a.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json;version="+APIVersion)
+	w.Header().Set("Content-Type", "application/json;version="+a.version)
 	w.Write(b)
 }
 
@@ -81,19 +85,19 @@ func (a *httpAPI) Filter(w http.ResponseWriter, req *http.Request) {
 
 	err := req.ParseForm()
 	if err != nil {
-		ErrorResponse(w, http.StatusBadRequest, "Error parsing the query:", err.Error())
+		a.ErrorResponse(w, http.StatusBadRequest, "Error parsing the query:", err.Error())
 		return
 	}
 	page, perPage, err := utils.ParsePagingParams(
 		req.Form.Get(utils.GetParamPage), req.Form.Get(utils.GetParamPerPage), MaxPerPage)
 	if err != nil {
-		ErrorResponse(w, http.StatusBadRequest, "Error parsing query parameters:", err.Error())
+		a.ErrorResponse(w, http.StatusBadRequest, "Error parsing query parameters:", err.Error())
 		return
 	}
 
 	services, total, err := a.controller.filter(path, op, value, page, perPage)
 	if err != nil {
-		ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		a.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -107,10 +111,10 @@ func (a *httpAPI) Filter(w http.ResponseWriter, req *http.Request) {
 
 	b, err := json.Marshal(coll)
 	if err != nil {
-		ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		a.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json;version="+APIVersion)
+	w.Header().Set("Content-Type", "application/json;version="+a.version)
 	w.Write(b)
 }
 
@@ -122,21 +126,21 @@ func (a *httpAPI) Get(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		switch err.(type) {
 		case *NotFoundError:
-			ErrorResponse(w, http.StatusNotFound, err.Error())
+			a.ErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		default:
-			ErrorResponse(w, http.StatusInternalServerError, "Error retrieving the service:", err.Error())
+			a.ErrorResponse(w, http.StatusInternalServerError, "Error retrieving the service:", err.Error())
 			return
 		}
 	}
 
 	b, err := json.Marshal(s)
 	if err != nil {
-		ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		a.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json;version="+APIVersion)
+	w.Header().Set("Content-Type", "application/json;version="+a.version)
 	w.Write(b)
 }
 
@@ -145,24 +149,24 @@ func (a *httpAPI) createService(w http.ResponseWriter, s *Service) {
 	if err != nil {
 		switch err.(type) {
 		case *ConflictError:
-			ErrorResponse(w, http.StatusConflict, "Error creating the registration:", err.Error())
+			a.ErrorResponse(w, http.StatusConflict, "Error creating the registration:", err.Error())
 			return
 		case *BadRequestError:
-			ErrorResponse(w, http.StatusBadRequest, "Invalid service registration:", err.Error())
+			a.ErrorResponse(w, http.StatusBadRequest, "Invalid service registration:", err.Error())
 			return
 		default:
-			ErrorResponse(w, http.StatusInternalServerError, "Error creating the registration:", err.Error())
+			a.ErrorResponse(w, http.StatusInternalServerError, "Error creating the registration:", err.Error())
 			return
 		}
 	}
 
 	b, err := json.Marshal(addedS)
 	if err != nil {
-		ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		a.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json;version="+APIVersion)
+	w.Header().Set("Content-Type", "application/json;version="+a.version)
 	w.Header().Set("Location", fmt.Sprintf("/%s", addedS.ID))
 	w.WriteHeader(http.StatusCreated)
 	w.Write(b)
@@ -172,19 +176,19 @@ func (a *httpAPI) createService(w http.ResponseWriter, s *Service) {
 func (a *httpAPI) Post(w http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		ErrorResponse(w, http.StatusBadRequest, err.Error())
+		a.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	req.Body.Close()
 
 	var s Service
 	if err := json.Unmarshal(body, &s); err != nil {
-		ErrorResponse(w, http.StatusBadRequest, "Error processing the request:", err.Error())
+		a.ErrorResponse(w, http.StatusBadRequest, "Error processing the request:", err.Error())
 		return
 	}
 
 	if s.ID != "" {
-		ErrorResponse(w, http.StatusBadRequest, "Creating a service with defined ID is not possible using a POST request.")
+		a.ErrorResponse(w, http.StatusBadRequest, "Creating a service with defined ID is not possible using a POST request.")
 		return
 	}
 
@@ -200,13 +204,13 @@ func (a *httpAPI) Put(w http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	req.Body.Close()
 	if err != nil {
-		ErrorResponse(w, http.StatusBadRequest, err.Error())
+		a.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	var s Service
 	if err := json.Unmarshal(body, &s); err != nil {
-		ErrorResponse(w, http.StatusBadRequest, "Error processing the request:", err.Error())
+		a.ErrorResponse(w, http.StatusBadRequest, "Error processing the request:", err.Error())
 		return
 	}
 
@@ -219,24 +223,24 @@ func (a *httpAPI) Put(w http.ResponseWriter, req *http.Request) {
 			a.createService(w, &s)
 			return
 		case *ConflictError:
-			ErrorResponse(w, http.StatusConflict, "Error updating the service:", err.Error())
+			a.ErrorResponse(w, http.StatusConflict, "Error updating the service:", err.Error())
 			return
 		case *BadRequestError:
-			ErrorResponse(w, http.StatusBadRequest, "Invalid service registration:", err.Error())
+			a.ErrorResponse(w, http.StatusBadRequest, "Invalid service registration:", err.Error())
 			return
 		default:
-			ErrorResponse(w, http.StatusInternalServerError, "Error updating the service:", err.Error())
+			a.ErrorResponse(w, http.StatusInternalServerError, "Error updating the service:", err.Error())
 			return
 		}
 	}
 
 	b, err := json.Marshal(updatedS)
 	if err != nil {
-		ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		a.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json;version="+APIVersion)
+	w.Header().Set("Content-Type", "application/json;version="+a.version)
 	w.WriteHeader(http.StatusOK)
 	w.Write(b)
 }
@@ -249,14 +253,30 @@ func (a *httpAPI) Delete(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		switch err.(type) {
 		case *NotFoundError:
-			ErrorResponse(w, http.StatusNotFound, err.Error())
+			a.ErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		default:
-			ErrorResponse(w, http.StatusInternalServerError, "Error deleting the service:", err.Error())
+			a.ErrorResponse(w, http.StatusInternalServerError, "Error deleting the service:", err.Error())
 			return
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json;version="+APIVersion)
+	w.Header().Set("Content-Type", "application/json;version="+a.version)
 	w.WriteHeader(http.StatusOK)
+}
+
+// a.ErrorResponse writes error to HTTP ResponseWriter
+func (a *httpAPI) ErrorResponse(w http.ResponseWriter, code int, msgs ...string) {
+	msg := strings.Join(msgs, " ")
+	e := &Error{
+		code,
+		msg,
+	}
+	if code >= 500 {
+		logger.Println("ERROR:", msg)
+	}
+	b, _ := json.Marshal(e)
+	w.Header().Set("Content-Type", "application/json;version="+a.version)
+	w.WriteHeader(code)
+	w.Write(b)
 }
