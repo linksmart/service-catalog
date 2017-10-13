@@ -144,8 +144,12 @@ func setupRouter(config *Config) (*router, func() error, error) {
 		return nil, nil, fmt.Errorf("Failed to start the controller: %v", err.Error())
 	}
 
+	//create mqtt api
+	catalog.NewMQTTAPI(controller,config.MQTTConf)
+
+
 	// Create catalog API object
-	api := catalog.NewHTTPAPI(controller, config.Description, Version)
+	httpAPI := catalog.NewHTTPAPI(controller, config.Description, Version)
 
 	commonHandlers := alice.New(
 		context.ClearHandler,
@@ -167,17 +171,17 @@ func setupRouter(config *Config) (*router, func() error, error) {
 		commonHandlers = commonHandlers.Append(v.Handler)
 	}
 
-	// Configure http api router
+	// Configure http httpAPI router
 	r := newRouter()
 	// Handlers
-	r.get("/", commonHandlers.ThenFunc(api.List))
-	r.post("/", commonHandlers.ThenFunc(api.Post))
+	r.get("/", commonHandlers.ThenFunc(httpAPI.List))
+	r.post("/", commonHandlers.ThenFunc(httpAPI.Post))
 	// Accept an id with zero or one slash: [^/]+/?[^/]*
 	// -> [^/]+ one or more of anything but slashes /? optional slash [^/]* zero or more of anything but slashes
-	r.get("/{id:[^/]+/?[^/]*}", commonHandlers.ThenFunc(api.Get))
-	r.put("/{id:[^/]+/?[^/]*}", commonHandlers.ThenFunc(api.Put))
-	r.delete("/{id:[^/]+/?[^/]*}", commonHandlers.ThenFunc(api.Delete))
-	r.get("/{path}/{op}/{value:.*}", commonHandlers.ThenFunc(api.Filter))
+	r.get("/{id:[^/]+/?[^/]*}", commonHandlers.ThenFunc(httpAPI.Get))
+	r.put("/{id:[^/]+/?[^/]*}", commonHandlers.ThenFunc(httpAPI.Put))
+	r.delete("/{id:[^/]+/?[^/]*}", commonHandlers.ThenFunc(httpAPI.Delete))
+	r.get("/{path}/{op}/{value:.*}", commonHandlers.ThenFunc(httpAPI.Filter))
 
 	return r, controller.Stop, nil
 }

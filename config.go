@@ -14,12 +14,14 @@ import (
 )
 
 type Config struct {
-	Description  string        `json:"description"`
-	DnssdEnabled bool          `json:"dnssdEnabled"`
-	BindAddr     string        `json:"bindAddr"`
-	BindPort     int           `json:"bindPort"`
-	Storage      StorageConfig `json:"storage"`
-	Auth         ValidatorConf `json:"auth"`
+	Description  string             `json:"description"`
+	DnssdEnabled bool               `json:"dnssdEnabled"`
+	BindAddr     string             `json:"bindAddr"`
+	BindPort     int                `json:"bindPort"`
+	Storage      StorageConfig      `json:"storage"`
+	Auth         ValidatorConf      `json:"auth"`
+	MQTTConf	 []catalog.MQTTConf	`json:"brokers"`
+
 }
 
 type StorageConfig struct {

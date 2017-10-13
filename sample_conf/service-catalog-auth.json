@@ -7,7 +7,7 @@
   "staticDir": "./static",
   "storage": {
     "type": "memory"
-  }
+  },
   "auth": {
     "enabled": true,
     "provider": "provider-name",
@@ -30,5 +30,30 @@
         }
       ]
     }
-  }
+  },
+  "brokers": [
+    {
+      "id": "MQTTbroker1",
+      "url":"tcp://broker1:1883",
+      "topic":"LS/HDS/service_unique_id/OGC/1.0/Datastream",
+      "qos":1,
+      "username":"",
+      "password":"",
+      "caFile":"",
+      "certFile":"",
+      "keyFile":""
+    },
+    {
+      "id": "MQTTbroker2",
+      "url":"tcp://broker2:1883",
+      "topic":"LS/HDS/service_unique_id/OGC/1.0/Datastream",
+      "qos":1,
+      "username":"",
+      "password":"",
+      "caFile":"",
+      "certFile":"",
+      "keyFile":""
+    }
+
+  ]
 }
