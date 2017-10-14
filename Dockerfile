@@ -1,7 +1,7 @@
-FROM debian:stable-slim
+FROM alpine
 
 COPY sample_conf/* /conf/
-COPY bin /home
+COPY bin/service-catalog-linux-amd64 /home/
 
 WORKDIR /home
 RUN chmod +x service-catalog-linux-amd64
