@@ -5,11 +5,10 @@ package catalog
 import (
 	"encoding/json"
 	"fmt"
-	"sync"
-	"time"
-
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/pborman/uuid"
+	"sync"
+	"time"
 )
 
 const (
@@ -22,26 +21,29 @@ func (e *MqttError) Error() string { return e.s }
 
 // MQTT describes a MQTT Connector
 type MQTTConf struct {
-	ID       string `json:"id"`
-	URL      string `json:"url"`
-	Topic    string `json:"topic"`
-	QoS      byte   `json:"qos"`
-	Username string `json:"username,omitempty"`
-	Password string `json:"password,omitempty"`
-	CaFile   string `json:"caFile,omitempty"`
-	CertFile string `json:"certFile,omitempty"`
-	KeyFile  string `json:"keyFile,omitempty"`
+	Brokers   []Broker `json:"brokers"`
+	RegTopic  string   `json:"regTopic"`
+	WillTopic string   `json:"willTopic"`
+}
+type Broker struct {
+	ID       string   `json:"id"`
+	URL      string   `json:"url"`
+	Topics   []string `json:"topic"`
+	QoS      byte     `json:"qos"`
+	Username string   `json:"username,omitempty"`
+	Password string   `json:"password,omitempty"`
+	CaFile   string   `json:"caFile,omitempty"`
+	CertFile string   `json:"certFile,omitempty"`
+	KeyFile  string   `json:"keyFile,omitempty"`
 }
 
 type MQTTConnector struct {
 	sync.Mutex
-	//registryClient registry.Client
-	controller *Controller
-	managers       map[string]*ClientManager
-	// cache of resource->ds
-	//cache map[string]*registry.DataSource
-	// failed mqtt registrations
-	failedRegistrations map[string] MQTTConf
+	controller          *Controller
+	managers            map[string]*ClientManager
+	RegTopic            string
+	WillTopic           string
+	failedRegistrations map[string]Broker
 }
 
 type ClientManager struct {
@@ -58,18 +60,24 @@ type Subscription struct {
 	topic     string
 	qos       byte
 	receivers int
+	IsWill    bool
 }
 
-func NewMQTTAPI(controller *Controller,mqttConfs [] MQTTConf) error {
+func NewMQTTAPI(controller *Controller, mqttConf MQTTConf) error {
 	c := &MQTTConnector{
 		//registryClient:      registryClient,
-		controller:             controller,
+		controller:          controller,
 		managers:            make(map[string]*ClientManager),
-		failedRegistrations: make(map[string] MQTTConf),
+		failedRegistrations: make(map[string]Broker),
+		RegTopic:            mqttConf.RegTopic,
+		WillTopic:           mqttConf.WillTopic,
 	}
 
-	for _,mqttConf := range mqttConfs{
-		c.failedRegistrations[mqttConf.ID] = mqttConf
+	for _, broker := range mqttConf.Brokers {
+
+		broker.Topics = append(broker.Topics, mqttConf.RegTopic, mqttConf.WillTopic)
+
+		c.failedRegistrations[broker.ID] = broker
 	}
 
 	go c.retryRegistrations()
@@ -81,8 +89,8 @@ func (c *MQTTConnector) retryRegistrations() {
 	for {
 		time.Sleep(mqttRetryInterval * time.Second)
 		c.Lock()
-		for id, mqttConf := range c.failedRegistrations {
-			err := c.register(mqttConf)
+		for id, broker := range c.failedRegistrations {
+			err := c.register(broker)
 			if err != nil {
 				fmt.Sprintf("MQTT: Error registering subscription: %v. Retrying in %ds", err, mqttRetryInterval)
 				continue
@@ -93,22 +101,24 @@ func (c *MQTTConnector) retryRegistrations() {
 	}
 }
 
-func (c *MQTTConnector) register(mqttConf MQTTConf) error {
+func (c *MQTTConnector) register(broker Broker) error {
 
-	if _, exists := c.managers[mqttConf.URL]; !exists { // NO CLIENT FOR THIS BROKER
+	if _, exists := c.managers[broker.URL]; !exists { // NO CLIENT FOR THIS BROKER
 		manager := &ClientManager{
-			url:           mqttConf.URL,
+			url:           broker.URL,
 			subscriptions: make(map[string]*Subscription),
 		}
 
-		manager.subscriptions[mqttConf.Topic] = &Subscription{
-			topic:     mqttConf.Topic,
-			qos:       mqttConf.QoS,
-			receivers: 1,
+		for _, topic := range broker.Topics {
+			manager.subscriptions[topic] = &Subscription{
+				topic:     topic,
+				qos:       broker.QoS,
+				receivers: 1,
+				IsWill:    (topic == c.WillTopic),
+			}
 		}
-
 		opts := paho.NewClientOptions() // uses defaults: https://godoc.org/github.com/eclipse/paho.mqtt.golang#NewClientOptions
-		opts.AddBroker(mqttConf.URL)
+		opts.AddBroker(broker.URL)
 		opts.SetClientID(fmt.Sprintf("SC-%v", uuid.NewRandom()))
 		opts.SetConnectTimeout(5 * time.Second)
 		opts.SetOnConnectHandler(manager.onConnectHandler)
@@ -118,51 +128,58 @@ func (c *MQTTConnector) register(mqttConf MQTTConf) error {
 		if token := manager.client.Connect(); token.Wait() && token.Error() != nil {
 			return &MqttError(fmt.Sprintf("MQTT: Error connecting to broker: %v", token.Error()))
 		}
-		c.managers[mqttConf.URL] = manager
+		c.managers[broker.URL] = manager
 
 	} else { // THERE IS A CLIENT FOR THIS BROKER
-		manager := c.managers[mqttConf.URL]
+		manager := c.managers[broker.URL]
 
-		// TODO: check if another wildcard subscription matches the topic.
-		if _, exists := manager.subscriptions[mqttConf.Topic]; !exists { // NO SUBSCRIPTION FOR THIS TOPIC
-			subscription := &Subscription{
-				topic:     mqttConf.Topic,
-				qos:       mqttConf.QoS,
-				receivers: 1,
-			}
-			// Subscribe
-			if token := manager.client.Subscribe(subscription.topic, subscription.qos, subscription.onMessage); token.Wait() && token.Error() != nil {
-				return &MqttError(fmt.Sprintf("MQTT: Error subscribing: %v", token.Error()))
-			}
-			manager.subscriptions[mqttConf.Topic] = subscription
-			return &MqttError(fmt.Sprintf("MQTT: %s: Subscribed to %s", mqttConf.URL, mqttConf.Topic))
+		for _, topic := range broker.Topics {
+			// TODO: check if another wildcard subscription matches the topic.
+			if _, exists := manager.subscriptions[topic]; !exists { // NO SUBSCRIPTION FOR THIS TOPIC
 
-		} else { // There is a subscription for this topic
-			return &MqttError(fmt.Sprintf("MQTT: %s: Already subscribed to %s", mqttConf.URL, mqttConf.Topic))
-			manager.subscriptions[mqttConf.Topic].receivers++
+				subscription := &Subscription{
+					topic:     topic,
+					qos:       broker.QoS,
+					receivers: 1,
+					IsWill:    (topic == c.WillTopic),
+				}
+
+				// Subscribe
+				if token := manager.client.Subscribe(subscription.topic, subscription.qos, subscription.onMessage); token.Wait() && token.Error() != nil {
+					return &MqttError(fmt.Sprintf("MQTT: Error subscribing: %v", token.Error()))
+				}
+				manager.subscriptions[topic] = subscription
+				return &MqttError(fmt.Sprintf("MQTT: %s: Subscribed to %s", broker.URL, topic))
+
+			} else { // There is a subscription for this topic
+				return &MqttError(fmt.Sprintf("MQTT: %s: Already subscribed to %s", broker.URL, topic))
+				manager.subscriptions[topic].receivers++
+			}
 		}
 	}
 
 	return nil
 }
 
-func (c *MQTTConnector) unregister(mqttConf MQTTConf) error {
-	manager := c.managers[mqttConf.URL]
-	manager.subscriptions[mqttConf.Topic].receivers--
+func (c *MQTTConnector) unregister(broker Broker) error {
+	manager := c.managers[broker.URL]
+	for _, topic := range broker.Topics {
+		manager.subscriptions[topic].receivers--
 
-	if manager.subscriptions[mqttConf.Topic].receivers == 0 {
-		// Unsubscribe
-		if token := manager.client.Unsubscribe(mqttConf.Topic); token.Wait() && token.Error() != nil {
-			return logger.Errorf("MQTT: Error unsubscribing: %v", token.Error())
+		if manager.subscriptions[topic].receivers == 0 {
+			// Unsubscribe
+			if token := manager.client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
+				return logger.Errorf("MQTT: Error unsubscribing: %v", token.Error())
+			}
+			delete(manager.subscriptions, topic)
+			logger.Printf("MQTT: %s: Unsubscribed from %s", broker.URL, topic)
 		}
-		delete(manager.subscriptions, mqttConf.Topic)
-		logger.Printf("MQTT: %s: Unsubscribed from %s", mqttConf.URL, mqttConf.Topic)
 	}
 	if len(manager.subscriptions) == 0 {
 		// Disconnect
 		manager.client.Disconnect(250)
-		delete(c.managers, mqttConf.URL)
-		logger.Printf("MQTT: %s: Disconnected!", mqttConf.URL)
+		delete(c.managers, broker.URL)
+		logger.Printf("MQTT: %s: Disconnected!", broker.URL)
 	}
 
 	return nil
@@ -194,5 +211,55 @@ func (s *Subscription) onMessage(client paho.Client, msg paho.Message) {
 		return
 	}
 
-	s.connector.controller.add(service)
+	s.createOrUpdate(service)
+
+}
+
+func (s *Subscription) createOrUpdate(service Service) {
+	_, err := s.connector.controller.update(service.ID, service)
+
+	if service.ID == "" { //There is no way SC can communicate back a new service's ID back to the service.
+		logger.Printf("MQTT: Cannot register a service without ID")
+		return
+	}
+
+	if s.IsWill {
+		s.connector.controller.delete(service.ID)
+		return
+	}
+
+	if err != nil {
+		switch err.(type) {
+		case *NotFoundError:
+			// Create a new service with the given id
+			s.createService(service)
+			return
+		case *ConflictError:
+			logger.Printf("MQTT: Error updating the service:%s", err.Error())
+			return
+		case *BadRequestError:
+			logger.Printf("MQTT: Invalid service registration:%s", err.Error())
+			return
+		default:
+			logger.Printf("MQTT: Error updating the service:%s", err.Error())
+			return
+		}
+	}
+}
+
+func (s *Subscription) createService(service Service) {
+	_, err := s.connector.controller.add(service)
+	if err != nil {
+		switch err.(type) {
+		case *ConflictError:
+			logger.Printf("MQTT: Error adding the service:%s", err.Error())
+			return
+		case *BadRequestError:
+			logger.Printf("MQTT: Invalid service registration:%s", err.Error())
+			return
+		default:
+			logger.Printf("MQTT: Error updating the service:%s", err.Error())
+			return
+		}
+	}
 }

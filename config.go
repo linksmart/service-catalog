@@ -20,8 +20,7 @@ type Config struct {
 	BindPort     int                `json:"bindPort"`
 	Storage      StorageConfig      `json:"storage"`
 	Auth         ValidatorConf      `json:"auth"`
-	MQTTConf	 []catalog.MQTTConf	`json:"brokers"`
-
+	MQTTConf	 catalog.MQTTConf	`json:"mqtt"`
 }
 
 type StorageConfig struct {

@@ -145,8 +145,7 @@ func setupRouter(config *Config) (*router, func() error, error) {
 	}
 
 	//create mqtt api
-	catalog.NewMQTTAPI(controller,config.MQTTConf)
-
+	catalog.NewMQTTAPI(controller, config.MQTTConf)
 
 	// Create catalog API object
 	httpAPI := catalog.NewHTTPAPI(controller, config.Description, Version)
