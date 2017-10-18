@@ -26,6 +26,12 @@
   version = "v3.0.0"
 
 [[projects]]
+  name = "github.com/eclipse/paho.mqtt.golang"
+  packages = [".","packets"]
+  revision = "aff15770515e3c57fc6109da73d42b0d46f7f483"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/farshidtz/elog"
   packages = ["."]
@@ -88,12 +94,12 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["bpf","internal/iana","internal/socket","ipv4","ipv6"]
+  packages = ["bpf","internal/iana","internal/socket","ipv4","ipv6","proxy","websocket"]
   revision = "57efc9c3d9f91fb3277f8da1cff370539c4d3dc5"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9a838ac76f3941b24bb00a8a63acb69068572725f83d120af6ea48def28fbb05"
+  inputs-digest = "8594f9f3bea60402cd739a405f677e6eb8bdf14e91b419922033657a0b80788f"
   solver-name = "gps-cdcl"
   solver-version = 1

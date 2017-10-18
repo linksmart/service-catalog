@@ -1,16 +1,14 @@
 package integration_test
 
 import (
-	"fmt"
-
-	paho "github.com/eclipse/paho.mqtt.golang"
-
-	"code.linksmart.eu/sc/service-catalog/catalog"
 	"encoding/json"
-
+	"fmt"
 	"os"
 	"testing"
 	"time"
+
+	"code.linksmart.eu/sc/service-catalog/catalog"
+	paho "github.com/eclipse/paho.mqtt.golang"
 )
 
 type ClientManager struct {

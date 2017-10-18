@@ -5,10 +5,11 @@ package catalog
 import (
 	"encoding/json"
 	"fmt"
-	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/pborman/uuid"
 	"sync"
 	"time"
+
+	paho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/pborman/uuid"
 )
 
 const (
