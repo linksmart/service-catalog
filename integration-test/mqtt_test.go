@@ -8,6 +8,7 @@ import (
 	"code.linksmart.eu/sc/service-catalog/catalog"
 	"encoding/json"
 
+	"os"
 	"testing"
 	"time"
 )
@@ -15,9 +16,10 @@ import (
 type ClientManager struct {
 	url    string
 	client paho.Client
-	t      *testing.T
 	c      chan bool
 }
+
+var manager *ClientManager
 
 func sameServices(s1, s2 *catalog.Service, checkID bool) bool {
 	// Compare IDs if specified
@@ -55,7 +57,7 @@ func sameServices(s1, s2 *catalog.Service, checkID bool) bool {
 }
 
 func (m *ClientManager) onConnectHandler(client paho.Client) {
-	fmt.Printf("MQTT: %s: Connected.", m.url)
+	fmt.Printf("MQTT: %s: Connected.\n", m.url)
 	m.client = client
 
 	close(m.c)
@@ -63,7 +65,7 @@ func (m *ClientManager) onConnectHandler(client paho.Client) {
 }
 
 func (m *ClientManager) onConnectionLostHandler(client paho.Client, err error) {
-	fmt.Printf("MQTT: %s: Connection lost: %v", m.url, err)
+	fmt.Printf("MQTT: %s: Connection lost: %v \n", m.url, err)
 }
 
 func MockedService(id string) *catalog.Service {
@@ -79,13 +81,12 @@ func MockedService(id string) *catalog.Service {
 	}
 }
 
-func TestMqtt(t *testing.T) {
-
+//TODO_: Improve this: with MQTT brokers runnning as docker images and the test script in another container. Use Bamboo to trigger this.
+func TestMain(m *testing.M) {
 	URL1 := "tcp://localhost:1883"
 
-	manager := &ClientManager{
+	manager = &ClientManager{
 		url: URL1,
-		t:   t,
 		c:   make(chan bool),
 	}
 	opts := paho.NewClientOptions() // uses defaults: https://godoc.org/github.com/eclipse/paho.mqtt.golang#NewClientOptions
@@ -101,14 +102,25 @@ func TestMqtt(t *testing.T) {
 		if token := manager.client.Connect(); token.Wait() && token.Error() != nil {
 			time.Sleep(1 * time.Second)
 		} else {
-			t.Log("connected to Broker")
+			fmt.Println("connected to Broker")
 			break
 		}
 	}
 	if counter == 100 {
-		t.Fatalf("Timed out waiting for broker")
+		fmt.Println("Timed out waiting for broker")
+		os.Exit(1)
 	}
 	<-manager.c
+
+	if m.Run() == 1 {
+		os.Exit(1)
+	}
+
+	manager.client.Disconnect(100)
+	os.Exit(0)
+}
+
+func TestCreateAndDelete(t *testing.T) {
 
 	//Publish a service
 	service := MockedService("1")
@@ -127,6 +139,61 @@ func TestMqtt(t *testing.T) {
 		t.Fatalf("The retrieved service is not the same as the added one:\n Added:\n %v \n Retrieved: \n %v", service, gotService)
 	}
 
+	//destroy the service
+	time.Sleep(2 * time.Second)
+
+	manager.client.Publish("LS/MOCK/1/SER/1.0/WILL", 1, false, b)
+
+	//verify if the service is deleted
+	time.Sleep(2 * time.Second)
+	gotService, err = httpRemoteClient.Get(service.ID)
+	if err != nil {
+		switch err.(type) {
+		case *catalog.NotFoundError:
+			break
+		default:
+			t.Fatalf("Error while fetching services:%v", err)
+		}
+	} else {
+		t.Fatalf("Service was fetched even after deletion")
+	}
+
+}
+
+func TestCreateUpdateAndDelete(t *testing.T) {
+
+	//Publish a service
+	service := MockedService("1")
+	b, _ := json.Marshal(service)
+	manager.client.Publish("LS/MOCK/1/SER/1.0/REG", 1, false, b)
+
+	time.Sleep(2 * time.Second)
+	//verify if the service is created
+	httpRemoteClient, _ := catalog.NewRemoteCatalogClient("http://localhost:8082", nil)
+	gotService, err := httpRemoteClient.Get(service.ID)
+	if err != nil {
+		t.Fatalf("Error retrieveing the service %s", service.ID)
+		return
+	}
+	if !sameServices(gotService, service, true) {
+		t.Fatalf("The retrieved service is not the same as the added one:\n Added:\n %v \n Retrieved: \n %v", service, gotService)
+	}
+
+	//update the service
+	service.TTL = 200
+	b, _ = json.Marshal(service)
+	manager.client.Publish("LS/MOCK/1/SER/1.0/REG", 1, false, b)
+
+	time.Sleep(2 * time.Second)
+	//verify if the service is created
+	gotService, err = httpRemoteClient.Get(service.ID)
+	if err != nil {
+		t.Fatalf("Error retrieveing the service %s", service.ID)
+		return
+	}
+	if !sameServices(gotService, service, true) {
+		t.Fatalf("The retrieved service is not the same as the added one:\n Added:\n %v \n Retrieved: \n %v", service, gotService)
+	}
 	//destroy the service
 	time.Sleep(2 * time.Second)
 

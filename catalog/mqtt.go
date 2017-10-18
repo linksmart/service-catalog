@@ -43,9 +43,10 @@ type MQTTConnector struct {
 }
 
 type ClientManager struct {
-	url    string
-	client paho.Client
-	// connector *MQTTConnector
+	url       string
+	id        string
+	client    paho.Client
+	connector *MQTTConnector
 	// total subscriptions for each topic in this manager
 	subscriptions map[string]*Subscription
 }
@@ -103,6 +104,8 @@ func (c *MQTTConnector) register(broker Broker) error {
 		manager := &ClientManager{
 			url:           broker.URL,
 			subscriptions: make(map[string]*Subscription),
+			connector:     c,
+			id:            broker.ID,
 		}
 
 		for _, topic := range broker.Topics {
@@ -192,6 +195,20 @@ func (m *ClientManager) onConnectHandler(client paho.Client) {
 		}
 		logger.Printf("MQTT: %s: Subscribed to %s", m.url, subscription.topic)
 	}
+
+	//Add this broker to list of MQTT brokers
+	m.addBrokerAsService()
+}
+func (manager *ClientManager) addBrokerAsService() {
+	service := Service{
+		ID:          "MQTTBroker_" + manager.id,
+		Description: "MQTT Broker",
+		APIs: []API{API{
+			Protocol: "MQTT",
+			URL:      manager.url,
+		}},
+	}
+	manager.connector.controller.add(service)
 }
 
 func (m *ClientManager) onConnectionLostHandler(client paho.Client, err error) {
@@ -209,27 +226,26 @@ func (s *Subscription) onMessage(client paho.Client, msg paho.Message) {
 		return
 	}
 
-	s.createOrUpdate(service)
+	if service.ID == "" {
+		logger.Printf("MQTT: Invalid service: No ID provided")
+		return
+	}
+	if s.IsWill {
+		s.connector.controller.delete(service.ID)
+	} else {
+		s.connector.createOrUpdate(service)
+	}
 
 }
 
-func (s *Subscription) createOrUpdate(service Service) {
+func (connector *MQTTConnector) createOrUpdate(service Service) {
 
-	if service.ID == "" { //There is no way SC can communicate back a new service's ID back to the service.
-		logger.Printf("MQTT: Cannot register a service without ID")
-		return
-	}
-
-	if s.IsWill {
-		s.connector.controller.delete(service.ID)
-		return
-	}
-	_, err := s.connector.controller.update(service.ID, service)
+	_, err := connector.controller.update(service.ID, service)
 	if err != nil {
 		switch err.(type) {
 		case *NotFoundError:
 			// Create a new service with the given id
-			s.createService(service)
+			connector.createService(service)
 			return
 		case *ConflictError:
 			logger.Printf("MQTT: Error updating the service:%s", err.Error())
@@ -244,8 +260,8 @@ func (s *Subscription) createOrUpdate(service Service) {
 	}
 }
 
-func (s *Subscription) createService(service Service) {
-	_, err := s.connector.controller.add(service)
+func (connector *MQTTConnector) createService(service Service) {
+	_, err := connector.controller.add(service)
 	if err != nil {
 		switch err.(type) {
 		case *ConflictError:
