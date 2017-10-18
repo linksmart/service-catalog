@@ -62,7 +62,7 @@ func setupRouter() (*mux.Router, func(), error) {
 	}, nil
 }
 
-func mockedService(id string) *Service {
+func MockedService(id string) *Service {
 	return &Service{
 		ID:          "TestHost/TestService" + id,
 		Meta:        map[string]interface{}{"test-id": id},
@@ -157,7 +157,7 @@ func TestCreate(t *testing.T) {
 	defer ts.Close()
 	defer shutdown()
 
-	service := mockedService("1")
+	service := MockedService("1")
 	service.ID = ""
 	b, _ := json.Marshal(service)
 
@@ -218,7 +218,7 @@ func TestRetrieve(t *testing.T) {
 	defer ts.Close()
 	defer shutdown()
 
-	service := mockedService("1")
+	service := MockedService("1")
 	b, _ := json.Marshal(service)
 
 	// Create
@@ -267,7 +267,7 @@ func TestUpdate(t *testing.T) {
 	defer ts.Close()
 	defer shutdown()
 
-	service := mockedService("1")
+	service := MockedService("1")
 	b, _ := json.Marshal(service)
 
 	// Create
@@ -279,7 +279,7 @@ func TestUpdate(t *testing.T) {
 	}
 
 	// Update
-	service2 := mockedService("1")
+	service2 := MockedService("1")
 	service2.Description = "Updated Test Service"
 	b, _ = json.Marshal(service2)
 
@@ -314,7 +314,7 @@ func TestUpdate(t *testing.T) {
 	}
 
 	// Create with user-defined ID (PUT for creation)
-	service4 := mockedService("1")
+	service4 := MockedService("1")
 	b, _ = json.Marshal(service4)
 	url = ts.URL + "/service123"
 	t.Log("Calling PUT", url)
@@ -347,7 +347,7 @@ func TestDelete(t *testing.T) {
 	defer ts.Close()
 	defer shutdown()
 
-	service := mockedService("1")
+	service := MockedService("1")
 	b, _ := json.Marshal(service)
 
 	// Create
@@ -406,9 +406,9 @@ func TestFilter(t *testing.T) {
 	defer shutdown()
 
 	// create 3 services
-	service1 := mockedService("1")
-	service2 := mockedService("2")
-	service3 := mockedService("3")
+	service1 := MockedService("1")
+	service2 := MockedService("2")
+	service3 := MockedService("3")
 
 	// Add
 	url := ts.URL + "/"
