@@ -16,30 +16,31 @@ const (
 	mqttRetryInterval = 10 // seconds
 )
 
-// MQTT describes a MQTT Connector
 type MQTTConf struct {
-	Brokers   []Broker `json:"brokers"`
-	RegTopic  string   `json:"regTopic"`
-	WillTopic string   `json:"willTopic"`
+	Brokers         []Broker `json:"brokers"`
+	CommonRegTopic  []string `json:"commonRegTopics"`
+	CommonWillTopic []string `json:"commonWillTopics"`
 }
+
 type Broker struct {
-	ID       string   `json:"id"`
-	URL      string   `json:"url"`
-	Topics   []string `json:"topic"`
-	QoS      byte     `json:"qos"`
-	Username string   `json:"username,omitempty"`
-	Password string   `json:"password,omitempty"`
-	CaFile   string   `json:"caFile,omitempty"`
-	CertFile string   `json:"certFile,omitempty"`
-	KeyFile  string   `json:"keyFile,omitempty"`
+	ID         string   `json:"id"`
+	URL        string   `json:"url"`
+	RegTopics  []string `json:"regTopics"`
+	WillTopics []string `json:"willTopics"`
+	QoS        byte     `json:"qos"`
+	Username   string   `json:"username,omitempty"`
+	Password   string   `json:"password,omitempty"`
+	//CaFile     string   `json:"caFile,omitempty"`
+	//CertFile   string   `json:"certFile,omitempty"`
+	//KeyFile    string   `json:"keyFile,omitempty"`
+	topics []string
+	will   map[string]bool
 }
 
 type MQTTConnector struct {
 	sync.Mutex
 	controller          *Controller
 	managers            map[string]*ClientManager
-	RegTopic            string
-	WillTopic           string
 	failedRegistrations map[string]Broker
 }
 
@@ -54,28 +55,35 @@ type ClientManager struct {
 
 type Subscription struct {
 	connector *MQTTConnector
-	//url       string
 	topic     string
 	qos       byte
 	receivers int
-	IsWill    bool
+	will      bool
 }
 
 func NewMQTTAPI(controller *Controller, mqttConf MQTTConf) error {
 	c := &MQTTConnector{
-		//registryClient:      registryClient,
 		controller:          controller,
 		managers:            make(map[string]*ClientManager),
 		failedRegistrations: make(map[string]Broker),
-		RegTopic:            mqttConf.RegTopic,
-		WillTopic:           mqttConf.WillTopic,
 	}
 
 	for _, broker := range mqttConf.Brokers {
+		broker.will = make(map[string]bool)
+		for _, topic := range append(mqttConf.CommonWillTopic, broker.WillTopics...) {
+			broker.will[topic] = true
+		}
+		for _, topics := range [][]string{mqttConf.CommonRegTopic, mqttConf.CommonWillTopic, broker.RegTopics, broker.WillTopics} {
+			broker.topics = append(broker.topics, topics...)
+		}
 
-		broker.Topics = append(broker.Topics, mqttConf.RegTopic, mqttConf.WillTopic)
-
-		c.failedRegistrations[broker.ID] = broker
+		err := c.register(broker)
+		if err != nil {
+			logger.Printf("MQTT: Error registering subscription: %v. Retrying in %ds", err, mqttRetryInterval)
+			c.failedRegistrations[broker.ID] = broker
+		}
+		//broker.Topics = append(broker.RegTopics, mqttConf.RegTopic, mqttConf.WillTopic)
+		//c.failedRegistrations[broker.ID] = broker
 	}
 
 	go c.retryRegistrations()
@@ -100,7 +108,8 @@ func (c *MQTTConnector) retryRegistrations() {
 }
 
 func (c *MQTTConnector) register(broker Broker) error {
-
+	// TODO
+	// the else section can be removed because no one will use two broker configuration blocks for the same broker
 	if _, exists := c.managers[broker.URL]; !exists { // NO CLIENT FOR THIS BROKER
 		manager := &ClientManager{
 			url:           broker.URL,
@@ -109,21 +118,28 @@ func (c *MQTTConnector) register(broker Broker) error {
 			id:            broker.ID,
 		}
 
-		for _, topic := range broker.Topics {
+		for _, topic := range broker.topics {
 			manager.subscriptions[topic] = &Subscription{
 				topic:     topic,
 				qos:       broker.QoS,
 				receivers: 1,
-				IsWill:    (topic == c.WillTopic),
+				will:      broker.will[topic],
 				connector: c,
 			}
 		}
+
 		opts := paho.NewClientOptions() // uses defaults: https://godoc.org/github.com/eclipse/paho.mqtt.golang#NewClientOptions
 		opts.AddBroker(broker.URL)
 		opts.SetClientID(fmt.Sprintf("SC-%v", uuid.NewRandom()))
 		opts.SetConnectTimeout(5 * time.Second)
 		opts.SetOnConnectHandler(manager.onConnectHandler)
 		opts.SetConnectionLostHandler(manager.onConnectionLostHandler)
+		if broker.Username != "" {
+			opts.SetUsername(broker.Username)
+			opts.SetPassword(broker.Password)
+		}
+		// TODO: add support for certificate auth
+		//
 		manager.client = paho.NewClient(opts)
 
 		if token := manager.client.Connect(); token.Wait() && token.Error() != nil {
@@ -134,7 +150,7 @@ func (c *MQTTConnector) register(broker Broker) error {
 	} else { // THERE IS A CLIENT FOR THIS BROKER
 		manager := c.managers[broker.URL]
 
-		for _, topic := range broker.Topics {
+		for _, topic := range broker.topics {
 			// TODO: check if another wildcard subscription matches the topic.
 			if _, exists := manager.subscriptions[topic]; !exists { // NO SUBSCRIPTION FOR THIS TOPIC
 
@@ -142,7 +158,7 @@ func (c *MQTTConnector) register(broker Broker) error {
 					topic:     topic,
 					qos:       broker.QoS,
 					receivers: 1,
-					IsWill:    (topic == c.WillTopic),
+					will:      broker.will[topic],
 					connector: c,
 				}
 
@@ -151,37 +167,13 @@ func (c *MQTTConnector) register(broker Broker) error {
 					return fmt.Errorf("MQTT: Error subscribing: %v", token.Error())
 				}
 				manager.subscriptions[topic] = subscription
-				return fmt.Errorf("MQTT: %s: Subscribed to %s", broker.URL, topic)
+				logger.Printf("MQTT: %s: Subscribed to %s %s", broker.URL, topic, subscription.printIfWill())
 
-			} else { // There is a subscription for this topic
-				return fmt.Errorf("MQTT: %s: Already subscribed to %s", broker.URL, topic)
+			} else { // THERE IS A SUBSCRIPTION FOR THIS TOPIC
+				logger.Printf("MQTT: %s: Already subscribed to %s", broker.URL, topic)
 				manager.subscriptions[topic].receivers++
 			}
 		}
-	}
-
-	return nil
-}
-
-func (c *MQTTConnector) unregister(broker Broker) error {
-	manager := c.managers[broker.URL]
-	for _, topic := range broker.Topics {
-		manager.subscriptions[topic].receivers--
-
-		if manager.subscriptions[topic].receivers == 0 {
-			// Unsubscribe
-			if token := manager.client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
-				return logger.Errorf("MQTT: Error unsubscribing: %v", token.Error())
-			}
-			delete(manager.subscriptions, topic)
-			logger.Printf("MQTT: %s: Unsubscribed from %s", broker.URL, topic)
-		}
-	}
-	if len(manager.subscriptions) == 0 {
-		// Disconnect
-		manager.client.Disconnect(250)
-		delete(c.managers, broker.URL)
-		logger.Printf("MQTT: %s: Disconnected!", broker.URL)
 	}
 
 	return nil
@@ -194,12 +186,13 @@ func (m *ClientManager) onConnectHandler(client paho.Client) {
 		if token := m.client.Subscribe(subscription.topic, subscription.qos, subscription.onMessage); token.Wait() && token.Error() != nil {
 			logger.Printf("MQTT: %s: Error subscribing: %v", m.url, token.Error())
 		}
-		logger.Printf("MQTT: %s: Subscribed to %s", m.url, subscription.topic)
+		logger.Printf("MQTT: %s: Subscribed to %s %s", m.url, subscription.topic, subscription.printIfWill())
 	}
 
 	//Add this broker to list of MQTT brokers
 	m.addBrokerAsService()
 }
+
 func (manager *ClientManager) addBrokerAsService() {
 	service := Service{
 		ID:          "MQTTBroker_" + manager.id,
@@ -231,12 +224,19 @@ func (s *Subscription) onMessage(client paho.Client, msg paho.Message) {
 		logger.Printf("MQTT: Invalid service: No ID provided")
 		return
 	}
-	if s.IsWill {
+	if s.will {
 		s.connector.controller.delete(service.ID)
 	} else {
 		s.connector.createOrUpdate(service)
 	}
 
+}
+
+func (s *Subscription) printIfWill() string {
+	if s.will {
+		return "(will topic)"
+	}
+	return ""
 }
 
 func (connector *MQTTConnector) createOrUpdate(service Service) {

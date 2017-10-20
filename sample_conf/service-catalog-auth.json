@@ -36,6 +36,8 @@
       {
         "id": "MQTTbroker1",
         "url":"tcp://broker1:1883",
+        "regTopics": [""],
+        "willTopics": [""],
         "qos":1,
         "username":"",
         "password":"",
@@ -46,6 +48,8 @@
       {
         "id": "MQTTbroker2",
         "url":"tcp://broker2:1883",
+        "regTopics": [""],
+        "willTopics": [""],
         "qos":1,
         "username":"",
         "password":"",
@@ -54,7 +58,7 @@
         "keyFile":""
       }
     ],
-    "regTopic":  "LS/+/+/SER/1.0/REG",
-    "willTopic": "LS/+/+/SER/1.0/WILL"
+    "commonRegTopic":  ["LS/+/+/SER/1.0/REG"],
+    "commonWillTopic": ["LS/+/+/SER/1.0/WILL"]
   }
 }

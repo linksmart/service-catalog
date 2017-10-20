@@ -2,13 +2,14 @@ package integration_test
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"os"
 	"testing"
 	"time"
 
 	"code.linksmart.eu/sc/service-catalog/catalog"
 	paho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/satori/go.uuid"
 )
 
 type ClientManager struct {
@@ -18,6 +19,8 @@ type ClientManager struct {
 }
 
 var manager *ClientManager
+
+const sleepTime = 2 * time.Second
 
 func sameServices(s1, s2 *catalog.Service, checkID bool) bool {
 	// Compare IDs if specified
@@ -55,7 +58,7 @@ func sameServices(s1, s2 *catalog.Service, checkID bool) bool {
 }
 
 func (m *ClientManager) onConnectHandler(client paho.Client) {
-	fmt.Printf("MQTT: %s: Connected.\n", m.url)
+	log.Printf("MQTT: %s: Connected.\n", m.url)
 	m.client = client
 
 	close(m.c)
@@ -63,7 +66,7 @@ func (m *ClientManager) onConnectHandler(client paho.Client) {
 }
 
 func (m *ClientManager) onConnectionLostHandler(client paho.Client, err error) {
-	fmt.Printf("MQTT: %s: Connection lost: %v \n", m.url, err)
+	log.Printf("MQTT: %s: Connection lost: %v \n", m.url, err)
 }
 
 func MockedService(id string) *catalog.Service {
@@ -81,7 +84,7 @@ func MockedService(id string) *catalog.Service {
 
 //TODO_: Improve this: with MQTT brokers runnning as docker images and the test script in another container. Use Bamboo to trigger this.
 func TestMain(m *testing.M) {
-	URL1 := "tcp://localhost:1883"
+	URL1 := "tcp://test.mosquitto.org:1883"
 
 	manager = &ClientManager{
 		url: URL1,
@@ -89,24 +92,23 @@ func TestMain(m *testing.M) {
 	}
 	opts := paho.NewClientOptions() // uses defaults: https://godoc.org/github.com/eclipse/paho.mqtt.golang#NewClientOptions
 	opts.AddBroker(manager.url)
-	opts.SetClientID(fmt.Sprintf("sc-tester-%v", 1))
+	opts.SetClientID(uuid.NewV4().String())
 	opts.SetConnectTimeout(5 * time.Second)
 	opts.SetOnConnectHandler(manager.onConnectHandler)
 	opts.SetConnectionLostHandler(manager.onConnectionLostHandler)
 	manager.client = paho.NewClient(opts)
-	counter := 1
-	for ; counter < 100; counter++ {
 
+	for counter := 1; ; counter++ {
 		if token := manager.client.Connect(); token.Wait() && token.Error() != nil {
 			time.Sleep(1 * time.Second)
 		} else {
-			fmt.Println("connected to Broker")
+			log.Println("connected to Broker")
 			break
 		}
-	}
-	if counter == 100 {
-		fmt.Println("Timed out waiting for broker")
-		os.Exit(1)
+		log.Println("Waiting for broker", manager.url)
+		if counter == 100 {
+			log.Fatalln("Timed out waiting for broker")
+		}
 	}
 	<-manager.c
 
@@ -125,7 +127,7 @@ func TestCreateAndDelete(t *testing.T) {
 	b, _ := json.Marshal(service)
 	manager.client.Publish("LS/MOCK/1/SER/1.0/REG", 1, false, b)
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(sleepTime)
 	//verify if the service is created
 	httpRemoteClient, _ := catalog.NewRemoteCatalogClient("http://localhost:8082", nil)
 	gotService, err := httpRemoteClient.Get(service.ID)
@@ -138,12 +140,12 @@ func TestCreateAndDelete(t *testing.T) {
 	}
 
 	//destroy the service
-	time.Sleep(2 * time.Second)
+	time.Sleep(sleepTime)
 
 	manager.client.Publish("LS/MOCK/1/SER/1.0/WILL", 1, false, b)
 
 	//verify if the service is deleted
-	time.Sleep(2 * time.Second)
+	time.Sleep(sleepTime)
 	gotService, err = httpRemoteClient.Get(service.ID)
 	if err != nil {
 		switch err.(type) {
@@ -165,7 +167,7 @@ func TestCreateUpdateAndDelete(t *testing.T) {
 	b, _ := json.Marshal(service)
 	manager.client.Publish("LS/MOCK/1/SER/1.0/REG", 1, false, b)
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(sleepTime)
 	//verify if the service is created
 	httpRemoteClient, _ := catalog.NewRemoteCatalogClient("http://localhost:8082", nil)
 	gotService, err := httpRemoteClient.Get(service.ID)
@@ -182,7 +184,7 @@ func TestCreateUpdateAndDelete(t *testing.T) {
 	b, _ = json.Marshal(service)
 	manager.client.Publish("LS/MOCK/1/SER/1.0/REG", 1, false, b)
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(sleepTime)
 	//verify if the service is created
 	gotService, err = httpRemoteClient.Get(service.ID)
 	if err != nil {
@@ -193,12 +195,12 @@ func TestCreateUpdateAndDelete(t *testing.T) {
 		t.Fatalf("The retrieved service is not the same as the added one:\n Added:\n %v \n Retrieved: \n %v", service, gotService)
 	}
 	//destroy the service
-	time.Sleep(2 * time.Second)
+	time.Sleep(sleepTime)
 
 	manager.client.Publish("LS/MOCK/1/SER/1.0/WILL", 1, false, b)
 
 	//verify if the service is deleted
-	time.Sleep(2 * time.Second)
+	time.Sleep(sleepTime)
 	gotService, err = httpRemoteClient.Get(service.ID)
 	if err != nil {
 		switch err.(type) {
