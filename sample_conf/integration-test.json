@@ -1,0 +1,22 @@
+{
+  "description": "Integration Test Service Catalog",
+  "dnssdEnabled": true,
+  "bindAddr": "0.0.0.0",
+  "bindPort": 8082,
+  "storage": {
+    "type": "memory"
+  },
+  "mqtt":{
+    "brokers": [
+      {
+        "id": "MQTTbroker1",
+        "url":"tcp://broker1:1883",
+        "regTopics": [],
+        "willTopics": [],
+        "qos": 1
+      }
+    ],
+    "commonRegTopics":  ["LS/+/+/SER/1.0/REG"],
+    "commonWillTopics": ["LS/+/+/SER/1.0/WILL"]
+  }
+}

@@ -12,10 +12,15 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+const (
+	ServiceCatalogURL = "http://service-catalog:8082"
+	Broker1           = "tcp://broker1:1883"
+)
+
 type ClientManager struct {
-	url    string
-	client paho.Client
-	c      chan bool
+	url       string
+	client    paho.Client
+	connected chan bool
 }
 
 var manager *ClientManager
@@ -61,8 +66,7 @@ func (m *ClientManager) onConnectHandler(client paho.Client) {
 	log.Printf("MQTT: %s: Connected.\n", m.url)
 	m.client = client
 
-	close(m.c)
-
+	m.connected <- true
 }
 
 func (m *ClientManager) onConnectionLostHandler(client paho.Client, err error) {
@@ -84,11 +88,10 @@ func MockedService(id string) *catalog.Service {
 
 //TODO_: Improve this: with MQTT brokers runnning as docker images and the test script in another container. Use Bamboo to trigger this.
 func TestMain(m *testing.M) {
-	URL1 := "tcp://localhost:1883"
 
 	manager = &ClientManager{
-		url: URL1,
-		c:   make(chan bool),
+		url:       Broker1,
+		connected: make(chan bool),
 	}
 	opts := paho.NewClientOptions() // uses defaults: https://godoc.org/github.com/eclipse/paho.mqtt.golang#NewClientOptions
 	opts.AddBroker(manager.url)
@@ -110,7 +113,21 @@ func TestMain(m *testing.M) {
 			log.Fatalln("Timed out waiting for broker")
 		}
 	}
-	<-manager.c
+	<-manager.connected
+
+	for counter := 1; ; counter++ {
+		httpRemoteClient, _ := catalog.NewRemoteCatalogClient(ServiceCatalogURL, nil)
+		_, _, err := httpRemoteClient.List(0, 100)
+		if err == nil {
+			log.Println("reached service catalog at", ServiceCatalogURL)
+			break
+		}
+		log.Println("Waiting for service catalog", ServiceCatalogURL)
+		time.Sleep(1 * time.Second)
+		if counter == 100 {
+			log.Fatalln("Timed out waiting for broker")
+		}
+	}
 
 	if m.Run() == 1 {
 		os.Exit(1)
@@ -129,7 +146,7 @@ func TestCreateAndDelete(t *testing.T) {
 
 	time.Sleep(sleepTime)
 	//verify if the service is created
-	httpRemoteClient, _ := catalog.NewRemoteCatalogClient("http://localhost:8082", nil)
+	httpRemoteClient, _ := catalog.NewRemoteCatalogClient(ServiceCatalogURL, nil)
 	gotService, err := httpRemoteClient.Get(service.ID)
 	if err != nil {
 		t.Fatalf("Error retrieveing the service %s", service.ID)
@@ -169,7 +186,7 @@ func TestCreateUpdateAndDelete(t *testing.T) {
 
 	time.Sleep(sleepTime)
 	//verify if the service is created
-	httpRemoteClient, _ := catalog.NewRemoteCatalogClient("http://localhost:8082", nil)
+	httpRemoteClient, _ := catalog.NewRemoteCatalogClient(ServiceCatalogURL, nil)
 	gotService, err := httpRemoteClient.Get(service.ID)
 	if err != nil {
 		t.Fatalf("Error retrieveing the service %s", service.ID)
