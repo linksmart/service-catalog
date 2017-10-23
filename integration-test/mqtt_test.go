@@ -84,7 +84,7 @@ func MockedService(id string) *catalog.Service {
 
 //TODO_: Improve this: with MQTT brokers runnning as docker images and the test script in another container. Use Bamboo to trigger this.
 func TestMain(m *testing.M) {
-	URL1 := "tcp://test.mosquitto.org:1883"
+	URL1 := "tcp://localhost:1883"
 
 	manager = &ClientManager{
 		url: URL1,

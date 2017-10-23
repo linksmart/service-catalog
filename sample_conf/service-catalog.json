@@ -7,5 +7,23 @@
   "staticDir": "./static",
   "storage": {
     "type": "memory"
+  },
+  "mqtt":{
+    "brokers": [
+      {
+        "id": "MQTTbroker1",
+        "url":"tcp://localhost:1883",
+        "regTopics": [],
+        "willTopics": [],
+        "qos":1,
+        "username":"",
+        "password":"",
+        "caFile":"",
+        "certFile":"",
+        "keyFile":""
+      }
+    ],
+    "commonRegTopics":  ["LS/+/+/SER/1.0/REG"],
+    "commonWillTopics": ["LS/+/+/SER/1.0/WILL"]
   }
 }
