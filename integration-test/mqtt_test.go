@@ -7,14 +7,16 @@ import (
 	"testing"
 	"time"
 
+	"strings"
+
 	"code.linksmart.eu/sc/service-catalog/catalog"
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/satori/go.uuid"
 )
 
-const (
-	ServiceCatalogURL = "http://service-catalog:8082"
-	Broker1           = "tcp://broker1:1883"
+var (
+	ServiceCatalogURL = "http://localhost:8082"
+	Brokers           = []string{"tcp://localhost:1883"}
 )
 
 type ClientManager struct {
@@ -88,9 +90,22 @@ func MockedService(id string) *catalog.Service {
 
 //TODO_: Improve this: with MQTT brokers runnning as docker images and the test script in another container. Use Bamboo to trigger this.
 func TestMain(m *testing.M) {
+	// Take urls from envs (if provided)
+	if url := os.Getenv("SC"); url != "" {
+		log.Println("Setting service catalog:", url)
+		ServiceCatalogURL = url
+	}
+	if joinedUrls := os.Getenv("BROKERS"); joinedUrls != "" {
+		urls := strings.Split(joinedUrls, ",")
+		log.Println("Setting brokers:", urls)
+		Brokers = make([]string, len(urls))
+		for i, url := range urls {
+			Brokers[i] = url
+		}
+	}
 
 	manager = &ClientManager{
-		url:       Broker1,
+		url:       Brokers[0],
 		connected: make(chan bool),
 	}
 	opts := paho.NewClientOptions() // uses defaults: https://godoc.org/github.com/eclipse/paho.mqtt.golang#NewClientOptions
@@ -102,7 +117,9 @@ func TestMain(m *testing.M) {
 	manager.client = paho.NewClient(opts)
 
 	for counter := 1; ; counter++ {
-		if token := manager.client.Connect(); !token.Wait() && token.Error() == nil {
+		if token := manager.client.Connect(); token.Wait() && token.Error() != nil {
+			log.Println(token.Error())
+		} else {
 			log.Println("connected to broker", manager.url)
 			break
 		}
@@ -116,8 +133,10 @@ func TestMain(m *testing.M) {
 
 	for counter := 1; ; counter++ {
 		httpRemoteClient, _ := catalog.NewRemoteCatalogClient(ServiceCatalogURL, nil)
-		_, _, err := httpRemoteClient.List(0, 100)
-		if err == nil {
+		_, _, err := httpRemoteClient.List(1, 100)
+		if err != nil {
+			log.Println(err)
+		} else {
 			log.Println("reached service catalog at", ServiceCatalogURL)
 			break
 		}
