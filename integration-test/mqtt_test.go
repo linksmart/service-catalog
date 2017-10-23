@@ -102,16 +102,15 @@ func TestMain(m *testing.M) {
 	manager.client = paho.NewClient(opts)
 
 	for counter := 1; ; counter++ {
-		if token := manager.client.Connect(); token.Wait() && token.Error() != nil {
-			time.Sleep(1 * time.Second)
-		} else {
-			log.Println("connected to Broker")
+		if token := manager.client.Connect(); !token.Wait() && token.Error() == nil {
+			log.Println("connected to broker", manager.url)
 			break
 		}
-		log.Println("Waiting for broker", manager.url)
-		if counter == 100 {
+		if counter == 30 {
 			log.Fatalln("Timed out waiting for broker")
 		}
+		log.Println("Waiting for broker", manager.url)
+		time.Sleep(1 * time.Second)
 	}
 	<-manager.connected
 
@@ -122,11 +121,11 @@ func TestMain(m *testing.M) {
 			log.Println("reached service catalog at", ServiceCatalogURL)
 			break
 		}
-		log.Println("Waiting for service catalog", ServiceCatalogURL)
-		time.Sleep(1 * time.Second)
-		if counter == 100 {
+		if counter == 30 {
 			log.Fatalln("Timed out waiting for broker")
 		}
+		log.Println("Waiting for service catalog", ServiceCatalogURL)
+		time.Sleep(1 * time.Second)
 	}
 
 	if m.Run() == 1 {
