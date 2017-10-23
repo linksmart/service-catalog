@@ -141,7 +141,7 @@ func TestMain(m *testing.M) {
 			break
 		}
 		if counter == 30 {
-			log.Fatalln("Timed out waiting for broker")
+			log.Fatalln("Timed out waiting for service catalog")
 		}
 		log.Println("Waiting for service catalog", ServiceCatalogURL)
 		time.Sleep(1 * time.Second)
