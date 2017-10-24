@@ -17,7 +17,7 @@ func setup() (*Controller, func(), error) {
 	var (
 		storage Storage
 		err     error
-		tempDir string = fmt.Sprintf("%s/lslc/test-%s.ldb", uuid.NewV4().String())
+		tempDir string = fmt.Sprintf("%s/lslc/test-%s.ldb", strings.Replace(os.TempDir(), "\\", "/", -1), uuid.NewV4().String())
 	)
 	switch TestStorageType {
 	case CatalogBackendMemory:
