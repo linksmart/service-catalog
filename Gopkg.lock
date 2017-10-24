@@ -74,12 +74,6 @@
   revision = "5dcf00d8b228be86307f952f550f2191d956b9e2"
 
 [[projects]]
-  name = "github.com/pborman/uuid"
-  packages = ["."]
-  revision = "e790cca94e6cc75c7064b1332e63811d4aae1a53"
-  version = "v1.1"
-
-[[projects]]
   name = "github.com/satori/go.uuid"
   packages = ["."]
   revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
@@ -100,6 +94,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8594f9f3bea60402cd739a405f677e6eb8bdf14e91b419922033657a0b80788f"
+  inputs-digest = "46d7960fe908d61a405606a84fd8e81bd5e846b4d8aa47d2b99f23db73f919c5"
   solver-name = "gps-cdcl"
   solver-version = 1

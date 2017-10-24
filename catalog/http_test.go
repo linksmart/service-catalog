@@ -14,7 +14,7 @@ import (
 
 	"code.linksmart.eu/sc/service-catalog/utils"
 	"github.com/gorilla/mux"
-	"github.com/pborman/uuid"
+	"github.com/satori/go.uuid"
 )
 
 func setupRouter() (*mux.Router, func(), error) {
@@ -22,7 +22,7 @@ func setupRouter() (*mux.Router, func(), error) {
 		storage Storage
 		err     error
 		tempDir string = fmt.Sprintf("%s/lslc/test-%s.ldb",
-			strings.Replace(os.TempDir(), "\\", "/", -1), uuid.New())
+			strings.Replace(os.TempDir(), "\\", "/", -1), uuid.NewV4().String())
 	)
 	switch TestStorageType {
 	case CatalogBackendMemory:
@@ -42,6 +42,7 @@ func setupRouter() (*mux.Router, func(), error) {
 
 	api := NewHTTPAPI(
 		controller,
+		uuid.NewV4().String(),
 		"Test catalog",
 		"MAJOR.MINOR.PATCH",
 	)

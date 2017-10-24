@@ -10,15 +10,14 @@ import (
 	"time"
 
 	"code.linksmart.eu/sc/service-catalog/utils"
-	"github.com/pborman/uuid"
+	"github.com/satori/go.uuid"
 )
 
 func setup() (*Controller, func(), error) {
 	var (
 		storage Storage
 		err     error
-		tempDir string = fmt.Sprintf("%s/lslc/test-%s.ldb",
-			strings.Replace(os.TempDir(), "\\", "/", -1), uuid.New())
+		tempDir string = fmt.Sprintf("%s/lslc/test-%s.ldb", uuid.NewV4().String())
 	)
 	switch TestStorageType {
 	case CatalogBackendMemory:
