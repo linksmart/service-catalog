@@ -9,7 +9,7 @@ import (
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/pborman/uuid"
+	"github.com/satori/go.uuid"
 )
 
 const (
@@ -40,6 +40,7 @@ type Broker struct {
 type MQTTConnector struct {
 	sync.Mutex
 	controller          *Controller
+	scID                string
 	managers            map[string]*ClientManager
 	failedRegistrations map[string]Broker
 }
@@ -61,9 +62,10 @@ type Subscription struct {
 	will      bool
 }
 
-func NewMQTTAPI(controller *Controller, mqttConf MQTTConf) error {
+func StartMQTTConnector(controller *Controller, mqttConf MQTTConf, scDescription string) {
 	c := &MQTTConnector{
 		controller:          controller,
+		scID:                scDescription,
 		managers:            make(map[string]*ClientManager),
 		failedRegistrations: make(map[string]Broker),
 	}
@@ -82,13 +84,9 @@ func NewMQTTAPI(controller *Controller, mqttConf MQTTConf) error {
 			logger.Printf("MQTT: Error registering subscription: %v. Retrying in %ds", err, mqttRetryInterval)
 			c.failedRegistrations[broker.ID] = broker
 		}
-		//broker.Topics = append(broker.RegTopics, mqttConf.RegTopic, mqttConf.WillTopic)
-		//c.failedRegistrations[broker.ID] = broker
 	}
 
-	go c.retryRegistrations()
-
-	return nil
+	c.retryRegistrations()
 }
 
 func (c *MQTTConnector) retryRegistrations() {
@@ -130,7 +128,7 @@ func (c *MQTTConnector) register(broker Broker) error {
 
 		opts := paho.NewClientOptions() // uses defaults: https://godoc.org/github.com/eclipse/paho.mqtt.golang#NewClientOptions
 		opts.AddBroker(broker.URL)
-		opts.SetClientID(fmt.Sprintf("SC-%v", uuid.NewRandom()))
+		opts.SetClientID(fmt.Sprintf("SC-%v", uuid.NewV4().String()))
 		opts.SetConnectTimeout(5 * time.Second)
 		opts.SetOnConnectHandler(manager.onConnectHandler)
 		opts.SetConnectionLostHandler(manager.onConnectionLostHandler)
@@ -193,16 +191,22 @@ func (m *ClientManager) onConnectHandler(client paho.Client) {
 	m.addBrokerAsService()
 }
 
-func (manager *ClientManager) addBrokerAsService() {
+func (m *ClientManager) addBrokerAsService() {
 	service := Service{
-		ID:          "MQTTBroker_" + manager.id,
+		ID:          m.id,
 		Description: "MQTT Broker",
+		Meta: map[string]interface{}{
+			"registrar": m.connector.scID,
+		},
 		APIs: []API{API{
 			Protocol: "MQTT",
-			URL:      manager.url,
+			URL:      m.url,
 		}},
 	}
-	manager.connector.controller.add(service)
+	_, err := m.connector.controller.add(service)
+	if err != nil {
+		logger.Printf("MQTT: Error registering broker %s:%v", m.id, err)
+	}
 }
 
 func (m *ClientManager) onConnectionLostHandler(client paho.Client, err error) {
@@ -229,7 +233,6 @@ func (s *Subscription) onMessage(client paho.Client, msg paho.Message) {
 	} else {
 		s.connector.createOrUpdate(service)
 	}
-
 }
 
 func (s *Subscription) printIfWill() string {
@@ -247,16 +250,12 @@ func (connector *MQTTConnector) createOrUpdate(service Service) {
 		case *NotFoundError:
 			// Create a new service with the given id
 			connector.createService(service)
-			return
 		case *ConflictError:
 			logger.Printf("MQTT: Error updating the service:%s", err.Error())
-			return
 		case *BadRequestError:
 			logger.Printf("MQTT: Invalid service registration:%s", err.Error())
-			return
 		default:
 			logger.Printf("MQTT: Error updating the service:%s", err.Error())
-			return
 		}
 	}
 }
@@ -267,13 +266,10 @@ func (connector *MQTTConnector) createService(service Service) {
 		switch err.(type) {
 		case *ConflictError:
 			logger.Printf("MQTT: Error adding the service:%s", err.Error())
-			return
 		case *BadRequestError:
 			logger.Printf("MQTT: Invalid service registration:%s", err.Error())
-			return
 		default:
 			logger.Printf("MQTT: Error updating the service:%s", err.Error())
-			return
 		}
 	}
 }

@@ -14,16 +14,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type httpAPI struct {
+type HttpAPI struct {
 	controller  *Controller
+	id          string
 	description string
 	version     string
 }
 
 // NewHTTPAPI creates a RESTful HTTP API
-func NewHTTPAPI(controller *Controller, description, version string) *httpAPI {
-	return &httpAPI{
+func NewHTTPAPI(controller *Controller, id, description, version string) *HttpAPI {
+	return &HttpAPI{
 		controller:  controller,
+		id:          id,
 		description: description,
 		version:     version,
 	}
@@ -31,6 +33,7 @@ func NewHTTPAPI(controller *Controller, description, version string) *httpAPI {
 
 // Collection is the paginated list of services
 type Collection struct {
+	ID          string    `json:"id"`
 	Description string    `json:"description"`
 	Services    []Service `json:"services"`
 	Page        int       `json:"page"`
@@ -39,7 +42,7 @@ type Collection struct {
 }
 
 // API Index: Lists services
-func (a *httpAPI) List(w http.ResponseWriter, req *http.Request) {
+func (a *HttpAPI) List(w http.ResponseWriter, req *http.Request) {
 	err := req.ParseForm()
 	if err != nil {
 		a.ErrorResponse(w, http.StatusBadRequest, "Error parsing the query:", err.Error())
@@ -59,6 +62,7 @@ func (a *httpAPI) List(w http.ResponseWriter, req *http.Request) {
 	}
 
 	coll := &Collection{
+		ID:          a.id,
 		Description: a.description,
 		Services:    services,
 		Page:        page,
@@ -77,7 +81,7 @@ func (a *httpAPI) List(w http.ResponseWriter, req *http.Request) {
 }
 
 // Filters services
-func (a *httpAPI) Filter(w http.ResponseWriter, req *http.Request) {
+func (a *HttpAPI) Filter(w http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	path := params["path"]
 	op := params["op"]
@@ -119,7 +123,7 @@ func (a *httpAPI) Filter(w http.ResponseWriter, req *http.Request) {
 }
 
 // Retrieves a service
-func (a *httpAPI) Get(w http.ResponseWriter, req *http.Request) {
+func (a *HttpAPI) Get(w http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 
 	s, err := a.controller.get(params["id"])
@@ -144,7 +148,7 @@ func (a *httpAPI) Get(w http.ResponseWriter, req *http.Request) {
 	w.Write(b)
 }
 
-func (a *httpAPI) createService(w http.ResponseWriter, s *Service) {
+func (a *HttpAPI) createService(w http.ResponseWriter, s *Service) {
 	addedS, err := a.controller.add(*s)
 	if err != nil {
 		switch err.(type) {
@@ -173,7 +177,7 @@ func (a *httpAPI) createService(w http.ResponseWriter, s *Service) {
 }
 
 // Adds a service
-func (a *httpAPI) Post(w http.ResponseWriter, req *http.Request) {
+func (a *HttpAPI) Post(w http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		a.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -198,7 +202,7 @@ func (a *httpAPI) Post(w http.ResponseWriter, req *http.Request) {
 
 // Updates an existing service (Response: StatusOK)
 // or creates a new one with the given id (Response: StatusCreated)
-func (a *httpAPI) Put(w http.ResponseWriter, req *http.Request) {
+func (a *HttpAPI) Put(w http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 
 	body, err := ioutil.ReadAll(req.Body)
@@ -246,7 +250,7 @@ func (a *httpAPI) Put(w http.ResponseWriter, req *http.Request) {
 }
 
 // Deletes a service
-func (a *httpAPI) Delete(w http.ResponseWriter, req *http.Request) {
+func (a *HttpAPI) Delete(w http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 
 	err := a.controller.delete(params["id"])
@@ -266,7 +270,7 @@ func (a *httpAPI) Delete(w http.ResponseWriter, req *http.Request) {
 }
 
 // a.ErrorResponse writes error to HTTP ResponseWriter
-func (a *httpAPI) ErrorResponse(w http.ResponseWriter, code int, msgs ...string) {
+func (a *HttpAPI) ErrorResponse(w http.ResponseWriter, code int, msgs ...string) {
 	msg := strings.Join(msgs, " ")
 	e := &Error{
 		code,

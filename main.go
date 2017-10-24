@@ -5,7 +5,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"mime"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -20,6 +19,7 @@ import (
 	"github.com/gorilla/context"
 	"github.com/justinas/alice"
 	"github.com/oleksandr/bonjour"
+	"github.com/satori/go.uuid"
 )
 
 var (
@@ -50,25 +50,48 @@ func main() {
 		go func() { logger.Println(http.ListenAndServe("0.0.0.0:6060", nil)) }()
 	}
 
+	// Load configuration
 	config, err := loadConfig(*confPath)
 	if err != nil {
 		logger.Fatalf("Error reading config file %v: %v", *confPath, err)
 	}
-
-	r, shutdownAPI, err := setupRouter(config)
-	if err != nil {
-		logger.Fatal(err.Error())
+	if config.ID == "" {
+		config.ID = uuid.NewV4().String()
 	}
+
+	// Setup storage
+	var storage catalog.Storage
+
+	switch config.Storage.Type {
+	case catalog.CatalogBackendMemory:
+		storage = catalog.NewMemoryStorage()
+	case catalog.CatalogBackendLevelDB:
+		storage, err = catalog.NewLevelDBStorage(config.Storage.DSN, nil)
+		if err != nil {
+			logger.Fatal("Failed to start LevelDB storage: %v", err)
+		}
+	default:
+		logger.Fatal("Could not create catalog API storage. Unsupported type: %v", config.Storage.Type)
+	}
+
+	var listeners []catalog.Listener
+	controller, err := catalog.NewController(storage, listeners...)
+	if err != nil {
+		storage.Close()
+		logger.Fatal("Failed to start the controller: %v", err)
+	}
+
+	// Create http api
+	httpAPI := catalog.NewHTTPAPI(controller, config.ID, config.Description, Version)
+	go serveHTTP(httpAPI, config)
+
+	// Create mqtt api
+	go catalog.StartMQTTConnector(controller, config.MQTTConf, config.ID)
 
 	// Announce service using DNS-SD
 	var bonjourS *bonjour.Server
 	if config.DnssdEnabled {
-		bonjourS, err = bonjour.Register(config.Description,
-			catalog.DNSSDServiceType,
-			"",
-			config.BindPort,
-			[]string{"uri=/"},
-			nil)
+		bonjourS, err = bonjour.Register(config.Description, catalog.DNSSDServiceType, "", config.BindPort, []string{"uri=/"}, nil)
 		if err != nil {
 			logger.Printf("Failed to register DNS-SD service: %s", err.Error())
 		} else {
@@ -79,76 +102,25 @@ func main() {
 	// Ctrl+C / Kill handling
 	handler := make(chan os.Signal, 1)
 	signal.Notify(handler, os.Interrupt, os.Kill)
-	go func() {
-		<-handler
-		// Place last will logic here
+	<-handler
+	logger.Println("Shutting down...")
 
-		// Stop bonjour registration
-		if bonjourS != nil {
-			bonjourS.Shutdown()
-			time.Sleep(1e9)
-		}
-
-		// Shutdown catalog API
-		err := shutdownAPI()
-		if err != nil {
-			logger.Println(err.Error())
-		}
-
-		logger.Println("Stopped")
-		os.Exit(0)
-	}()
-
-	err = mime.AddExtensionType(".jsonld", "application/ld+json")
-	if err != nil {
-		logger.Println("ERROR: ", err.Error())
+	// Stop bonjour registration
+	if bonjourS != nil {
+		bonjourS.Shutdown()
+		time.Sleep(1e9)
 	}
 
-	// Configure the middleware
-	n := negroni.New(
-		negroni.NewRecovery(),
-		logger,
-	)
-	// Mount router
-	n.UseHandler(r)
+	// Shutdown storage
+	err = controller.Stop()
+	if err != nil {
+		logger.Println(err.Error())
+	}
 
-	// Start listener
-	endpoint := fmt.Sprintf("%s:%s", config.BindAddr, strconv.Itoa(config.BindPort))
-	//logger.Printf("Listening on %v%v", endpoint, config.ApiLocation)
-	n.Run(endpoint)
+	logger.Println("Stopped")
 }
 
-func setupRouter(config *Config) (*router, func() error, error) {
-	var listeners []catalog.Listener
-
-	// Setup API storage
-	var (
-		storage catalog.Storage
-		err     error
-	)
-	switch config.Storage.Type {
-	case catalog.CatalogBackendMemory:
-		storage = catalog.NewMemoryStorage()
-	case catalog.CatalogBackendLevelDB:
-		storage, err = catalog.NewLevelDBStorage(config.Storage.DSN, nil)
-		if err != nil {
-			return nil, nil, fmt.Errorf("Failed to start LevelDB storage: %v", err.Error())
-		}
-	default:
-		return nil, nil, fmt.Errorf("Could not create catalog API storage. Unsupported type: %v", config.Storage.Type)
-	}
-
-	controller, err := catalog.NewController(storage, listeners...)
-	if err != nil {
-		storage.Close()
-		return nil, nil, fmt.Errorf("Failed to start the controller: %v", err.Error())
-	}
-
-	//create mqtt api
-	catalog.NewMQTTAPI(controller, config.MQTTConf)
-
-	// Create catalog API object
-	httpAPI := catalog.NewHTTPAPI(controller, config.Description, Version)
+func serveHTTP(httpAPI *catalog.HttpAPI, config *Config) {
 
 	commonHandlers := alice.New(
 		context.ClearHandler,
@@ -164,13 +136,13 @@ func setupRouter(config *Config) (*router, func() error, error) {
 			config.Auth.BasicEnabled,
 			config.Auth.Authz)
 		if err != nil {
-			return nil, nil, err
+			logger.Fatalln(err)
 		}
 
 		commonHandlers = commonHandlers.Append(v.Handler)
 	}
 
-	// Configure http httpAPI router
+	// Configure http router
 	r := newRouter()
 	// Handlers
 	r.get("/", commonHandlers.ThenFunc(httpAPI.List))
@@ -182,5 +154,14 @@ func setupRouter(config *Config) (*router, func() error, error) {
 	r.delete("/{id:[^/]+/?[^/]*}", commonHandlers.ThenFunc(httpAPI.Delete))
 	r.get("/{path}/{op}/{value:.*}", commonHandlers.ThenFunc(httpAPI.Filter))
 
-	return r, controller.Stop, nil
+	// Configure the middleware
+	n := negroni.New(
+		negroni.NewRecovery(),
+		logger,
+	)
+	// Mount router
+	n.UseHandler(r)
+
+	// Start listener
+	n.Run(fmt.Sprintf("%s:%s", config.BindAddr, strconv.Itoa(config.BindPort)))
 }
