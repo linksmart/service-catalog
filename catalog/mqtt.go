@@ -5,6 +5,7 @@ package catalog
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"sync"
 	"time"
 
@@ -20,6 +21,22 @@ type MQTTConf struct {
 	Brokers         []Broker `json:"brokers"`
 	CommonRegTopic  []string `json:"commonRegTopics"`
 	CommonWillTopic []string `json:"commonWillTopics"`
+}
+
+func (c MQTTConf) Validate() error {
+	for _, broker := range c.Brokers {
+		_, err := url.Parse(broker.URL)
+		if err != nil {
+			return err
+		}
+		if broker.QoS > 2 {
+			return fmt.Errorf("MQTT: qos must be 0, 1, or 2")
+		}
+		if len(c.CommonRegTopic) == 0 && len(broker.RegTopics) == 0 {
+			return fmt.Errorf("MQTT: regTopics not defined")
+		}
+	}
+	return nil
 }
 
 type Broker struct {

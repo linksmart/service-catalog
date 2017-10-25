@@ -1,13 +1,15 @@
 {
   "description": "Standalone Service Catalog",
   "dnssdEnabled": true,
-  "bindAddr": "0.0.0.0",
-  "bindPort": 8082,
-  "apiLocation": "/sc",
-  "staticDir": "./static",
   "storage": {
-    "type": "memory"
+    "type": "memory",
+    "dsn": ""
   },
+  "http" : {
+    "bindAddr": "0.0.0.0",
+    "bindPort": 8082
+  },
+  "mqtt": {},
   "auth": {
     "enabled": true,
     "provider": "provider-name",
@@ -30,35 +32,5 @@
         }
       ]
     }
-  },
-  "mqtt":{
-    "brokers": [
-      {
-        "id": "MQTTbroker1",
-        "url":"tcp://broker1:1883",
-        "regTopics": [""],
-        "willTopics": [""],
-        "qos":1,
-        "username":"",
-        "password":"",
-        "caFile":"",
-        "certFile":"",
-        "keyFile":""
-      },
-      {
-        "id": "MQTTbroker2",
-        "url":"tcp://broker2:1883",
-        "regTopics": [""],
-        "willTopics": [""],
-        "qos":1,
-        "username":"",
-        "password":"",
-        "caFile":"",
-        "certFile":"",
-        "keyFile":""
-      }
-    ],
-    "commonRegTopic":  ["LS/+/+/SER/1.0/REG"],
-    "commonWillTopic": ["LS/+/+/SER/1.0/WILL"]
   }
 }

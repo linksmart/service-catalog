@@ -16,40 +16,39 @@ import (
 type Config struct {
 	ID           string           `json:"id"`
 	Description  string           `json:"description"`
-	DnssdEnabled bool             `json:"dnssdEnabled"`
-	BindAddr     string           `json:"bindAddr"`
-	BindPort     int              `json:"bindPort"`
-	Storage      StorageConfig    `json:"storage"`
+	DNSSDEnabled bool             `json:"dnssdEnabled"`
+	Storage      StorageConf      `json:"storage"`
+	HTTP         HTTPConf         `json:"http"`
+	MQTT         catalog.MQTTConf `json:"mqtt"`
 	Auth         ValidatorConf    `json:"auth"`
-	MQTTConf     catalog.MQTTConf `json:"mqtt"`
 }
 
-type StorageConfig struct {
-	Type string `json:"type"`
-	DSN  string `json:"dsn"`
-}
+func (c *Config) validate() error {
 
-func (c *Config) Validate() error {
-	var err error
-	if c.BindAddr == "" || c.BindPort == 0 {
-		err = fmt.Errorf("Empty host or port")
-	}
-	if !catalog.SupportedBackends[c.Storage.Type] {
-		err = fmt.Errorf("Unsupported storage backend")
-	}
-	_, err = url.Parse(c.Storage.DSN)
+	err := c.Storage.validate()
 	if err != nil {
-		err = fmt.Errorf("storage DSN should be a valid URL")
+		return err
 	}
+
+	err = c.HTTP.validate()
+	if err != nil {
+		return err
+	}
+
+	err = c.MQTT.Validate()
+	if err != nil {
+		return err
+	}
+
 	if c.Auth.Enabled {
 		// Validate ticket validator config
-		err = c.Auth.Validate()
+		err = c.Auth.validate()
 		if err != nil {
 			return err
 		}
 	}
 
-	return err
+	return nil
 }
 
 func loadConfig(confPath string) (*Config, error) {
@@ -64,10 +63,41 @@ func loadConfig(confPath string) (*Config, error) {
 		return nil, err
 	}
 
-	if err = config.Validate(); err != nil {
+	if err = config.validate(); err != nil {
 		return nil, err
 	}
 	return config, nil
+}
+
+type StorageConf struct {
+	Type string `json:"type"`
+	DSN  string `json:"dsn"`
+}
+
+func (c StorageConf) validate() error {
+	if !catalog.SupportedBackends[c.Type] {
+		return fmt.Errorf("storage: unsupported backend")
+	}
+	_, err := url.Parse(c.DSN)
+	if err != nil {
+		return fmt.Errorf("storage: DSN should be a valid URL: %v", err)
+	}
+	return nil
+}
+
+type HTTPConf struct {
+	BindAddr string `json:"bindAddr"`
+	BindPort int    `json:"bindPort"`
+}
+
+func (c HTTPConf) validate() error {
+	if c.BindAddr == ""{
+		return fmt.Errorf("http: bindAddr not defined")
+	}
+	if c.BindPort == 0 {
+		return fmt.Errorf("http: bindPort not defined")
+	}
+	return nil
 }
 
 // Ticket Validator Config
@@ -86,7 +116,7 @@ type ValidatorConf struct {
 	Authz *authz.Conf `json:"authorization"`
 }
 
-func (c ValidatorConf) Validate() error {
+func (c ValidatorConf) validate() error {
 
 	// Validate Provider
 	if c.Provider == "" {

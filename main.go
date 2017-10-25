@@ -86,12 +86,12 @@ func main() {
 	go serveHTTP(httpAPI, config)
 
 	// Create mqtt api
-	go catalog.StartMQTTConnector(controller, config.MQTTConf, config.ID)
+	go catalog.StartMQTTConnector(controller, config.MQTT, config.ID)
 
 	// Announce service using DNS-SD
 	var bonjourS *bonjour.Server
-	if config.DnssdEnabled {
-		bonjourS, err = bonjour.Register(config.Description, catalog.DNSSDServiceType, "", config.BindPort, []string{"uri=/"}, nil)
+	if config.DNSSDEnabled {
+		bonjourS, err = bonjour.Register(config.Description, catalog.DNSSDServiceType, "", config.HTTP.BindPort, []string{"uri=/"}, nil)
 		if err != nil {
 			logger.Printf("Failed to register DNS-SD service: %s", err.Error())
 		} else {
@@ -163,5 +163,5 @@ func serveHTTP(httpAPI *catalog.HttpAPI, config *Config) {
 	n.UseHandler(r)
 
 	// Start listener
-	n.Run(fmt.Sprintf("%s:%s", config.BindAddr, strconv.Itoa(config.BindPort)))
+	n.Run(fmt.Sprintf("%s:%s", config.HTTP.BindAddr, strconv.Itoa(config.HTTP.BindPort)))
 }
