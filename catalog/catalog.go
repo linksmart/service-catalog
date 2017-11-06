@@ -16,7 +16,7 @@ type Service struct {
 	ID           string                 `json:"id"`
 	Description  string                 `json:"description"`
 	APIs         []API                  `json:"apis"`
-	ExternalDocs []ExternalDoc          `json:"externalDocs"`
+	ExternalDocs []ExternalDoc          `json:"external_docs"`
 	Meta         map[string]interface{} `json:"meta"`
 	TTL          uint                   `json:"ttl,omitempty"`
 	Created      time.Time              `json:"created"`
