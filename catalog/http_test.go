@@ -14,7 +14,7 @@ import (
 
 	"code.linksmart.eu/sc/service-catalog/utils"
 	"github.com/gorilla/mux"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 func setupRouter() (*mux.Router, func(), error) {
@@ -68,9 +68,10 @@ func MockedService(id string) *Service {
 		ID:          "TestHost/TestService" + id,
 		Meta:        map[string]interface{}{"test-id": id},
 		Description: "Test Service " + id,
-		ExternalDocs: []ExternalDoc{{
+		Docs: []Doc{{
 			Description: "REST",
 			URL:         "http://link-to-openapi-specs.json",
+			Type:        "openapi",
 		}},
 		TTL: 30,
 	}
@@ -99,7 +100,7 @@ func sameServices(s1, s2 *Service, checkID bool) bool {
 	}
 
 	// Compare number of protocols
-	if len(s1.ExternalDocs) != len(s2.ExternalDocs) {
+	if len(s1.Docs) != len(s2.Docs) {
 		return false
 	}
 

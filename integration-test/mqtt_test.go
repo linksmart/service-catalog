@@ -11,7 +11,7 @@ import (
 
 	"code.linksmart.eu/sc/service-catalog/catalog"
 	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 var (
@@ -52,7 +52,7 @@ func sameServices(s1, s2 *catalog.Service, checkID bool) bool {
 	}
 
 	// Compare number of protocols
-	if len(s1.ExternalDocs) != len(s2.ExternalDocs) {
+	if len(s1.Docs) != len(s2.Docs) {
 		return false
 	}
 
@@ -80,9 +80,12 @@ func MockedService(id string) *catalog.Service {
 		ID:          "TestHost/TestService" + id,
 		Meta:        map[string]interface{}{"test-id": id},
 		Description: "Test Service " + id,
-		ExternalDocs: []catalog.ExternalDoc{{
-			Description: "REST",
+		APIs:        map[string]string{"Dummy": "mqtt://test.mosquitto.org:1883"},
+		Docs: []catalog.Doc{{
+			Description: "REST API Specs",
+			Type:        "openapi",
 			URL:         "http://link-to-openapi-specs.json",
+			APIs:        []string{"Dummy"},
 		}},
 		TTL: 100,
 	}
@@ -167,7 +170,7 @@ func TestCreateAndDelete(t *testing.T) {
 	httpRemoteClient, _ := catalog.NewRemoteCatalogClient(ServiceCatalogURL, nil)
 	gotService, err := httpRemoteClient.Get(service.ID)
 	if err != nil {
-		t.Fatalf("Error retrieveing the service %s", service.ID)
+		t.Fatalf("Error retrieveing the service %s: %s", service.ID, err)
 		return
 	}
 	if !sameServices(gotService, service, true) {
@@ -187,7 +190,7 @@ func TestCreateAndDelete(t *testing.T) {
 		case *catalog.NotFoundError:
 			break
 		default:
-			t.Fatalf("Error while fetching services:%v", err)
+			t.Fatalf("Error while fetching services: %s", err)
 		}
 	} else {
 		t.Fatalf("Service was fetched even after deletion")
@@ -223,7 +226,7 @@ func TestCreateUpdateAndDelete(t *testing.T) {
 	//verify if the service is created
 	gotService, err = httpRemoteClient.Get(service.ID)
 	if err != nil {
-		t.Fatalf("Error retrieveing the service %s", service.ID)
+		t.Fatalf("Error retrieveing the service %s: %s", service.ID, err)
 		return
 	}
 	if !sameServices(gotService, service, true) {
@@ -242,7 +245,7 @@ func TestCreateUpdateAndDelete(t *testing.T) {
 		case *catalog.NotFoundError:
 			break
 		default:
-			t.Fatalf("Error while fetching services:%v", err)
+			t.Fatalf("Error while fetching services: %v", err)
 		}
 	} else {
 		t.Fatalf("Service was fetched even after deletion")

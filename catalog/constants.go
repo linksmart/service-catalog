@@ -16,8 +16,8 @@ var SupportedBackends = map[string]bool{
 	CatalogBackendLevelDB: true,
 }
 
-var SupportedProtocols = map[string]bool{
-	"HTTP": true,
-	"MQTT": true,
-	"AMQP": true,
+var SupportedDocTypes = map[string]bool{
+	"openapi":  true,
+	"asyncapi": true,
+	"other":    true,
 }

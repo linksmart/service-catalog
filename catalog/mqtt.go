@@ -10,7 +10,7 @@ import (
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -215,10 +215,9 @@ func (m *ClientManager) addBrokerAsService() {
 		Meta: map[string]interface{}{
 			"registrar": m.connector.scID,
 		},
-		APIs: []API{API{
-			Protocol: "MQTT",
-			URL:      m.url,
-		}},
+		APIs: map[string]string{
+			"MQTT": m.url,
+		},
 	}
 	_, err := m.connector.controller.add(service)
 	if err != nil {

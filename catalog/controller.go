@@ -10,7 +10,7 @@ import (
 
 	"code.linksmart.eu/sc/service-catalog/utils"
 	avl "github.com/ancientlore/go-avltree"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 type Controller struct {
@@ -54,9 +54,6 @@ func (c *Controller) add(s Service) (*Service, error) {
 	if s.ID == "" {
 		// System generated id
 		s.ID = uuid.NewV4().String()
-	}
-	for i, api := range s.APIs {
-		s.APIs[i].Protocol = strings.ToUpper(api.Protocol)
 	}
 	s.Created = time.Now().UTC()
 	s.Updated = s.Created
@@ -106,10 +103,7 @@ func (c *Controller) update(id string, s Service) (*Service, error) {
 
 	ss.Description = s.Description
 	ss.APIs = s.APIs
-	for i, api := range ss.APIs {
-		ss.APIs[i].Protocol = strings.ToUpper(api.Protocol)
-	}
-	ss.ExternalDocs = s.ExternalDocs
+	ss.Docs = s.Docs
 	ss.Meta = s.Meta
 	ss.TTL = s.TTL
 	ss.Updated = time.Now().UTC()

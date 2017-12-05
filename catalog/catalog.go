@@ -13,14 +13,14 @@ import (
 
 // Service is a service entry in the catalog
 type Service struct {
-	ID           string                 `json:"id"`
-	Description  string                 `json:"description"`
-	APIs         []API                  `json:"apis"`
-	ExternalDocs []ExternalDoc          `json:"external_docs"`
-	Meta         map[string]interface{} `json:"meta"`
-	TTL          uint                   `json:"ttl,omitempty"`
-	Created      time.Time              `json:"created"`
-	Updated      time.Time              `json:"updated"`
+	ID          string                 `json:"id"`
+	Description string                 `json:"description"`
+	APIs        map[string]string      `json:"apis"`
+	Docs        []Doc                  `json:"docs"`
+	Meta        map[string]interface{} `json:"meta"`
+	TTL         uint                   `json:"ttl,omitempty"`
+	Created     time.Time              `json:"created"`
+	Updated     time.Time              `json:"updated"`
 	// Expires is the time when service will be removed from the system (Only when TTL is set)
 	Expires *time.Time `json:"expires,omitempty"`
 }
@@ -31,13 +31,13 @@ type API struct {
 	URL      string `json:"url"`
 }
 
-// ExternalDoc is an external resource for extended documentation. E.g. OpenAPI specs, Wiki page
-type ExternalDoc struct {
-	Description string `json:"description"`
-	URL         string `json:"url"`
+// Doc is an external resource documenting the service and/or APIs. E.g. OpenAPI specs, Wiki page
+type Doc struct {
+	Description string   `json:"description"`
+	Type        string   `json:"type"`
+	URL         string   `json:"url"`
+	APIs        []string `json:"apis"`
 }
-
-
 
 // Validates the Service configuration
 func (s Service) validate() error {
@@ -50,18 +50,28 @@ func (s Service) validate() error {
 		return fmt.Errorf("invalid service id: %v", err)
 	}
 
-	for _, api := range s.APIs {
-		if !SupportedProtocols[strings.ToUpper(api.Protocol)] {
-			return fmt.Errorf("unsupported API protocol: %s", api.Protocol)
-		}
-		if _, err := url.Parse(api.URL); err != nil {
-			return fmt.Errorf("invalid external doc url: %s", api.URL)
+	for _, URL := range s.APIs {
+		if _, err := url.Parse(URL); err != nil {
+			return fmt.Errorf("invalid API url: %s", URL)
 		}
 	}
 
-	for _, ed := range s.ExternalDocs {
-		if _, err := url.Parse(ed.URL); err != nil {
-			return fmt.Errorf("invalid external doc url: %s", ed.URL)
+	for _, doc := range s.Docs {
+		if doc.Type == "" {
+			return fmt.Errorf("doc type not defined")
+		}
+		if !SupportedDocTypes[doc.Type] {
+			return fmt.Errorf("unsupported doc type: %s", doc.Type)
+		}
+		if _, err := url.Parse(doc.URL); err != nil {
+			return fmt.Errorf("invalid doc url: %s", doc.URL)
+		}
+		if len(s.APIs) != 0 {
+			for _, api := range doc.APIs {
+				if _, found := s.APIs[api]; !found {
+					return fmt.Errorf("api name in doc does not match any apis: %s", api)
+				}
+			}
 		}
 	}
 
