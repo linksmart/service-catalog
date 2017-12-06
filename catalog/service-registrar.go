@@ -133,6 +133,24 @@ func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
 	}
 }
 
+// RegisterServiceAndKeepalive registers service in the remote catalog and renews it before expiry
+// endpoint: catalog endpoint. If empty - will be discovered using DNS-SD
+// s: service registration
+// ticket: set to nil for no auth
+func RegisterServiceAndKeepalive(endpoint string, discover bool, s Service, ticket *obtainer.Client) (stop func() error, err error) {
+	var wg sync.WaitGroup
+	sigCh := make(chan bool)
+
+	stop = func() error {
+		sigCh <- true
+		wg.Wait()
+		return nil
+	}
+
+	go RegisterServiceWithKeepalive(endpoint, discover, s, sigCh, &wg, nil)
+	return
+}
+
 // Keep a given registration alive
 // client: configured client for the remote catalog
 // s: registration to be kept alive
