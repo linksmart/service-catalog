@@ -133,7 +133,8 @@ func RegisterServiceWithKeepalive(endpoint string, discover bool, s Service,
 	}
 }
 
-// RegisterServiceAndKeepalive registers service in the remote catalog and renews it before expiry
+// RegisterServiceAndKeepalive is a wrapper for legacy function RegisterServiceWithKeepalive
+// it registers service in the remote catalog and renews it before expiry
 // endpoint: catalog endpoint. If empty - will be discovered using DNS-SD
 // s: service registration
 // ticket: set to nil for no auth
@@ -142,6 +143,7 @@ func RegisterServiceAndKeepalive(endpoint string, discover bool, s Service, tick
 	sigCh := make(chan bool)
 
 	stop = func() error {
+		wg.Add(1)
 		sigCh <- true
 		wg.Wait()
 		return nil
