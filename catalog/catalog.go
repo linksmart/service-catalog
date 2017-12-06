@@ -4,6 +4,7 @@ package catalog
 
 import (
 	"fmt"
+	"mime"
 	"net/url"
 	"strings"
 	"time"
@@ -57,22 +58,22 @@ func (s Service) validate() error {
 	}
 
 	for _, doc := range s.Docs {
-		if doc.Type == "" {
-			return fmt.Errorf("doc type not defined")
-		}
-		if !SupportedDocTypes[doc.Type] {
-			return fmt.Errorf("unsupported doc type: %s", doc.Type)
+		// if doc.Type == "" {
+		// 	return fmt.Errorf("doc type not defined")
+		// }
+		if _, _, err := mime.ParseMediaType(doc.Type); err != nil {
+			return fmt.Errorf("invalid doc MIME type: %s: %s", doc.URL, err)
 		}
 		if _, err := url.Parse(doc.URL); err != nil {
 			return fmt.Errorf("invalid doc url: %s", doc.URL)
 		}
-		if len(s.APIs) != 0 {
-			for _, api := range doc.APIs {
-				if _, found := s.APIs[api]; !found {
-					return fmt.Errorf("api name in doc does not match any apis: %s", api)
-				}
-			}
-		}
+		// if len(s.APIs) != 0 {
+		// 	for _, api := range doc.APIs {
+		// 		if _, found := s.APIs[api]; !found {
+		// 			return fmt.Errorf("api name in doc does not match any apis: %s", api)
+		// 		}
+		// 	}
+		// }
 	}
 
 	return nil

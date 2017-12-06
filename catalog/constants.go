@@ -15,9 +15,3 @@ var SupportedBackends = map[string]bool{
 	CatalogBackendMemory:  true,
 	CatalogBackendLevelDB: true,
 }
-
-var SupportedDocTypes = map[string]bool{
-	"openapi":  true,
-	"asyncapi": true,
-	"other":    true,
-}
