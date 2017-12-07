@@ -244,11 +244,8 @@ func (s *Subscription) onMessage(client paho.Client, msg paho.Message) {
 		logger.Printf("MQTT: Invalid service: No ID provided")
 		return
 	}
-	if s.will {
-		s.connector.controller.delete(service.ID)
-	} else {
-		s.connector.createOrUpdate(service)
-	}
+
+	s.connector.handleService(service, s.will)
 }
 
 func (s *Subscription) printIfWill() string {
@@ -258,14 +255,31 @@ func (s *Subscription) printIfWill() string {
 	return ""
 }
 
-func (connector *MQTTConnector) createOrUpdate(service Service) {
+func (connector *MQTTConnector) handleService(service Service, will bool) {
+	if will {
+		connector.controller.delete(service.ID)
+		logger.Printf("MQTT: Removed service %s", service.ID)
+		return
+	}
 
 	_, err := connector.controller.update(service.ID, service)
 	if err != nil {
 		switch err.(type) {
 		case *NotFoundError:
 			// Create a new service with the given id
-			connector.createService(service)
+			_, err := connector.controller.add(service)
+			if err != nil {
+				switch err.(type) {
+				case *ConflictError:
+					logger.Printf("MQTT: Error adding the service:%s", err.Error())
+				case *BadRequestError:
+					logger.Printf("MQTT: Invalid service registration:%s", err.Error())
+				default:
+					logger.Printf("MQTT: Error updating the service:%s", err.Error())
+				}
+			}
+			logger.Printf("MQTT: Created service %s", service.ID)
+			return
 		case *ConflictError:
 			logger.Printf("MQTT: Error updating the service:%s", err.Error())
 		case *BadRequestError:
@@ -274,18 +288,5 @@ func (connector *MQTTConnector) createOrUpdate(service Service) {
 			logger.Printf("MQTT: Error updating the service:%s", err.Error())
 		}
 	}
-}
-
-func (connector *MQTTConnector) createService(service Service) {
-	_, err := connector.controller.add(service)
-	if err != nil {
-		switch err.(type) {
-		case *ConflictError:
-			logger.Printf("MQTT: Error adding the service:%s", err.Error())
-		case *BadRequestError:
-			logger.Printf("MQTT: Invalid service registration:%s", err.Error())
-		default:
-			logger.Printf("MQTT: Error updating the service:%s", err.Error())
-		}
-	}
+	logger.Printf("MQTT: Updated service %s", service.ID)
 }
