@@ -8,32 +8,37 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"code.linksmart.eu/com/go-sec/auth/obtainer"
+	"code.linksmart.eu/sc/service-catalog/catalog"
 	"code.linksmart.eu/sc/service-catalog/utils"
 )
 
-type RemoteClient struct {
+type httpClient struct {
 	serverEndpoint *url.URL
 	ticket         *obtainer.Client
 }
 
-func NewRemoteCatalogClient(serverEndpoint string, ticket *obtainer.Client) (*RemoteClient, error) {
-	// Check if serverEndpoint is a correct URL
+type FilterArgs struct {
+	Path, Op, Value string
+}
+
+// NewHTTPClient creates a new HTTP client for SC's REST API
+func NewHTTPClient(serverEndpoint string, ticket *obtainer.Client) (*httpClient, error) {
+
 	endpointUrl, err := url.Parse(serverEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing catalog endpoint url: %s", err)
 	}
 
-	return &RemoteClient{
+	return &httpClient{
 		serverEndpoint: endpointUrl,
 		ticket:         ticket,
 	}, nil
 }
 
-// Retrieves a service
-func (c *RemoteClient) Get(id string) (*Service, error) {
+// Get gets a service
+func (c *httpClient) Get(id string) (*catalog.Service, error) {
 	res, err := utils.HTTPRequest("GET",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		nil,
@@ -47,11 +52,11 @@ func (c *RemoteClient) Get(id string) (*Service, error) {
 
 	switch res.StatusCode {
 	case http.StatusBadRequest:
-		return nil, &BadRequestError{ErrorMsg(res)}
+		return nil, &catalog.BadRequestError{ErrorMsg(res)}
 	case http.StatusConflict:
-		return nil, &ConflictError{ErrorMsg(res)}
+		return nil, &catalog.ConflictError{ErrorMsg(res)}
 	case http.StatusNotFound:
-		return nil, &NotFoundError{ErrorMsg(res)}
+		return nil, &catalog.NotFoundError{ErrorMsg(res)}
 	default:
 		if res.StatusCode != http.StatusOK {
 			return nil, fmt.Errorf(ErrorMsg(res))
@@ -59,7 +64,7 @@ func (c *RemoteClient) Get(id string) (*Service, error) {
 	}
 
 	decoder := json.NewDecoder(res.Body)
-	var s *Service
+	var s *catalog.Service
 	err = decoder.Decode(&s)
 	if err != nil {
 		return nil, err
@@ -68,151 +73,94 @@ func (c *RemoteClient) Get(id string) (*Service, error) {
 	return s, nil
 }
 
-// Adds a service
-func (c *RemoteClient) Add(s *Service) (string, error) {
-	id := s.ID
-	service := *s
-	service.ID = ""
-	b, _ := json.Marshal(service)
-
-	var (
-		res *http.Response
-		err error
-	)
-
-	if id == "" { // Let the system generate an id
-		res, err = utils.HTTPRequest("POST",
-			c.serverEndpoint.String()+"/",
-			map[string][]string{"Content-Type": []string{"application/ld+json"}},
-			bytes.NewReader(b),
-			c.ticket,
-		)
-		if err != nil {
-			return "", err
-		}
-		defer res.Body.Close()
-
-	} else { // User-defined id
-
-		// Check if id is unique
-		resGet, err := utils.HTTPRequest("GET",
-			fmt.Sprintf("%v/%v", c.serverEndpoint, id),
-			nil,
-			nil,
-			c.ticket,
-		)
-		if err != nil {
-			return "", err
-		}
-		defer resGet.Body.Close()
-
-		// Make sure registration is not found
-		// catch every status but http.StatusNotFound
-		switch resGet.StatusCode {
-		case http.StatusOK:
-			return "", &ConflictError{fmt.Sprintf("Device id %s is not unique.", id)}
-		case http.StatusBadRequest:
-			return "", &BadRequestError{ErrorMsg(resGet)}
-		case http.StatusConflict:
-			return "", &ConflictError{ErrorMsg(resGet)}
-		default:
-			if resGet.StatusCode != http.StatusNotFound {
-				return "", fmt.Errorf(ErrorMsg(resGet))
-			}
-		}
-
-		// Now add
-		res, err = utils.HTTPRequest("PUT",
-			fmt.Sprintf("%v/%v", c.serverEndpoint, id),
-			map[string][]string{"Content-Type": []string{"application/ld+json"}},
-			bytes.NewReader(b),
-			c.ticket,
-		)
-		if err != nil {
-			return "", err
-		}
-		defer res.Body.Close()
+// Post posts a service
+func (c *httpClient) Post(service *catalog.Service) (*catalog.Service, error) {
+	if service.ID != "" {
+		return nil, fmt.Errorf("Cannot POST a service with pre-defined ID. Use Put method.")
 	}
 
-	switch res.StatusCode {
-	case http.StatusBadRequest:
-		return "", &BadRequestError{ErrorMsg(res)}
-	case http.StatusConflict:
-		return "", &ConflictError{ErrorMsg(res)}
-	case http.StatusNotFound:
-		return "", &NotFoundError{ErrorMsg(res)}
-	default:
-		if res.StatusCode != http.StatusCreated {
-			return "", fmt.Errorf(ErrorMsg(res))
-		}
-	}
-
-	location, err := res.Location()
+	b, err := json.Marshal(service)
 	if err != nil {
-		return "", err
-	}
-	id = strings.SplitAfterN(location.String(), "", 2)[1]
-
-	return id, nil
-}
-
-// Updates a service
-func (c *RemoteClient) Update(id string, s *Service) error {
-	// Check if id is found
-	resGet, err := utils.HTTPRequest("GET",
-		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
-		nil,
-		nil,
-		c.ticket,
-	)
-	if err != nil {
-		return err
-	}
-	defer resGet.Body.Close()
-
-	switch resGet.StatusCode {
-	case http.StatusBadRequest:
-		return &BadRequestError{ErrorMsg(resGet)}
-	case http.StatusConflict:
-		return &ConflictError{ErrorMsg(resGet)}
-	case http.StatusNotFound:
-		return &NotFoundError{ErrorMsg(resGet)}
-	default:
-		if resGet.StatusCode != http.StatusOK {
-			return fmt.Errorf(ErrorMsg(resGet))
-		}
+		return nil, err
 	}
 
-	b, _ := json.Marshal(s)
-	res, err := utils.HTTPRequest("PUT",
-		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
-		map[string][]string{"Content-Type": []string{"application/ld+json"}},
+	res, err := utils.HTTPRequest("POST",
+		c.serverEndpoint.String()+"/",
+		map[string][]string{"Content-Type": []string{"application/json"}},
 		bytes.NewReader(b),
 		c.ticket,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer res.Body.Close()
 
 	switch res.StatusCode {
 	case http.StatusBadRequest:
-		return &BadRequestError{ErrorMsg(res)}
+		return nil, &catalog.BadRequestError{ErrorMsg(res)}
 	case http.StatusConflict:
-		return &ConflictError{ErrorMsg(res)}
+		return nil, &catalog.ConflictError{ErrorMsg(res)}
 	case http.StatusNotFound:
-		return &NotFoundError{ErrorMsg(res)}
+		return nil, &catalog.NotFoundError{ErrorMsg(res)}
 	default:
-		if res.StatusCode != http.StatusOK {
-			return fmt.Errorf(ErrorMsg(res))
+		if res.StatusCode != http.StatusCreated {
+			return nil, fmt.Errorf(ErrorMsg(res))
 		}
 	}
 
-	return nil
+	decoder := json.NewDecoder(res.Body)
+	var s *catalog.Service
+	err = decoder.Decode(&s)
+	if err != nil {
+		return nil, err
+	}
+
+	return s, nil
 }
 
-// Deletes a service
-func (c *RemoteClient) Delete(id string) error {
+// Put puts a service
+func (c *httpClient) Put(service *catalog.Service) (*catalog.Service, error) {
+	if service.ID == "" {
+		return nil, fmt.Errorf("Cannot PUT a service without ID.")
+	}
+
+	b, _ := json.Marshal(service)
+	res, err := utils.HTTPRequest("PUT",
+		fmt.Sprintf("%v/%v", c.serverEndpoint, service.ID),
+		map[string][]string{"Content-Type": []string{"application/ld+json"}},
+		bytes.NewReader(b),
+		c.ticket,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	switch res.StatusCode {
+	case http.StatusBadRequest:
+		return nil, &catalog.BadRequestError{ErrorMsg(res)}
+	case http.StatusConflict:
+		return nil, &catalog.ConflictError{ErrorMsg(res)}
+	case http.StatusNotFound:
+		return nil, &catalog.NotFoundError{ErrorMsg(res)}
+	default:
+		if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated {
+			return nil, fmt.Errorf(ErrorMsg(res))
+		}
+	}
+
+	decoder := json.NewDecoder(res.Body)
+	var s *catalog.Service
+	err = decoder.Decode(&s)
+	if err != nil {
+		return nil, err
+	}
+
+	return s, nil
+}
+
+// Delete deletes a service
+func (c *httpClient) Delete(id string) error {
 	res, err := utils.HTTPRequest("DELETE",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		nil,
@@ -226,11 +174,11 @@ func (c *RemoteClient) Delete(id string) error {
 
 	switch res.StatusCode {
 	case http.StatusBadRequest:
-		return &BadRequestError{ErrorMsg(res)}
+		return &catalog.BadRequestError{ErrorMsg(res)}
 	case http.StatusConflict:
-		return &ConflictError{ErrorMsg(res)}
+		return &catalog.ConflictError{ErrorMsg(res)}
 	case http.StatusNotFound:
-		return &NotFoundError{ErrorMsg(res)}
+		return &catalog.NotFoundError{ErrorMsg(res)}
 	default:
 		if res.StatusCode != http.StatusOK {
 			return fmt.Errorf(ErrorMsg(res))
@@ -240,15 +188,27 @@ func (c *RemoteClient) Delete(id string) error {
 	return nil
 }
 
-// Retrieves a page from the service collection
-func (c *RemoteClient) List(page, perPage int) ([]Service, int, error) {
-	res, err := utils.HTTPRequest("GET",
-		fmt.Sprintf("%v?%v=%v&%v=%v",
-			c.serverEndpoint, utils.GetParamPage, page, utils.GetParamPerPage, perPage),
-		nil,
-		nil,
-		c.ticket,
-	)
+// GetMany retrieves a page from the service collection
+func (c *httpClient) GetMany(page, perPage int, filter *FilterArgs) ([]catalog.Service, int, error) {
+	var err error
+	var res *http.Response
+	if filter == nil {
+		res, err = utils.HTTPRequest("GET",
+			fmt.Sprintf("%v?%v=%v&%v=%v",
+				c.serverEndpoint, utils.GetParamPage, page, utils.GetParamPerPage, perPage),
+			nil,
+			nil,
+			c.ticket,
+		)
+	} else {
+		res, err = utils.HTTPRequest("GET",
+			fmt.Sprintf("%v/%v/%v/%v?%v=%v&%v=%v",
+				c.serverEndpoint, filter.Path, filter.Op, filter.Value, utils.GetParamPage, page, utils.GetParamPerPage, perPage),
+			nil,
+			nil,
+			c.ticket,
+		)
+	}
 	if err != nil {
 		return nil, 0, err
 	}
@@ -256,11 +216,11 @@ func (c *RemoteClient) List(page, perPage int) ([]Service, int, error) {
 
 	switch res.StatusCode {
 	case http.StatusBadRequest:
-		return nil, 0, &BadRequestError{ErrorMsg(res)}
+		return nil, 0, &catalog.BadRequestError{ErrorMsg(res)}
 	case http.StatusConflict:
-		return nil, 0, &ConflictError{ErrorMsg(res)}
+		return nil, 0, &catalog.ConflictError{ErrorMsg(res)}
 	case http.StatusNotFound:
-		return nil, 0, &NotFoundError{ErrorMsg(res)}
+		return nil, 0, &catalog.NotFoundError{ErrorMsg(res)}
 	default:
 		if res.StatusCode != http.StatusOK {
 			return nil, 0, fmt.Errorf(ErrorMsg(res))
@@ -268,44 +228,7 @@ func (c *RemoteClient) List(page, perPage int) ([]Service, int, error) {
 	}
 
 	decoder := json.NewDecoder(res.Body)
-	var coll Collection
-	err = decoder.Decode(&coll)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return coll.Services, len(coll.Services), nil
-}
-
-// Filter services
-func (c *RemoteClient) Filter(path, op, value string, page, perPage int) ([]Service, int, error) {
-	res, err := utils.HTTPRequest("GET",
-		fmt.Sprintf("%v/%v/%v/%v?%v=%v&%v=%v",
-			c.serverEndpoint, path, op, value, utils.GetParamPage, page, utils.GetParamPerPage, perPage),
-		nil,
-		nil,
-		c.ticket,
-	)
-	if err != nil {
-		return nil, 0, err
-	}
-	defer res.Body.Close()
-
-	switch res.StatusCode {
-	case http.StatusBadRequest:
-		return nil, 0, &BadRequestError{ErrorMsg(res)}
-	case http.StatusConflict:
-		return nil, 0, &ConflictError{ErrorMsg(res)}
-	case http.StatusNotFound:
-		return nil, 0, &NotFoundError{ErrorMsg(res)}
-	default:
-		if res.StatusCode != http.StatusOK {
-			return nil, 0, fmt.Errorf(ErrorMsg(res))
-		}
-	}
-
-	decoder := json.NewDecoder(res.Body)
-	var coll Collection
+	var coll catalog.Collection
 	err = decoder.Decode(&coll)
 	if err != nil {
 		return nil, 0, err
@@ -318,7 +241,7 @@ func (c *RemoteClient) Filter(path, op, value string, page, perPage int) ([]Serv
 func ErrorMsg(res *http.Response) string {
 	decoder := json.NewDecoder(res.Body)
 
-	var e Error
+	var e catalog.Error
 	err := decoder.Decode(&e)
 	if err != nil {
 		return res.Status

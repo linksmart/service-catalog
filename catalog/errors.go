@@ -3,16 +3,16 @@
 package catalog
 
 // Not Found
-type NotFoundError struct{ s string }
+type NotFoundError struct{ Msg string }
 
-func (e *NotFoundError) Error() string { return e.s }
+func (e *NotFoundError) Error() string { return e.Msg }
 
 // Conflict (non-unique id, assignment to read-only data)
-type ConflictError struct{ s string }
+type ConflictError struct{ Msg string }
 
-func (e *ConflictError) Error() string { return e.s }
+func (e *ConflictError) Error() string { return e.Msg }
 
 // Bad Request
-type BadRequestError struct{ s string }
+type BadRequestError struct{ Msg string }
 
-func (e *BadRequestError) Error() string { return e.s }
+func (e *BadRequestError) Error() string { return e.Msg }
