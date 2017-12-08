@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"code.linksmart.eu/sc/service-catalog/client"
+
 	"strings"
 
 	"code.linksmart.eu/sc/service-catalog/catalog"
@@ -135,8 +137,8 @@ func TestMain(m *testing.M) {
 	<-manager.connected
 
 	for counter := 1; ; counter++ {
-		httpRemoteClient, _ := catalog.NewRemoteCatalogClient(ServiceCatalogURL, nil)
-		_, _, err := httpRemoteClient.List(1, 100)
+		httpRemoteClient, _ := client.NewHTTPClient(ServiceCatalogURL, nil)
+		_, _, err := httpRemoteClient.GetMany(1, 100, nil)
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -167,7 +169,7 @@ func TestCreateAndDelete(t *testing.T) {
 
 	time.Sleep(sleepTime)
 	//verify if the service is created
-	httpRemoteClient, _ := catalog.NewRemoteCatalogClient(ServiceCatalogURL, nil)
+	httpRemoteClient, _ := client.NewHTTPClient(ServiceCatalogURL, nil)
 	gotService, err := httpRemoteClient.Get(service.ID)
 	if err != nil {
 		t.Fatalf("Error retrieveing the service %s: %s", service.ID, err)
@@ -207,7 +209,7 @@ func TestCreateUpdateAndDelete(t *testing.T) {
 
 	time.Sleep(sleepTime)
 	//verify if the service is created
-	httpRemoteClient, _ := catalog.NewRemoteCatalogClient(ServiceCatalogURL, nil)
+	httpRemoteClient, _ := client.NewHTTPClient(ServiceCatalogURL, nil)
 	gotService, err := httpRemoteClient.Get(service.ID)
 	if err != nil {
 		t.Fatalf("Error retrieveing the service %s", service.ID)
