@@ -59,6 +59,7 @@ func RegisterServiceAndKeepalive(endpoint string, service catalog.Service, ticke
 			_, err := client.Put(&service)
 			if err != nil {
 				logger.Printf("Error updating service registration for %s: %s", service.ID, err)
+				continue
 			}
 			logger.Printf("Updated service registration for %s", service.ID)
 		}
