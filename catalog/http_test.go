@@ -68,6 +68,7 @@ func MockedService(id string) *Service {
 		ID:          "TestHost/TestService" + id,
 		Meta:        map[string]interface{}{"test-id": id},
 		Description: "Test Service " + id,
+		Name:        "_test._tcp",
 		Docs: []Doc{{
 			Description: "REST",
 			URL:         "http://link-to-openapi-specs.json",

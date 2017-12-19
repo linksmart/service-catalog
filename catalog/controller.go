@@ -102,6 +102,7 @@ func (c *Controller) update(id string, s Service) (*Service, error) {
 	var cp Service = *ss
 
 	ss.Description = s.Description
+	ss.Name = s.Name
 	ss.APIs = s.APIs
 	ss.Docs = s.Docs
 	ss.Meta = s.Meta

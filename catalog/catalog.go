@@ -16,6 +16,7 @@ import (
 type Service struct {
 	ID          string                 `json:"id"`
 	Description string                 `json:"description"`
+	Name        string                 `json:"name"`
 	APIs        map[string]string      `json:"apis"`
 	Docs        []Doc                  `json:"docs"`
 	Meta        map[string]interface{} `json:"meta"`
@@ -44,16 +45,23 @@ type Doc struct {
 func (s Service) validate() error {
 
 	if strings.ContainsAny(s.ID, " ") {
-		return fmt.Errorf("id must not contain spaces")
+		return fmt.Errorf("service id must not contain spaces")
 	}
 	_, err := url.Parse("http://example.com/" + s.ID)
 	if err != nil {
-		return fmt.Errorf("invalid service id: %v", err)
+		return fmt.Errorf("service is is no valid invalid: %v", err)
+	}
+
+	if s.Name == "" {
+		return fmt.Errorf("service name not defined")
+	}
+	if strings.ContainsAny(s.Name, " ") {
+		return fmt.Errorf("service name must not contain spaces")
 	}
 
 	for _, URL := range s.APIs {
 		if _, err := url.Parse(URL); err != nil {
-			return fmt.Errorf("invalid API url: %s", URL)
+			return fmt.Errorf("invalid service API url: %s", URL)
 		}
 	}
 
@@ -62,15 +70,15 @@ func (s Service) validate() error {
 		// 	return fmt.Errorf("doc type not defined")
 		// }
 		if _, _, err := mime.ParseMediaType(doc.Type); err != nil {
-			return fmt.Errorf("invalid doc MIME type: %s: %s", doc.URL, err)
+			return fmt.Errorf("invalid service doc MIME type: %s: %s", doc.URL, err)
 		}
 		if _, err := url.Parse(doc.URL); err != nil {
-			return fmt.Errorf("invalid doc url: %s", doc.URL)
+			return fmt.Errorf("invalid service doc url: %s", doc.URL)
 		}
 		// if len(s.APIs) != 0 {
 		// 	for _, api := range doc.APIs {
 		// 		if _, found := s.APIs[api]; !found {
-		// 			return fmt.Errorf("api name in doc does not match any apis: %s", api)
+		// 			return fmt.Errorf("service API name in doc does not match any apis: %s", api)
 		// 		}
 		// 	}
 		// }

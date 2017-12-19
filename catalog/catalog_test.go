@@ -12,6 +12,7 @@ func TestValidate(t *testing.T) {
 	s := &Service{
 		ID:          "unique_id",
 		Description: "service description",
+		Name:        "_test._tcp",
 		APIs:        map[string]string{"API 1": "http://localhost:8080"},
 		Docs: []Doc{{
 			Description: "doc description",
@@ -39,6 +40,12 @@ func TestValidate(t *testing.T) {
 	err = bad.validate()
 	if err == nil {
 		t.Fatalf("Failed to invalidate a registration with ID including whitespace")
+	}
+
+	bad = Service{Name: ""}
+	err = bad.validate()
+	if err == nil {
+		t.Fatalf("Failed to invalidate a registration with no name")
 	}
 
 	bad = Service{APIs: map[string]string{"API 1": ":://localhost"}}

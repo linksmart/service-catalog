@@ -82,6 +82,7 @@ func MockedService(id string) *catalog.Service {
 		ID:          "TestHost/TestService" + id,
 		Meta:        map[string]interface{}{"test-id": id},
 		Description: "Test Service " + id,
+		Name:        "_test._tcp",
 		APIs:        map[string]string{"Dummy": "mqtt://test.mosquitto.org:1883"},
 		Docs: []catalog.Doc{{
 			Description: "REST API Specs",
