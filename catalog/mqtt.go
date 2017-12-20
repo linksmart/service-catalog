@@ -211,6 +211,7 @@ func (m *ClientManager) onConnectHandler(client paho.Client) {
 func (m *ClientManager) addBrokerAsService() {
 	service := Service{
 		ID:          m.id,
+		Name:        "_mqtt._tcp",
 		Description: "MQTT Broker",
 		Meta: map[string]interface{}{
 			"registrar": m.connector.scID,
@@ -221,7 +222,7 @@ func (m *ClientManager) addBrokerAsService() {
 	}
 	_, err := m.connector.controller.add(service)
 	if err != nil {
-		logger.Printf("MQTT: Error registering broker %s:%v", m.id, err)
+		logger.Printf("MQTT: Error registering broker %s: %s", m.id, err)
 	}
 }
 
