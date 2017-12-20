@@ -106,6 +106,7 @@ func (a *HttpAPI) Filter(w http.ResponseWriter, req *http.Request) {
 	}
 
 	coll := &Collection{
+		ID:          a.id,
 		Description: a.description,
 		Services:    services,
 		Page:        page,
