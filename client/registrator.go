@@ -64,6 +64,7 @@ func RegisterServiceAndKeepalive(endpoint string, service catalog.Service, ticke
 			logger.Printf("Updated service registration for %s", service.ID)
 		}
 	}()
+	ticker.C <- time.Now()
 
 	stop := func() error {
 		ticker.Stop()
