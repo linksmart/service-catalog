@@ -214,7 +214,7 @@ func (m *ClientManager) addBrokerAsService() {
 		Name:        "_mqtt._tcp",
 		Description: "MQTT Broker",
 		Meta: map[string]interface{}{
-			"registrar": m.connector.scID,
+			"registrator": m.connector.scID,
 		},
 		APIs: map[string]string{
 			"MQTT": m.url,
