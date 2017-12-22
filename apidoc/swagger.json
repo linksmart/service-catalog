@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "2.2",
+    "version": 2.2,
     "title": "LinkSmart Service Catalog REST API"
   },
   "basePath": "/",
@@ -237,6 +237,9 @@
                 "description": "URL of the newly created Service",
                 "type": "string"
               }
+            },
+            "schema": {
+              "$ref": "#/definitions/Service"
             }
           },
           "400": {
@@ -318,10 +321,16 @@
         ],
         "responses": {
           "200": {
-            "description": "Service updated successfully"
+            "description": "Service updated successfully",
+            "schema": {
+              "$ref": "#/definitions/Service"
+            }
           },
           "201": {
-            "description": "A new service is created"
+            "description": "A new service is created",
+            "schema": {
+              "$ref": "#/definitions/Service"
+            }
           },
           "400": {
             "$ref": "#/responses/RespBadRequest"
