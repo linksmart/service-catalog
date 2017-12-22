@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>eu.linksmart.testing.registration</groupId>
+    <artifactId>reactor</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+	
+	<packaging>pom</packaging>
+    <modules>
+        <module>RegistrationIT</module>
+    </modules>
+    <properties>
+        <eclipse.paho.mqtt.version>1.1.0</eclipse.paho.mqtt.version>
+        <apache.commons.configuration2.version>2.2</apache.commons.configuration2.version>
+        <apache.commons.beanutils.version>1.9.3</apache.commons.beanutils.version>
+        <apache.commons.lang.version>3.1</apache.commons.lang.version>
+        <slf4j.version>1.7.21</slf4j.version>
+        <log4j.version>1.2.17</log4j.version>
+        <jackson.maper.asl.version>1.9.13</jackson.maper.asl.version>
+        <jackson.core.version>2.7.1</jackson.core.version>
+        <jackson.geojeson.version>1.6</jackson.geojeson.version>
+        <java.junit.version>4.12</java.junit.version>
+        <jjwt.version>3.2.0</jjwt.version>
+        <java.version>1.8</java.version>
+        <maven.compiler.plugin.version>3.5.1</maven.compiler.plugin.version>
+        <maven.source.version>2.2.1</maven.source.version>
+        <nimbus.jose.jwt>5.1</nimbus.jose.jwt>
+        <ls.se.agents.version>0.0.0</ls.se.agents.version>
+    </properties>
+    <distributionManagement>
+
+        <repository>
+            <id>releases</id>
+            <name>Releases</name>
+            <url>https://nexus.linksmart.eu/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>Snapshots</name>
+            <url>https://nexus.linksmart.eu/repository/maven-snapshots/</url>
+            <!--<url>https://linksmart.eu/repo/content/repositories/snapshots/</url>-->
+            <uniqueVersion>false</uniqueVersion>
+        </snapshotRepository>
+        <site>
+            <id>agents</id>
+            <name>linksmart-service-agents-repository</name>
+            <url>dav:https://nexus.linksmart.eu/repository/iot-agents-site/</url>
+            <!--<url>dav:https://linksmart.eu/repo/content/sites/agents</url>-->
+        </site>
+    </distributionManagement>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.5.3</version>
+                    <configuration>
+                        <tagNameFormat>v@{project.version}</tagNameFormat>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+
+            <!-- build sources  -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${maven.source.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <mainClass>fully.qualified.MainClass</mainClass>
+                            </manifest>
+                        </archive>
+                        <descriptorRefs>
+                            <descriptorRef>jar-with-dependencies</descriptorRef>
+                        </descriptorRefs>
+                    </configuration>
+                </plugin>
+
+        </plugins>
+
+    </build>
+
+</project>
