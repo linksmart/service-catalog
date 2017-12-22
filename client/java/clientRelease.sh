@@ -15,5 +15,5 @@ sed -i s/'<version>1.0.0<\/version>'/'<version>'`jq -r .info.version ../../apido
 
 #######################################################################################################################################################################################################################
 ## Note: deploy the client
-#mvn -s D:\.m2\settings.xml deploy:deploy-file -D"pomFile=pom.xml" -D"file=target\swagger-java-client-2.2.x.jar"  -D"repositoryId=releases" -"Durl=https://nexus.linksmart.eu/repository/maven-releases/";
+#mvn -s D:\.m2\settings.xml deploy:deploy-file -D"pomFile=pom.xml" -D"file=target\service-catalog-client-2.2.jar"  -D"repositoryId=releases" -"Durl=https://nexus.linksmart.eu/repository/maven-releases/";
 #######################################################################################################################################################################################################################

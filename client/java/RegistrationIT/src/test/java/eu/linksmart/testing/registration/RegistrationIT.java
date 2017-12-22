@@ -35,7 +35,7 @@ public class RegistrationIT {
         String id = UUID.randomUUID().toString();
 
         Service service = new Service();
-        service.setName("_it_tcp_");
+        service.setName("_it._tcp");
         Map<String,String> apis = new HashMap<String, String>();
         apis.put("Test API","http://test:666");
         // service.meta("test");
