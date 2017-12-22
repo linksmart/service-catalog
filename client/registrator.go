@@ -55,7 +55,7 @@ func RegisterServiceAndKeepalive(endpoint string, service catalog.Service, ticke
 
 	ticker := time.NewTicker(time.Duration(service.TTL/2) * time.Second)
 	go func() {
-		for _ = range ticker.C {
+		for ; true; <-ticker.C {
 			_, err := client.Put(&service)
 			if err != nil {
 				logger.Printf("Error updating service registration for %s: %s", service.ID, err)
