@@ -1,6 +1,5 @@
 {
-  "id":"*",
-  "name":"it._tcp",
+  "name":"_it._tcp",
   "description":"It's a test",
   "meta": {"dummy":"test"},
   "apis":{
