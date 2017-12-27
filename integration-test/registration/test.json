@@ -1,0 +1,18 @@
+{
+  "id":"*",
+  "name":"it._tcp",
+  "description":"It's a test",
+  "meta": {"dummy":"test"},
+  "apis":{
+    "My API Name": "http://my.test:666",
+    "My Other API Name": "http://my.other.test:666"
+  },
+  "docs":[
+    {
+      "description":"My docu description",
+      "apis":["My API Name","My Other API Name"],
+      "type":"application/json",
+      "url":"http://my.great.docs.location"
+    }
+  ]
+}

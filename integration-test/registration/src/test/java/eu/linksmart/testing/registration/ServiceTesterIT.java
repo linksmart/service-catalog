@@ -1,5 +1,6 @@
 package eu.linksmart.testing.registration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.client.ApiClient;
 import io.swagger.client.api.ScApi;
 import io.swagger.client.model.APIIndex;
@@ -7,47 +8,39 @@ import io.swagger.client.model.Service;
 import io.swagger.client.model.ServiceDocs;
 import org.junit.Test;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-/**
- * Created by José Ángel Carvajal on 21.12.2017 a researcher of Fraunhofer FIT.
- */
-public class RegistrationIT {
+public class ServiceTesterIT {
+    static final String
+            BASE_URL = "http://localhost:8082",
+            DEFAULT_FILE_NAME = "test.json";
 
-    static final String BASE_URL_PATH = "base_url", BASE_URL = "http://localhost:8082";
+    static final String
+            BASE_URL_PATH = "base_url",
+            FILENAME = "filename";
     @Test
     public void registration(){
         if(!System.getenv().containsKey("integration_test"))
             return;
         ApiClient client = new ApiClient();
-
-        client.setBasePath((System.getenv().containsKey(BASE_URL_PATH))?System.getenv().get(BASE_URL_PATH):BASE_URL);
-
+        ObjectMapper mapper = new ObjectMapper();
+        client.setBasePath(System.getenv().getOrDefault(BASE_URL_PATH, BASE_URL));
         ScApi api = new ScApi(client);
 
-        String id = UUID.randomUUID().toString();
+        String id = UUID.randomUUID().toString(), file = System.getenv().getOrDefault(FILENAME, DEFAULT_FILE_NAME);
 
-        Service service = new Service();
-        service.setName("_it._tcp");
-        Map<String,String> apis = new HashMap<String, String>();
-        apis.put("Test API","http://test:666");
-        // service.meta("test");
-        service.apis(apis);
-        ServiceDocs docs = new ServiceDocs();
-        docs.addApisItem("Test API");
-        docs.description("it's a test!");
-        docs.setType("application/json");
-        docs.setUrl("http://test:666/docu");
-        service.addDocsItem(docs);
 
         try{
+
+            Service service = mapper.readValue(new File(file), Service.class);
+
             Service service1;
 
             api.idPut(id,service);
