@@ -20,7 +20,7 @@ import static org.junit.Assert.fail;
 public class ServiceTesterIT {
     static final String
             BASE_URL = "http://localhost:8082",
-            DEFAULT_FILE_NAME = "test.json";
+            DEFAULT_FILE_NAME = "test/dummy.json";
 
     static final String
             BASE_URL_PATH = "base_url",
