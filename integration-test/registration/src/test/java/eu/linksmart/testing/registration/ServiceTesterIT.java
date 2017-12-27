@@ -41,15 +41,19 @@ public class ServiceTesterIT {
 
             Service service = mapper.readValue(new File(file), Service.class);
 
-            Service service1;
-
-            api.idPut(id,service);
+            Service service1, service2= api.idPut(id,service);
 
             service1 = api.idGet(id);
 
-            assertTrue("Ids most be equal", id.equals(service1.getId()));
+
+            assertTrue("Ids must be equal", id.equals(service1.getId()));
+            assertTrue("Name must be equal", service.getName().equals(service1.getName()));
+            assertTrue("Description must be equal", service.getDescription().equals(service1.getDescription()));
+            assertTrue("Docs must be equal", service.getDocs().equals(service1.getDocs()));
+
             APIIndex index =  api.rootGet(new BigDecimal(1),new BigDecimal(100));
             assertTrue("It must contain 1 service", index.getTotal().equals(1));
+
             api.idDelete(id);
 
         }catch (Exception e){
