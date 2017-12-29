@@ -19,6 +19,6 @@
       }
     ],
     "commonRegTopics":  ["LS/+/+/+/service", "LS/+/+/+/service/+"],
-    "commonWillTopics": ["LS/+/+/+/service/will", "LS/+/+/+/service/will/+"]
+    "commonWillTopics": ["LS/+/+/+/will",    "LS/+/+/+/will/+"]
   }
 }
