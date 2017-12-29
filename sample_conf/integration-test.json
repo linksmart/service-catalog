@@ -12,7 +12,7 @@
     "brokers": [
       {
         "id": "MQTTbroker1",
-        "url":"tcp://localhost:1883",
+        "url":"tcp://broker1:1883",
         "regTopics": [],
         "willTopics": [],
         "qos": 1
