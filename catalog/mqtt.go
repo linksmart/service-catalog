@@ -288,22 +288,23 @@ func (connector *MQTTConnector) handleService(service Service, will bool) {
 			if err != nil {
 				switch err.(type) {
 				case *ConflictError:
-					logger.Printf("MQTT: Error adding the service: %s", err.Error())
+					logger.Printf("MQTT: Error adding service: %s", err.Error())
 				case *BadRequestError:
 					logger.Printf("MQTT: Invalid service registration: %s", err.Error())
 				default:
-					logger.Printf("MQTT: Error updating the service: %s", err.Error())
+					logger.Printf("MQTT: Error creating service: %s", err.Error())
 				}
+			} else {
+				logger.Printf("MQTT: Created service with id %s", service.ID)
 			}
-			logger.Printf("MQTT: Created service with id %s", service.ID)
-			return
 		case *ConflictError:
-			logger.Printf("MQTT: Error updating the service: %s", err.Error())
+			logger.Printf("MQTT: Error updating service: %s", err.Error())
 		case *BadRequestError:
 			logger.Printf("MQTT: Invalid service registration: %s", err.Error())
 		default:
-			logger.Printf("MQTT: Error updating the service: %s", err.Error())
+			logger.Printf("MQTT: Error updating service: %s", err.Error())
 		}
+	} else {
+		logger.Printf("MQTT: Updated service with id %s", service.ID)
 	}
-	logger.Printf("MQTT: Updated service with id %s", service.ID)
 }
