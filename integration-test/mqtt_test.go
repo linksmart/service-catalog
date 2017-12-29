@@ -97,7 +97,6 @@ func MockedService(id string) *catalog.Service {
 
 //TODO_: Improve this: with MQTT brokers runnning as docker images and the test script in another container. Use Bamboo to trigger this.
 func TestMain(m *testing.M) {
-	time.Sleep(30 * time.Second)
 
 	// Take urls from envs (if provided)
 	if url := os.Getenv("SC"); url != "" {
