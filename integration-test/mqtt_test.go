@@ -17,6 +17,7 @@ import (
 )
 
 var (
+	// Can be overriden with env variables
 	ServiceCatalogURL = "http://localhost:8082"
 	Brokers           = []string{"tcp://localhost:1883"}
 )
@@ -79,7 +80,7 @@ func (m *ClientManager) onConnectionLostHandler(client paho.Client, err error) {
 
 func MockedService(id string) *catalog.Service {
 	return &catalog.Service{
-		ID:          "TestHost/TestService" + id,
+		ID:          "TestHost/" + id,
 		Meta:        map[string]interface{}{"test-id": id},
 		Description: "Test Service " + id,
 		Name:        "_test._tcp",
@@ -96,6 +97,8 @@ func MockedService(id string) *catalog.Service {
 
 //TODO_: Improve this: with MQTT brokers runnning as docker images and the test script in another container. Use Bamboo to trigger this.
 func TestMain(m *testing.M) {
+	time.Sleep(30 * time.Second)
+
 	// Take urls from envs (if provided)
 	if url := os.Getenv("SC"); url != "" {
 		log.Println("Setting service catalog:", url)
