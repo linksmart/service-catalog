@@ -21,7 +21,7 @@
         "password": ""
       }
     ],
-    "commonRegTopics":  ["LS/+/+/SER/1.0/reg"],
-    "commonWillTopics": ["LS/+/+/SER/1.0/will"]
+    "commonRegTopics":  ["LS/v2/+/+/service", "LS/v2/+/+/service/+"],
+    "commonWillTopics": ["LS/v2/+/+/will",    "LS/v2/+/+/will/+"]
   }
 }

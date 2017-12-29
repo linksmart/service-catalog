@@ -12,13 +12,13 @@
     "brokers": [
       {
         "id": "MQTTbroker1",
-        "url":"tcp://broker1:1883",
+        "url":"tcp://localhost:1883",
         "regTopics": [],
         "willTopics": [],
         "qos": 1
       }
     ],
-    "commonRegTopics":  ["LS/+/+/SER/1.0/REG"],
-    "commonWillTopics": ["LS/+/+/SER/1.0/WILL"]
+    "commonRegTopics":  ["LS/+/+/+/service/", "LS/+/+/+/service/+"],
+    "commonWillTopics": ["LS/+/+/+/service/will", "LS/+/+/+/service/will/+"]
   }
 }

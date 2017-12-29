@@ -161,12 +161,12 @@ func TestMain(m *testing.M) {
 	os.Exit(0)
 }
 
-func TestCreateAndDelete(t *testing.T) {
+func TestCreateDelete(t *testing.T) {
 
 	//Publish a service
-	service := MockedService("1")
+	service := MockedService(uuid.NewV4().String())
 	b, _ := json.Marshal(service)
-	manager.client.Publish("LS/MOCK/1/SER/1.0/REG", 1, false, b)
+	manager.client.Publish("LS/v2/IT/someid/service", 1, false, b)
 
 	time.Sleep(sleepTime)
 	//verify if the service is created
@@ -183,7 +183,9 @@ func TestCreateAndDelete(t *testing.T) {
 	//destroy the service
 	time.Sleep(sleepTime)
 
-	manager.client.Publish("LS/MOCK/1/SER/1.0/WILL", 1, false, b)
+	if token := manager.client.Publish("LS/v2/IT/someid/will", 1, false, b); token.Wait() && token.Error() != nil {
+		t.Fatalf("Error publishing: %s", token.Error())
+	}
 
 	//verify if the service is deleted
 	time.Sleep(sleepTime)
@@ -201,12 +203,12 @@ func TestCreateAndDelete(t *testing.T) {
 
 }
 
-func TestCreateUpdateAndDelete(t *testing.T) {
+func TestCreateUpdate(t *testing.T) {
 
 	//Publish a service
-	service := MockedService("1")
+	service := MockedService(uuid.NewV4().String())
 	b, _ := json.Marshal(service)
-	manager.client.Publish("LS/MOCK/1/SER/1.0/REG", 1, false, b)
+	manager.client.Publish("LS/v2/IT/someid/service", 1, false, b)
 
 	time.Sleep(sleepTime)
 	//verify if the service is created
@@ -223,10 +225,12 @@ func TestCreateUpdateAndDelete(t *testing.T) {
 	//update the service
 	service.TTL = 200
 	b, _ = json.Marshal(service)
-	manager.client.Publish("LS/MOCK/1/SER/1.0/REG", 1, false, b)
+	if token := manager.client.Publish("LS/v2/IT/someid/service", 1, false, b); token.Wait() && token.Error() != nil {
+		t.Fatalf("Error publishing: %s", token.Error())
+	}
 
 	time.Sleep(sleepTime)
-	//verify if the service is created
+	//verify if the service is updated
 	gotService, err = httpRemoteClient.Get(service.ID)
 	if err != nil {
 		t.Fatalf("Error retrieveing the service %s: %s", service.ID, err)
@@ -235,20 +239,43 @@ func TestCreateUpdateAndDelete(t *testing.T) {
 	if !sameServices(gotService, service, true) {
 		t.Fatalf("The retrieved service is not the same as the added one:\n Added:\n %v \n Retrieved: \n %v", service, gotService)
 	}
+
+}
+
+func TestCreateDeleteWithIdInTopic(t *testing.T) {
+	id := "1234"
+
+	//Publish a service
+	service := MockedService("")
+	service.ID = "" // clear the id field
+	b, _ := json.Marshal(service)
+	manager.client.Publish("LS/v2/IT/someid/service/"+id, 1, false, b)
+
+	time.Sleep(sleepTime)
+	//verify if the service is created
+	httpRemoteClient, _ := client.NewHTTPClient(ServiceCatalogURL, nil)
+	_, err := httpRemoteClient.Get(id)
+	if err != nil {
+		t.Fatalf("Error retrieveing the service %s: %s", id, err)
+		return
+	}
+
 	//destroy the service
 	time.Sleep(sleepTime)
 
-	manager.client.Publish("LS/MOCK/1/SER/1.0/WILL", 1, false, b)
+	if token := manager.client.Publish("LS/v2/IT/someid/will/"+id, 1, false, b); token.Wait() && token.Error() != nil {
+		t.Fatalf("Error publishing: %s", token.Error())
+	}
 
 	//verify if the service is deleted
 	time.Sleep(sleepTime)
-	gotService, err = httpRemoteClient.Get(service.ID)
+	_, err = httpRemoteClient.Get(id)
 	if err != nil {
 		switch err.(type) {
 		case *catalog.NotFoundError:
 			break
 		default:
-			t.Fatalf("Error while fetching services: %v", err)
+			t.Fatalf("Error while fetching services: %s", err)
 		}
 	} else {
 		t.Fatalf("Service was fetched even after deletion")

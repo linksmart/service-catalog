@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -233,17 +234,32 @@ func (m *ClientManager) onConnectionLostHandler(client paho.Client, err error) {
 func (s *Subscription) onMessage(client paho.Client, msg paho.Message) {
 	logger.Debugf("MQTT: %s %s", msg.Topic(), msg.Payload())
 
-	var service Service
+	var id string
+	// Get id from topic. Expects: <prefix>will/<id>
+	if s.will {
+		if parts := strings.SplitAfter(msg.Topic(), "will/"); len(parts) == 2 && parts[1] != "" {
+			s.connector.handleService(Service{ID: parts[1]}, s.will)
+			return
+		}
+	}
+	// Get id from topic. Expects: <prefix>service/<id>
+	if parts := strings.SplitAfter(msg.Topic(), "service/"); len(parts) == 2 {
+		id = parts[1]
+	}
 
+	var service Service
 	err := json.Unmarshal(msg.Payload(), &service)
 	if err != nil {
 		logger.Printf("MQTT: Error parsing json: %s : %v", msg.Payload(), err)
 		return
 	}
 
-	if service.ID == "" {
-		logger.Printf("MQTT: Invalid service: No ID provided")
+	if service.ID == "" && id == "" {
+		logger.Printf("MQTT: Invalid registration: ID not provided")
 		return
+	} else if service.ID == "" {
+		logger.Debugf("MQTT: Getting id from topic: %s", id)
+		service.ID = id
 	}
 
 	s.connector.handleService(service, s.will)
@@ -259,7 +275,7 @@ func (s *Subscription) printIfWill() string {
 func (connector *MQTTConnector) handleService(service Service, will bool) {
 	if will {
 		connector.controller.delete(service.ID)
-		logger.Printf("MQTT: Removed service %s", service.ID)
+		logger.Printf("MQTT: Removed service with id %s", service.ID)
 		return
 	}
 
@@ -272,22 +288,22 @@ func (connector *MQTTConnector) handleService(service Service, will bool) {
 			if err != nil {
 				switch err.(type) {
 				case *ConflictError:
-					logger.Printf("MQTT: Error adding the service:%s", err.Error())
+					logger.Printf("MQTT: Error adding the service: %s", err.Error())
 				case *BadRequestError:
-					logger.Printf("MQTT: Invalid service registration:%s", err.Error())
+					logger.Printf("MQTT: Invalid service registration: %s", err.Error())
 				default:
-					logger.Printf("MQTT: Error updating the service:%s", err.Error())
+					logger.Printf("MQTT: Error updating the service: %s", err.Error())
 				}
 			}
-			logger.Printf("MQTT: Created service %s", service.ID)
+			logger.Printf("MQTT: Created service with id %s", service.ID)
 			return
 		case *ConflictError:
-			logger.Printf("MQTT: Error updating the service:%s", err.Error())
+			logger.Printf("MQTT: Error updating the service: %s", err.Error())
 		case *BadRequestError:
-			logger.Printf("MQTT: Invalid service registration:%s", err.Error())
+			logger.Printf("MQTT: Invalid service registration: %s", err.Error())
 		default:
-			logger.Printf("MQTT: Error updating the service:%s", err.Error())
+			logger.Printf("MQTT: Error updating the service: %s", err.Error())
 		}
 	}
-	logger.Printf("MQTT: Updated service %s", service.ID)
+	logger.Printf("MQTT: Updated service with id %s", service.ID)
 }
