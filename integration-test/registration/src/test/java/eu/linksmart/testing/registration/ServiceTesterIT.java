@@ -35,12 +35,17 @@ public class ServiceTesterIT {
         System.out.println("SC URL: "+System.getenv().getOrDefault(BASE_URL_PATH, BASE_URL));
         client.setBasePath(System.getenv().getOrDefault(BASE_URL_PATH, BASE_URL));
         ScApi api = new ScApi(client);
-        
+
         System.out.println("Verification registration file : "+System.getenv().getOrDefault(FILENAME, DEFAULT_FILE_NAME));
         String id = UUID.randomUUID().toString(), file = System.getenv().getOrDefault(FILENAME, DEFAULT_FILE_NAME);
 
         try{
-            Service service = mapper.readValue(new File(file), Service.class), service1 = api.idGet(id), service2= api.idPut(id,service);
+            Service service = mapper.readValue(new File(file), Service.class);
+
+            System.out.println("Registering service");
+            Service service2= api.idPut(id,service);
+
+            Service service1=api.idGet(id);
 
             assertTrue("Ids must be equal", id.equals(service1.getId()));
             comp(service,service1);
