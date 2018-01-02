@@ -35,8 +35,8 @@ public class ServiceTesterIT {
         System.out.println("SC URL: "+System.getenv().getOrDefault(BASE_URL_PATH, BASE_URL));
         client.setBasePath(System.getenv().getOrDefault(BASE_URL_PATH, BASE_URL));
         ScApi api = new ScApi(client);
-
-        System.out.println("Verification registration file : "+System.getenv().getOrDefault(BASE_URL_PATH, BASE_URL));
+        
+        System.out.println("Verification registration file : "+System.getenv().getOrDefault(FILENAME, DEFAULT_FILE_NAME));
         String id = UUID.randomUUID().toString(), file = System.getenv().getOrDefault(FILENAME, DEFAULT_FILE_NAME);
 
         try{
