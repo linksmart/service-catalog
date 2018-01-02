@@ -389,25 +389,26 @@
           "sc"
         ],
         "summary": "Service filtering API",
+        "description": "The filtering API enables service filtering based on a given path, operator, and value. Below are few examples:\n* Filter all MQTT brokers:\n  `/name/prefix/_mqtt`\n* Filter all services operating on TCP\n  `/name/suffix/_tcp`\n* Filter all services based on address meta field:\n  `/meta.address/contains/Bonn`\n",
         "parameters": [
           {
             "name": "jsonpath",
             "in": "path",
-            "description": "Dot-separated path in the registration JSON",
+            "description": "The dot notation path to search for in service objects",
             "required": true,
             "type": "string"
           },
           {
             "name": "operator",
             "in": "path",
-            "description": "One of (equals, prefix, suffix, contains) string comparison operations",
+            "description": "One of (equals, prefix, suffix, contains) string comparison operators",
             "required": true,
             "type": "string"
           },
           {
             "name": "value",
             "in": "path",
-            "description": "The intended value, prefix, suffix, or substring of the value identified by the jsonpath",
+            "description": "The intended value, prefix, suffix, or substring identified by the jsonpath",
             "required": true,
             "type": "string"
           },
