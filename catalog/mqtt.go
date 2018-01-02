@@ -31,10 +31,10 @@ func (c MQTTConf) Validate() error {
 			return err
 		}
 		if broker.QoS > 2 {
-			return fmt.Errorf("MQTT: qos must be 0, 1, or 2")
+			return fmt.Errorf("QoS must be 0, 1, or 2")
 		}
 		if len(c.CommonRegTopic) == 0 && len(broker.RegTopics) == 0 {
-			return fmt.Errorf("MQTT: regTopics not defined")
+			return fmt.Errorf("regTopics not defined")
 		}
 	}
 	return nil
@@ -159,7 +159,7 @@ func (c *MQTTConnector) register(broker Broker) error {
 		manager.client = paho.NewClient(opts)
 
 		if token := manager.client.Connect(); token.Wait() && token.Error() != nil {
-			return fmt.Errorf("MQTT: Error connecting to broker: %v", token.Error())
+			return fmt.Errorf("error connecting to broker: %v", token.Error())
 		}
 		c.managers[broker.URL] = manager
 
@@ -180,7 +180,7 @@ func (c *MQTTConnector) register(broker Broker) error {
 
 				// Subscribe
 				if token := manager.client.Subscribe(subscription.topic, subscription.qos, subscription.onMessage); token.Wait() && token.Error() != nil {
-					return fmt.Errorf("MQTT: Error subscribing: %v", token.Error())
+					return fmt.Errorf("error subscribing: %v", token.Error())
 				}
 				manager.subscriptions[topic] = subscription
 				logger.Printf("MQTT: %s: Subscribed to %s %s", broker.URL, topic, subscription.printIfWill())

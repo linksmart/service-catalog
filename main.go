@@ -34,7 +34,8 @@ const LINKSMART = `
 ╩═╝ ╩ ╝╚╝ ╩ ╩  ╚═╝ ╩ ╩ ╩ ╩ ╩╚═  ╩
 `
 
-var Version = "MAJOR.MINOR.PATCH Not Provided"
+var Version = "N/A"
+var BuildNumber = "N/A"
 
 func main() {
 	flag.Parse()
@@ -43,7 +44,9 @@ func main() {
 		return
 	}
 	fmt.Print(LINKSMART)
-	logger.Printf("Starting Service Catalog - Version %s", Version)
+	logger.Printf("Starting Service Catalog")
+	logger.Printf("Version: %s", Version)
+	logger.Printf("Build Number: %s", BuildNumber)
 
 	if *profile {
 		logger.Println("Starting runtime profiling server")
