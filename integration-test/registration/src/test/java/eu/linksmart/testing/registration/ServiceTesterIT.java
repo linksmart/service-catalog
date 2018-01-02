@@ -28,11 +28,15 @@ public class ServiceTesterIT {
     @Test
     public void registration(){
 
+        System.out.println("Start registration dummy integration test");
         ApiClient client = new ApiClient();
         ObjectMapper mapper = new ObjectMapper();
+
+        System.out.println("SC URL: "+System.getenv().getOrDefault(BASE_URL_PATH, BASE_URL));
         client.setBasePath(System.getenv().getOrDefault(BASE_URL_PATH, BASE_URL));
         ScApi api = new ScApi(client);
 
+        System.out.println("Verification registration file : "+System.getenv().getOrDefault(BASE_URL_PATH, BASE_URL));
         String id = UUID.randomUUID().toString(), file = System.getenv().getOrDefault(FILENAME, DEFAULT_FILE_NAME);
 
         try{
@@ -56,6 +60,8 @@ public class ServiceTesterIT {
             e.printStackTrace();
             fail();
         }
+
+        System.out.println("Registration Dummy integration test finished");
 
     }
     private void comp(Service s1, Service s2){
