@@ -26,7 +26,14 @@ type MQTTConf struct {
 }
 
 func (c MQTTConf) Validate() error {
+
 	for _, broker := range append(c.AdditionalBrokers, c.Broker) {
+		if broker.URL == "" {
+			continue
+		}
+		if broker.ID == "" {
+			return fmt.Errorf("id not set")
+		}
 		_, err := url.Parse(broker.URL)
 		if err != nil {
 			return err
@@ -90,6 +97,9 @@ func StartMQTTConnector(controller *Controller, mqttConf MQTTConf, scDescription
 	}
 
 	for _, broker := range append(mqttConf.AdditionalBrokers, mqttConf.Broker) {
+		if broker.URL == "" {
+			continue
+		}
 		broker.will = make(map[string]bool)
 		for _, topic := range append(mqttConf.CommonWillTopics, broker.WillTopics...) {
 			broker.will[topic] = true
