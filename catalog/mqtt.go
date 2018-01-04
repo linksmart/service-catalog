@@ -31,9 +31,6 @@ func (c MQTTConf) Validate() error {
 		if broker.URL == "" {
 			continue
 		}
-		if broker.ID == "" {
-			return fmt.Errorf("id not set")
-		}
 		_, err := url.Parse(broker.URL)
 		if err != nil {
 			return err
@@ -99,6 +96,9 @@ func StartMQTTConnector(controller *Controller, mqttConf MQTTConf, scDescription
 	for _, broker := range append(mqttConf.AdditionalBrokers, mqttConf.Broker) {
 		if broker.URL == "" {
 			continue
+		}
+		if broker.ID == "" {
+			broker.ID = uuid.NewV4().String()
 		}
 		broker.will = make(map[string]bool)
 		for _, topic := range append(mqttConf.CommonWillTopics, broker.WillTopics...) {
