@@ -15,6 +15,7 @@ var logger *elog.Logger
 func init() {
 	logger = elog.New(LoggerPrefix, &elog.Config{
 		DebugPrefix: LoggerPrefix,
+		DebugTrace:  elog.NoTrace,
 	})
 
 	if os.Getenv("PAHO_DEBUG") == "1" {

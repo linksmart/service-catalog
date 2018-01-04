@@ -11,5 +11,6 @@ var logger *elog.Logger
 func init() {
 	logger = elog.New("[sc] ", &elog.Config{
 		DebugPrefix: "[sc-debug] ",
+		DebugTrace:  elog.NoTrace,
 	})
 }
