@@ -10,17 +10,16 @@
     "bindPort": 8082
   },
   "mqtt":{
-    "brokers": [
-      {
-        "id": "MQTTbroker1",
-        "url":"tcp://localhost:1883",
-        "regTopics": [],
-        "willTopics": [],
-        "qos": 1,
-        "username": "",
-        "password": ""
-      }
-    ],
+    "broker" : {
+      "id": "main_broker",
+      "url": "tcp://localhost:1883",
+      "regTopics": [],
+      "willTopics": [],
+      "qos": 1,
+      "username": "",
+      "password": ""
+    },
+    "additionalBrokers": [],
     "commonRegTopics":  ["LS/v2/+/+/service", "LS/v2/+/+/service/+"],
     "commonWillTopics": ["LS/v2/+/+/will",    "LS/v2/+/+/will/+"]
   }

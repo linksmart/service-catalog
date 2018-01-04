@@ -62,6 +62,12 @@
   version = "1.0.0"
 
 [[projects]]
+  name = "github.com/kelseyhightower/envconfig"
+  packages = ["."]
+  revision = "f611eb38b3875cc3bd991ca91c51d06446afa14c"
+  version = "v1.3.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/miekg/dns"
   packages = ["."]
@@ -94,6 +100,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "46d7960fe908d61a405606a84fd8e81bd5e846b4d8aa47d2b99f23db73f919c5"
+  inputs-digest = "734defcb808cb6e89505d28ef52ca15761d6418604876020609486c8d4b25885"
   solver-name = "gps-cdcl"
   solver-version = 1

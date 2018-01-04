@@ -19,13 +19,14 @@ const (
 )
 
 type MQTTConf struct {
-	Brokers         []Broker `json:"brokers"`
-	CommonRegTopic  []string `json:"commonRegTopics"`
-	CommonWillTopic []string `json:"commonWillTopics"`
+	Broker            Broker   `json:"broker"`
+	AdditionalBrokers []Broker `json:"additionalBrokers"`
+	CommonRegTopics   []string `json:"commonRegTopics"`
+	CommonWillTopics  []string `json:"commonWillTopics"`
 }
 
 func (c MQTTConf) Validate() error {
-	for _, broker := range c.Brokers {
+	for _, broker := range append(c.AdditionalBrokers, c.Broker) {
 		_, err := url.Parse(broker.URL)
 		if err != nil {
 			return err
@@ -33,7 +34,7 @@ func (c MQTTConf) Validate() error {
 		if broker.QoS > 2 {
 			return fmt.Errorf("QoS must be 0, 1, or 2")
 		}
-		if len(c.CommonRegTopic) == 0 && len(broker.RegTopics) == 0 {
+		if len(c.CommonRegTopics) == 0 && len(broker.RegTopics) == 0 {
 			return fmt.Errorf("regTopics not defined")
 		}
 	}
@@ -88,12 +89,12 @@ func StartMQTTConnector(controller *Controller, mqttConf MQTTConf, scDescription
 		failedRegistrations: make(map[string]Broker),
 	}
 
-	for _, broker := range mqttConf.Brokers {
+	for _, broker := range append(mqttConf.AdditionalBrokers, mqttConf.Broker) {
 		broker.will = make(map[string]bool)
-		for _, topic := range append(mqttConf.CommonWillTopic, broker.WillTopics...) {
+		for _, topic := range append(mqttConf.CommonWillTopics, broker.WillTopics...) {
 			broker.will[topic] = true
 		}
-		for _, topics := range [][]string{mqttConf.CommonRegTopic, mqttConf.CommonWillTopic, broker.RegTopics, broker.WillTopics} {
+		for _, topics := range [][]string{mqttConf.CommonRegTopics, mqttConf.CommonWillTopics, broker.RegTopics, broker.WillTopics} {
 			broker.topics = append(broker.topics, topics...)
 		}
 
