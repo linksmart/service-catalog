@@ -5,7 +5,12 @@
     "bindAddr": "0.0.0.0",
     "bindPort": 8082
   },
-  "mqtt": {},
+  "mqtt": {
+    "broker" : {},
+    "additionalBrokers": [],
+    "commonRegTopics":  ["LS/v2/+/+/service", "LS/v2/+/+/service/+"],
+    "commonWillTopics": ["LS/v2/+/+/will",    "LS/v2/+/+/will/+"]
+  },
   "storage": {
     "type": "leveldb",
     "dsn": "/data"
