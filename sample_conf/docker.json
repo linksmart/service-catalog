@@ -1,18 +1,26 @@
 {
   "description": "Standalone Service Catalog",
   "dnssdEnabled": false,
+  "storage": {
+    "type": "leveldb",
+    "dsn": "/data"
+  },
   "http" : {
     "bindAddr": "0.0.0.0",
     "bindPort": 8082
   },
   "mqtt": {
-    "broker" : {},
+    "broker" : {
+      "id": "",
+      "url": "",
+      "regTopics": [],
+      "willTopics": [],
+      "qos": 1,
+      "username": "",
+      "password": ""
+    },
     "additionalBrokers": [],
     "commonRegTopics":  ["LS/v2/+/+/service", "LS/v2/+/+/service/+"],
     "commonWillTopics": ["LS/v2/+/+/will",    "LS/v2/+/+/will/+"]
-  },
-  "storage": {
-    "type": "leveldb",
-    "dsn": "/data"
   }
 }
