@@ -32,16 +32,16 @@
     "authorization": {
       "rules": [
         {
-          "resources": ["/sc"],
+          "resources": ["/"],
           "methods": ["GET","POST", "PUT", "DELETE"],
           "users": ["admin"],
           "groups": []
         },
         {
-          "resources": ["/sc"],
+          "resources": ["/"],
           "methods": ["GET"],
           "users": [],
-          "groups": ["fit"]
+          "groups": ["anonymous"]
         }
       ]
     }
