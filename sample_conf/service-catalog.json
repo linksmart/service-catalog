@@ -12,7 +12,7 @@
   "mqtt":{
     "broker" : {
       "id": "main_broker",
-      "url": "tcp://localhost:1883",
+      "url": "",
       "regTopics": [],
       "willTopics": [],
       "qos": 1,
@@ -22,5 +22,28 @@
     "additionalBrokers": [],
     "commonRegTopics":  ["LS/v2/+/+/service", "LS/v2/+/+/service/+"],
     "commonWillTopics": ["LS/v2/+/+/will",    "LS/v2/+/+/will/+"]
+  },
+  "auth": {
+    "enabled": false,
+    "provider": "provider-name",
+    "providerURL": "https://provider-url",
+    "serviceID": "sampleSC",
+    "basicEnabled": false,
+    "authorization": {
+      "rules": [
+        {
+          "resources": ["/sc"],
+          "methods": ["GET","POST", "PUT", "DELETE"],
+          "users": ["admin"],
+          "groups": []
+        },
+        {
+          "resources": ["/sc"],
+          "methods": ["GET"],
+          "users": [],
+          "groups": ["fit"]
+        }
+      ]
+    }
   }
 }
