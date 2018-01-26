@@ -1,5 +1,6 @@
 // Copyright 2014-2016 Fraunhofer Institute for Applied Information Technology FIT
 
+// Package utils offers utility functions for http requests, pagination, and filtering
 package utils
 
 import (

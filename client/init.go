@@ -1,5 +1,6 @@
 // Copyright 2014-2016 Fraunhofer Institute for Applied Information Technology FIT
 
+// Package client offers utility functions for service registration
 package client
 
 import (
