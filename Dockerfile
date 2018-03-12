@@ -1,3 +1,5 @@
+# Dockerfile for piplelines.linksmart.eu
+# Use Dockerfile-multistage to build locally
 FROM alpine
 
 COPY sample_conf/* /conf/
