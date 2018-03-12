@@ -92,7 +92,7 @@ public class ServiceTesterIT {
                 assertTrue("The docs description, apis, and type must match ", s2.getDocs().stream().anyMatch(d2->
                                 cmp(docs.getDescription(), d2.getDescription(), "Docs.Description") && docs.getDescription().equals(d2.getDescription()) &&
                                 cmp(docs.getType(), d2.getType(), "Docs.Type") && docs.getType().equals(d2.getType()) &&
-                                cmp(docs.getApis(), d2.getApis(), "Docs.Apis") && docs.getApis().equals(d2.getApis()))
+                                (docs.getApis()==null || cmp(docs.getApis(), d2.getApis(), "Docs.Apis") && docs.getApis().equals(d2.getApis())) )
                 );
 
     }
