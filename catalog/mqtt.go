@@ -232,6 +232,7 @@ func (m *ClientManager) addBrokerAsService() {
 				Description: "MQTT Broker",
 				Meta: map[string]interface{}{
 					"registrator": m.connector.scID,
+					"connected":   true,
 				},
 				APIs: map[string]string{
 					"MQTT": m.url,
@@ -248,6 +249,7 @@ func (m *ClientManager) addBrokerAsService() {
 		}
 	}
 	// Broker re-connect
+	service.Meta["connected"] = true
 	_, err = m.connector.controller.update(m.id, *service)
 	if err != nil {
 		logger.Printf("MQTT: Error updating broker %s: %s", m.id, err)
@@ -257,6 +259,17 @@ func (m *ClientManager) addBrokerAsService() {
 
 func (m *ClientManager) onConnectionLostHandler(client paho.Client, err error) {
 	logger.Printf("MQTT: %s: Connection lost: %v", m.url, err)
+	service, err := m.connector.controller.get(m.id)
+	if err != nil {
+		logger.Printf("MQTT: Error retrieving broker %s: %s", m.id, err)
+	}
+
+	service.Meta["connected"] = false
+	_, err = m.connector.controller.update(m.id, *service)
+	if err != nil {
+		logger.Printf("MQTT: Error updating broker %s: %s", m.id, err)
+	}
+	logger.Printf("MQTT: %s: Updated broker %s", m.url, m.id)
 }
 
 func (s *Subscription) onMessage(client paho.Client, msg paho.Message) {
