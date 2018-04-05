@@ -23,6 +23,7 @@ type MQTTConf struct {
 	AdditionalBrokers []Broker `json:"additionalBrokers"`
 	CommonRegTopics   []string `json:"commonRegTopics"`
 	CommonWillTopics  []string `json:"commonWillTopics"`
+	TopicPrefix       string   `json:"topicPrefix"`
 }
 
 func (c MQTTConf) Validate() error {
@@ -66,6 +67,7 @@ type MQTTConnector struct {
 	scID                string
 	managers            map[string]*ClientManager
 	failedRegistrations map[string]Broker
+	topicPrefix         string
 }
 
 type ClientManager struct {
@@ -92,7 +94,7 @@ func StartMQTTConnector(controller *Controller, mqttConf MQTTConf, scDescription
 		managers:            make(map[string]*ClientManager),
 		failedRegistrations: make(map[string]Broker),
 	}
-
+	controller.AddListener(c)
 	for _, broker := range append(mqttConf.AdditionalBrokers, mqttConf.Broker) {
 		if broker.URL == "" {
 			continue
@@ -114,6 +116,8 @@ func StartMQTTConnector(controller *Controller, mqttConf MQTTConf, scDescription
 			c.failedRegistrations[broker.ID] = broker
 		}
 	}
+
+	c.topicPrefix = mqttConf.TopicPrefix
 
 	c.retryRegistrations()
 }
@@ -169,6 +173,8 @@ func (c *MQTTConnector) register(broker Broker) error {
 		//
 		manager.client = paho.NewClient(opts)
 
+		logger.Printf("MQTT: %s: connecting...", manager.url)
+
 		if token := manager.client.Connect(); token.Wait() && token.Error() != nil {
 			return fmt.Errorf("error connecting to broker: %v", token.Error())
 		}
@@ -204,6 +210,62 @@ func (c *MQTTConnector) register(broker Broker) error {
 	}
 
 	return nil
+}
+
+//Controller Listener interface implementation
+func (m *MQTTConnector) added(s Service) {
+	m.publishAliveService(s)
+}
+
+//Controller Listener interface implementation
+func (m *MQTTConnector) updated(s Service) {
+	m.publishAliveService(s)
+}
+
+//Controller Listener interface implementation
+func (m *MQTTConnector) deleted(s Service) {
+	m.removeService(s)
+}
+
+func (connector *MQTTConnector) publishAliveService(s Service) {
+	payload, err := json.Marshal(s)
+	if err != nil {
+		logger.Printf("MQTT: Error parsing json: %s ", err)
+		return
+	}
+	topic := connector.topicPrefix + s.Name + "/" + s.ID + "/alive"
+	logger.Printf("MQTT: publishing Service id:%s, topic:%s", s.ID, topic)
+	for _, manager := range connector.managers {
+		if token := manager.client.Publish(topic, 1, true, payload); token.Wait() && token.Error() != nil {
+			logger.Printf("MQTT: %s: Error publishing: %v", manager.url, token.Error())
+		}
+	}
+}
+
+func (connector *MQTTConnector) removeService(s Service) {
+	//remove the retained message
+	topic := connector.topicPrefix + s.Name + "/" + s.ID + "/alive"
+	logger.Printf("MQTT: removing the retain message topic:%s", topic)
+	//payload,err := json.Marshal(nil)
+	for _, manager := range connector.managers {
+		if token := manager.client.Publish(topic, 1, true, ""); token.Wait() && token.Error() != nil {
+			logger.Printf("MQTT: %s: Error publishing: %v", manager.url, token.Error())
+		}
+	}
+
+	//update to listening services
+	topic = connector.topicPrefix + s.Name + "/" + s.ID + "/dead"
+	logger.Printf("MQTT: Publishing deletion Service topic:%s", topic)
+	payload, err := json.Marshal(s)
+	if err != nil {
+		logger.Printf("MQTT: Error parsing json: %s ", err)
+		return
+	}
+	for _, manager := range connector.managers {
+		if token := manager.client.Publish(topic, 1, false, payload); token.Wait() && token.Error() != nil {
+			logger.Printf("MQTT: %s: Error publishing: %v", manager.url, token.Error())
+		}
+	}
 }
 
 func (m *ClientManager) onConnectHandler(client paho.Client) {

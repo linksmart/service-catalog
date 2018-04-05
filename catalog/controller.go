@@ -151,7 +151,7 @@ func (c *Controller) delete(id string) error {
 
 	// notify listeners
 	for _, l := range c.listeners {
-		go l.deleted(old.ID)
+		go l.deleted(*old)
 	}
 
 	return nil
@@ -231,12 +231,34 @@ func (c *Controller) cleanExpired() {
 			}
 			// Remove secondary indices
 			c.removeIndices(old)
+
+			// notify listeners
+			for _, l := range c.listeners {
+				go l.deleted(*old)
+			}
 		}
 
 		c.Unlock()
 	}
 }
 
+func (c *Controller) AddListener(listener Listener){
+	c.Lock()
+	c.listeners = append(c.listeners, listener)
+	c.Unlock()
+}
+
+func (c *Controller) RemoveListener(listener Listener){
+	c.Lock()
+	for i, l := range c.listeners {
+		if(l == listener ){
+			//delete the entry and break
+			c.listeners = append(c.listeners[:i], c.listeners[i+1:]...)
+			break
+		}
+	}
+	c.Unlock()
+}
 // Stop the controller
 func (c *Controller) Stop() error {
 	c.ticker.Stop()

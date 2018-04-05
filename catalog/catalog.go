@@ -113,5 +113,5 @@ type Storage interface {
 type Listener interface {
 	added(s Service)
 	updated(s Service)
-	deleted(id string)
+	deleted(s Service)
 }
