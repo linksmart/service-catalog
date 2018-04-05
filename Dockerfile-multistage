@@ -14,6 +14,8 @@ RUN go install -ldflags "${LDFLAGS}" ${PACKAGE}
 FROM alpine
 LABEL maintainer="dev@linksmart.eu"
 
+RUN apk update && apk add ca-certificates
+
 WORKDIR /home
 COPY --from=builder /home/bin/* .
 COPY sample_conf/* /conf/

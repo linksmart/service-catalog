@@ -2,6 +2,8 @@
 # Use Dockerfile-multistage to build locally
 FROM alpine
 
+RUN apk update && apk add ca-certificates
+
 COPY sample_conf/* /conf/
 COPY bin/service-catalog-linux-amd64 /home/
 

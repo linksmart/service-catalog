@@ -283,25 +283,55 @@ func (m *ClientManager) onConnectHandler(client paho.Client) {
 }
 
 func (m *ClientManager) addBrokerAsService() {
-	service := Service{
-		ID:          m.id,
-		Name:        "_mqtt._tcp",
-		Description: "MQTT Broker",
-		Meta: map[string]interface{}{
-			"registrator": m.connector.scID,
-		},
-		APIs: map[string]string{
-			"MQTT": m.url,
-		},
-	}
-	_, err := m.connector.controller.add(service)
+	service, err := m.connector.controller.get(m.id)
 	if err != nil {
-		logger.Printf("MQTT: Error registering broker %s: %s", m.id, err)
+		switch err.(type) {
+		case *NotFoundError:
+			// First registration
+			service = &Service{
+				ID:          m.id,
+				Name:        "_mqtt._tcp",
+				Description: "MQTT Broker",
+				Meta: map[string]interface{}{
+					"registrator": m.connector.scID,
+					"connected":   true,
+				},
+				APIs: map[string]string{
+					"MQTT": m.url,
+				},
+			}
+			_, err := m.connector.controller.add(*service)
+			if err != nil {
+				logger.Printf("MQTT: Error registering broker %s: %s", m.id, err)
+			}
+			logger.Printf("MQTT: %s: Registered as %s", m.url, m.id)
+			return
+		default:
+			logger.Printf("MQTT: Error retrieving broker %s: %s", m.id, err)
+		}
 	}
+	// Broker re-connect
+	service.Meta["connected"] = true
+	_, err = m.connector.controller.update(m.id, *service)
+	if err != nil {
+		logger.Printf("MQTT: Error updating broker %s: %s", m.id, err)
+	}
+	logger.Printf("MQTT: %s: Updated broker %s", m.url, m.id)
 }
 
 func (m *ClientManager) onConnectionLostHandler(client paho.Client, err error) {
 	logger.Printf("MQTT: %s: Connection lost: %v", m.url, err)
+	service, err := m.connector.controller.get(m.id)
+	if err != nil {
+		logger.Printf("MQTT: Error retrieving broker %s: %s", m.id, err)
+	}
+
+	service.Meta["connected"] = false
+	_, err = m.connector.controller.update(m.id, *service)
+	if err != nil {
+		logger.Printf("MQTT: Error updating broker %s: %s", m.id, err)
+	}
+	logger.Printf("MQTT: %s: Updated broker %s", m.url, m.id)
 }
 
 func (s *Subscription) onMessage(client paho.Client, msg paho.Message) {
