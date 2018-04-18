@@ -54,11 +54,11 @@ type Broker struct {
 	QoS        byte     `json:"qos"`
 	Username   string   `json:"username,omitempty"`
 	Password   string   `json:"password,omitempty"`
-	//CaFile     string   `json:"caFile,omitempty"`
-	//CertFile   string   `json:"certFile,omitempty"`
-	//KeyFile    string   `json:"keyFile,omitempty"`
-	topics []string
-	will   map[string]bool
+	CaFile     string   `json:"caFile,omitempty"`   // trusted CA certificates file path
+	CertFile   string   `json:"certFile,omitempty"` // client certificate file path
+	KeyFile    string   `json:"keyFile,omitempty"`  // client private key file path
+	topics     []string
+	will       map[string]bool
 }
 
 type MQTTConnector struct {
@@ -159,20 +159,15 @@ func (c *MQTTConnector) register(broker Broker) error {
 			}
 		}
 
-		opts := paho.NewClientOptions() // uses defaults: https://godoc.org/github.com/eclipse/paho.mqtt.golang#NewClientOptions
-		opts.AddBroker(broker.URL)
-		opts.SetClientID(fmt.Sprintf("SC-%v", uuid.NewV4().String()))
-		opts.SetConnectTimeout(5 * time.Second)
+		opts, err := initMQTTClientOptions(broker)
+		if err != nil {
+			return fmt.Errorf("unable to configure MQTT client: %s", err)
+		}
+		// Add handlers
 		opts.SetOnConnectHandler(manager.onConnectHandler)
 		opts.SetConnectionLostHandler(manager.onConnectionLostHandler)
-		if broker.Username != "" {
-			opts.SetUsername(broker.Username)
-			opts.SetPassword(broker.Password)
-		}
-		// TODO: add support for certificate auth
-		//
-		manager.client = paho.NewClient(opts)
 
+		manager.client = paho.NewClient(opts)
 		logger.Printf("MQTT: %s: connecting...", manager.url)
 
 		if token := manager.client.Connect(); token.Wait() && token.Error() != nil {
