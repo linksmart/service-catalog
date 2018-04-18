@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
@@ -18,32 +19,37 @@ const (
 	mqttClientIDPrefix = "SC-"
 )
 
-func initMQTTClientOptions(broker Broker) (*paho.ClientOptions, error) {
+func initMQTTClientOptions(client MQTTClient) (*paho.ClientOptions, error) {
 	opts := paho.NewClientOptions() // uses defaults: https://godoc.org/github.com/eclipse/paho.mqtt.golang#NewClientOptions
-	opts.AddBroker(broker.URL)
+	opts.AddBroker(client.BrokerURI)
 	opts.SetClientID(fmt.Sprintf("%s%s", mqttClientIDPrefix, uuid.NewV4().String()))
 	opts.SetConnectTimeout(mqttConnectTimeout)
 
-	if broker.Username != "" {
-		opts.SetUsername(broker.Username)
-		opts.SetPassword(broker.Password)
+	if client.Username != "" {
+		opts.SetUsername(client.Username)
+	}
+	if client.Password != "" {
+		opts.SetPassword(client.Password)
 	}
 
 	// TLS CONFIG
 	tlsConfig := &tls.Config{}
-	if broker.CaFile != "" {
+	if client.CaFile != "" {
+		if !strings.HasPrefix(client.BrokerURI, "ssl") {
+			logger.Printf("MQTT: Warning: Configuring TLS with a non-SSL protocol: %s", client.BrokerURI)
+		}
 		// Import trusted certificates from CAfile.pem.
 		// Alternatively, manually add CA certificates to
 		// default openssl CA bundle.
 		tlsConfig.RootCAs = x509.NewCertPool()
-		pemCerts, err := ioutil.ReadFile(broker.CaFile)
+		pemCerts, err := ioutil.ReadFile(client.CaFile)
 		if err == nil {
 			tlsConfig.RootCAs.AppendCertsFromPEM(pemCerts)
 		}
 	}
-	if broker.CertFile != "" && broker.KeyFile != "" {
+	if client.CertFile != "" && client.KeyFile != "" {
 		// Import client certificate/key pair
-		cert, err := tls.LoadX509KeyPair(broker.CertFile, broker.KeyFile)
+		cert, err := tls.LoadX509KeyPair(client.CertFile, client.KeyFile)
 		if err != nil {
 			return nil, fmt.Errorf("error loading client keypair: %s", err)
 		}
