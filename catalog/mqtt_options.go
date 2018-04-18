@@ -29,43 +29,31 @@ func initMQTTClientOptions(broker Broker) (*paho.ClientOptions, error) {
 		opts.SetPassword(broker.Password)
 	}
 
-	// TLS CONFIG:
-	//	based on https://github.com/eclipse/paho.mqtt.golang/blob/master/cmd/ssl/main.go
-	// Import trusted certificates from CAfile.pem.
-	// Alternatively, manually add CA certificates to
-	// default openssl CA bundle.
-	certpool := x509.NewCertPool()
-	pemCerts, err := ioutil.ReadFile(broker.CaFile)
-	if err == nil {
-		certpool.AppendCertsFromPEM(pemCerts)
+	// TLS CONFIG
+	tlsConfig := &tls.Config{}
+	if broker.CaFile != "" {
+		// Import trusted certificates from CAfile.pem.
+		// Alternatively, manually add CA certificates to
+		// default openssl CA bundle.
+		tlsConfig.RootCAs = x509.NewCertPool()
+		pemCerts, err := ioutil.ReadFile(broker.CaFile)
+		if err == nil {
+			tlsConfig.RootCAs.AppendCertsFromPEM(pemCerts)
+		}
 	}
-	// Import client certificate/key pair
-	cert, err := tls.LoadX509KeyPair(broker.CertFile, broker.KeyFile)
-	if err != nil {
-		return nil, fmt.Errorf("error loading client keypair: %s", err)
+	if broker.CertFile != "" && broker.KeyFile != "" {
+		// Import client certificate/key pair
+		cert, err := tls.LoadX509KeyPair(broker.CertFile, broker.KeyFile)
+		if err != nil {
+			return nil, fmt.Errorf("error loading client keypair: %s", err)
+		}
+		// Just to print out the client certificate..
+		cert.Leaf, err = x509.ParseCertificate(cert.Certificate[0])
+		if err != nil {
+			return nil, fmt.Errorf("error parsing client certificate: %s", err)
+		}
+		tlsConfig.Certificates = []tls.Certificate{cert}
 	}
-	// Just to print out the client certificate..
-	cert.Leaf, err = x509.ParseCertificate(cert.Certificate[0])
-	if err != nil {
-		return nil, fmt.Errorf("error parsing client certificate: %s", err)
-	}
-	// Create tls.Config with desired tls properties
-	tlsConfig := &tls.Config{
-		// RootCAs = certs used to verify server cert.
-		RootCAs: certpool,
-		// ClientAuth = whether to request cert from server.
-		// Since the server is set up for SSL, this happens
-		// anyways.
-		ClientAuth: tls.NoClientCert,
-		// ClientCAs = certs used to validate client cert.
-		ClientCAs: nil,
-		// InsecureSkipVerify = verify that cert contents
-		// match server. IP matches what is in cert etc.
-		InsecureSkipVerify: true,
-		// Certificates = list of certs client sends to server.
-		Certificates: []tls.Certificate{cert},
-	}
-
 	opts.SetTLSConfig(tlsConfig)
 
 	return opts, nil
