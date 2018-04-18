@@ -47,8 +47,8 @@ func (c MQTTConf) Validate() error {
 }
 
 type MQTTClient struct {
-	BrokerID   string   `json:"broker_id"`
-	BrokerURI  string   `json:"broker_uri"`
+	BrokerID   string   `json:"brokerID"`
+	BrokerURI  string   `json:"brokerURI"`
 	RegTopics  []string `json:"regTopics"`
 	WillTopics []string `json:"willTopics"`
 	QoS        byte     `json:"qos"`

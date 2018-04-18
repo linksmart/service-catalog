@@ -10,16 +10,16 @@
     "bindPort": 8082
   },
   "mqtt":{
-    "broker" : {
-      "id": "main_broker",
-      "url": "",
+    "client" : {
+      "brokerID": "main_broker",
+      "brokerURI": "",
       "regTopics": [],
       "willTopics": [],
       "qos": 1,
       "username": "",
       "password": ""
     },
-    "additionalBrokers": [],
+    "additionalClients": [],
     "commonRegTopics":  ["LS/v2/+/+/service", "LS/v2/+/+/service/+"],
     "commonWillTopics": ["LS/v2/+/+/will",    "LS/v2/+/+/will/+"],
     "topicPrefix": "LS/v2/SC/"
