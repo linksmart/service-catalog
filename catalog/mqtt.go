@@ -292,7 +292,7 @@ func (m *ClientManager) addBrokerAsService() {
 					"connected":   true,
 				},
 				APIs: map[string]string{
-					"MQTT": m.uri,
+					APITypeMQTT: m.uri,
 				},
 			}
 			_, err := m.connector.controller.add(*service)

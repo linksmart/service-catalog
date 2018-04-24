@@ -9,6 +9,9 @@ const (
 
 	CatalogBackendMemory  = "memory"
 	CatalogBackendLevelDB = "leveldb"
+
+	APITypeHTTP = "HTTP"
+	APITypeMQTT = "MQTT"
 )
 
 var SupportedBackends = map[string]bool{
