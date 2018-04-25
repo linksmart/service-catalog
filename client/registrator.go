@@ -60,7 +60,6 @@ func RegisterServiceAndKeepalive(endpoint string, service catalog.Service, ticke
 	go func() {
 		for ; true; <-ticker.C {
 			mutex.RLock()
-			fmt.Println(service)
 			_, err := client.Put(&service)
 			if err != nil {
 				logger.Printf("Error updating service registration for %s: %s", service.ID, err)
