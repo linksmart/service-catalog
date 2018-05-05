@@ -1,21 +1,28 @@
-# Dockerfile for piplelines.linksmart.eu
-# Use Dockerfile-multistage to build locally
+FROM golang:1.9-alpine as builder
+
+ENV PACKAGE code.linksmart.eu/sc/service-catalog
+# copy code
+COPY . /home/src/${PACKAGE}
+
+# build
+ENV GOPATH /home
+RUN go install ${PACKAGE}
+
+###########
 FROM alpine
 
-RUN apk update && apk add ca-certificates
-
-COPY sample_conf/* /conf/
-COPY bin/service-catalog-linux-amd64 /home/
+RUN apk --no-cache add ca-certificates
 
 WORKDIR /home
-RUN chmod +x service-catalog-linux-amd64
-
-VOLUME /conf /data
-EXPOSE 8082
+COPY --from=builder /home/bin/* .
+COPY sample_conf/* /conf/
 
 ENV SC_DNSSDENABLED=false
 ENV SC_STORAGE_TYPE=leveldb
 ENV SC_STORAGE_DSN=/data
 
-ENTRYPOINT ["./service-catalog-linux-amd64"]
+VOLUME /conf /data
+EXPOSE 8082
+
+ENTRYPOINT ["./service-catalog"]
 CMD ["-conf", "/conf/service-catalog.json"]
