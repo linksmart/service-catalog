@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "2.2.6",
+    "version": "2.2.7",
     "title": "LinkSmart Service Catalog REST API"
   },
   "basePath": "/",
