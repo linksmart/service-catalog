@@ -10,7 +10,7 @@ LABEL BUILD=${BUILD}
 
 RUN apk --no-cache add ca-certificates
 
-COPY service-catalog.json /conf/
+COPY sample_conf/service-catalog.json /conf/
 COPY service-catalog-linux-amd64 /home/service-catalog
 
 WORKDIR /home
