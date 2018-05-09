@@ -306,6 +306,7 @@ func (m *ClientManager) addBrokerAsService() {
 		}
 	}
 	// MQTTClient re-connect
+	service.Meta = make(map[string]interface{})
 	service.Meta["connected"] = true
 	_, err = m.connector.controller.update(m.id, *service)
 	if err != nil {
