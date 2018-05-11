@@ -127,6 +127,7 @@ func serveHTTP(httpAPI *catalog.HttpAPI, config *Config) {
 
 	commonHandlers := alice.New(
 		context.ClearHandler,
+		commonHeaders,
 	)
 
 	// Append auth handler if enabled
