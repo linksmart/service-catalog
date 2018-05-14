@@ -24,7 +24,7 @@ func main() {
 		TTL:  10,
 	}
 
-	stopRegistrator, err := client.RegisterServiceAndKeepalive("http://localhost:8082", service, nil)
+	stopRegistrator, _, err := client.RegisterServiceAndKeepalive("http://localhost:8082", service, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
