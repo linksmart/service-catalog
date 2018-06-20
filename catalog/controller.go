@@ -307,23 +307,30 @@ func (c *Controller) removeIndices(s *Service) {
 	//	which leads to non-unique keys in the maps.
 	// This code removes keys with that expiry time (keeping them in a temp) until the
 	// 	desired target is reached. It then adds the items in the temp back to the tree.
+
+	// iterate
 	if s.TTL != 0 {
+		var keys []interface{}
 		var temp []Map
 		for m := range c.exp_sid.Iter() {
-			id := m.(Map).value.(string)
-			if id == s.ID {
-				for { // go through all duplicates (same expiry times)
-					r := c.exp_sid.Remove(m)
-					if r == nil {
-						break
-					}
-					if id != s.ID {
-						temp = append(temp, r.(Map))
-					}
-				}
-				break
+			if s.ID == m.(Map).value.(string) {
+				keys = append(keys, m)
 			}
 		}
+		// remove everything with that expiry
+		for _, key := range keys {
+			for { // go through all duplicates (same expiry times)
+				r := c.exp_sid.Remove(key)
+				if r == nil {
+					break
+				}
+				if key != s.ID {
+					temp = append(temp, r.(Map))
+				}
+			}
+			break
+		}
+		// add back the expiry times for items that weren't suppose to be removed
 		for _, r := range temp {
 			c.exp_sid.Add(r)
 		}
