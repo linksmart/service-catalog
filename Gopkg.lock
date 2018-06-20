@@ -14,10 +14,10 @@
   revision = "5abeee54723444678d878c5bb556e5c4218f69ce"
 
 [[projects]]
-  branch = "master"
   name = "github.com/ancientlore/go-avltree"
   packages = ["."]
-  revision = "4ba4b949e04ae520ba87de82bb82d8f3a6be7e11"
+  revision = "b2eb526dd47ba854b70e5da6e62514c0688ff968"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/codegangsta/negroni"
