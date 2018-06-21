@@ -209,17 +209,23 @@ func (c *MQTTConnector) register(client MQTTClient) error {
 
 //Controller Listener interface implementation
 func (m *MQTTConnector) added(s Service) {
-	m.publishAliveService(s)
+	if len(m.managers) > 0 {
+		m.publishAliveService(s)
+	}
 }
 
 //Controller Listener interface implementation
 func (m *MQTTConnector) updated(s Service) {
-	m.publishAliveService(s)
+	if len(m.managers) > 0 {
+		m.publishAliveService(s)
+	}
 }
 
 //Controller Listener interface implementation
 func (m *MQTTConnector) deleted(s Service) {
-	m.removeService(s)
+	if len(m.managers) > 0 {
+		m.removeService(s)
+	}
 }
 
 func (connector *MQTTConnector) publishAliveService(s Service) {
