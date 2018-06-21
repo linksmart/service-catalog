@@ -12,7 +12,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-const expiryCleanupInterval = 30 * time.Second
+var ControllerExpiryCleanupInterval = 30 * time.Second // to be modified in unit tests
 
 type Controller struct {
 	wg sync.WaitGroup
@@ -206,7 +206,7 @@ func (c *Controller) cleanExpired() {
 	}
 	cleanAt(time.Now().UTC())
 
-	for t := range time.NewTicker(expiryCleanupInterval).C {
+	for t := range time.NewTicker(ControllerExpiryCleanupInterval).C {
 		cleanAt(t)
 	}
 }
