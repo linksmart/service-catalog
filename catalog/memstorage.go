@@ -107,6 +107,22 @@ func (ms *MemoryStorage) total() (int, error) {
 	return ms.services.Len(), nil
 }
 
+func (ms *MemoryStorage) iterator() <-chan *Service {
+	serviceIter := make(chan *Service)
+
+	go func() {
+		defer close(serviceIter)
+
+		data := ms.services.Data()
+		for i := 0; i < len(data); i++ {
+			service := data[i].(Service)
+			serviceIter <- &service
+		}
+	}()
+
+	return serviceIter
+}
+
 func (ms *MemoryStorage) Close() error {
 	return nil
 }

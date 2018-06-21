@@ -105,6 +105,7 @@ type Storage interface {
 	delete(id string) error
 	list(page, perPage int) ([]Service, int, error)
 	total() (int, error)
+	iterator() <-chan *Service
 	Close() error
 }
 

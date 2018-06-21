@@ -120,8 +120,12 @@ func (ls *LevelDBStorage) list(page int, perPage int) ([]Service, int, error) {
 	// TODO: is there a better way to do this?
 	// github.com/syndtr/goleveldb/leveldb/iterator
 	services := make([]Service, limit)
+
 	ls.wg.Add(1)
+	defer ls.wg.Done()
 	iter := ls.db.NewIterator(nil, nil)
+	defer iter.Release()
+
 	i := 0
 	for iter.Next() {
 		var s Service
@@ -137,8 +141,7 @@ func (ls *LevelDBStorage) list(page int, perPage int) ([]Service, int, error) {
 		}
 		i++
 	}
-	iter.Release()
-	ls.wg.Done()
+
 	err = iter.Error()
 	if err != nil {
 		return nil, 0, err
@@ -162,6 +165,36 @@ func (s *LevelDBStorage) total() (int, error) {
 	}
 
 	return c, nil
+}
+
+func (s *LevelDBStorage) iterator() <-chan *Service {
+	serviceIter := make(chan *Service)
+
+	go func() {
+		defer close(serviceIter)
+
+		s.wg.Add(1)
+		defer s.wg.Done()
+		iter := s.db.NewIterator(nil, nil)
+		defer iter.Release()
+
+		for iter.Next() {
+			var service Service
+			err := json.Unmarshal(iter.Value(), &service)
+			if err != nil {
+				logger.Printf("LevelDB Error: %s", err)
+				return
+			}
+			serviceIter <- &service
+		}
+
+		err := iter.Error()
+		if err != nil {
+			logger.Printf("LevelDB Error: %s", err)
+		}
+	}()
+
+	return serviceIter
 }
 
 func (s *LevelDBStorage) Close() error {

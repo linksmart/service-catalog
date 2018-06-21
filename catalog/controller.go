@@ -9,35 +9,24 @@ import (
 	"time"
 
 	"code.linksmart.eu/sc/service-catalog/utils"
-	avl "github.com/ancientlore/go-avltree"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 )
+
+const expiryCleanupInterval = 30 * time.Second
 
 type Controller struct {
 	wg sync.WaitGroup
 	sync.RWMutex
 	storage   Storage
 	listeners []Listener
-	ticker    *time.Ticker
-
-	// sorted expiryTime->serviceID maps
-	exp_sid *avl.Tree
 }
 
 func NewController(storage Storage, listeners ...Listener) (*Controller, error) {
 	c := Controller{
 		storage:   storage,
-		exp_sid:   avl.New(timeKeys, avl.AllowDuplicates), // allows more than one service with the same expiry time
 		listeners: listeners,
 	}
 
-	// Initialize secondary indices (if a persistent storage backend is present)
-	err := c.initIndices()
-	if err != nil {
-		return nil, err
-	}
-
-	c.ticker = time.NewTicker(5 * time.Second)
 	go c.cleanExpired()
 
 	return &c, nil
@@ -69,9 +58,6 @@ func (c *Controller) add(s Service) (*Service, error) {
 		return nil, err
 	}
 
-	// Add secondary indices
-	c.addIndices(&s)
-
 	// notify listeners
 	for _, l := range c.listeners {
 		go l.added(s)
@@ -98,9 +84,6 @@ func (c *Controller) update(id string, s Service) (*Service, error) {
 		return nil, err
 	}
 
-	// Shallow copy
-	var cp Service = *ss
-
 	ss.Description = s.Description
 	ss.Name = s.Name
 	ss.APIs = s.APIs
@@ -119,10 +102,6 @@ func (c *Controller) update(id string, s Service) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// Update secondary indices
-	c.removeIndices(&cp)
-	c.addIndices(ss)
 
 	// notify listeners
 	for _, l := range c.listeners {
@@ -145,9 +124,6 @@ func (c *Controller) delete(id string) error {
 	if err != nil {
 		return err
 	}
-
-	// Remove secondary indices
-	c.removeIndices(old)
 
 	// notify listeners
 	for _, l := range c.listeners {
@@ -201,44 +177,37 @@ func (c *Controller) total() (int, error) {
 }
 
 func (c *Controller) cleanExpired() {
-	for t := range c.ticker.C {
+	logger.Println("cleanExpired() started cleanup routine.")
+
+	cleanAt := func(t time.Time){
 		c.Lock()
 
-		var expiredList []Map
-		for m := range c.exp_sid.Iter() {
-			if !m.(Map).key.(time.Time).After(t.UTC()) {
-				expiredList = append(expiredList, m.(Map))
-			} else {
-				// exp_did is sorted by time ascendingly: its elements expire in order
-				break
+		var expiredServices []*Service
+
+		for s := range c.storage.iterator() {
+			if s.TTL != 0 && s.Expires.Before(t.UTC()) {
+				expiredServices = append(expiredServices, s)
 			}
 		}
 
-		for _, m := range expiredList {
-			id := m.value.(string)
-			logger.Printf("cleanExpired() Registration %v has expired\n", id)
-
-			old, err := c.storage.get(id)
+		for _, service := range expiredServices {
+			logger.Printf("cleanExpired() Removing expired registration: %s", service.ID)
+			err := c.storage.delete(service.ID)
 			if err != nil {
-				logger.Printf("cleanExpired() Error retrieving device %v: %v\n", id, err.Error())
-				break
+				logger.Printf("cleanExpired() Error removing expired registration: %s: %s", service.ID, err)
 			}
-
-			err = c.storage.delete(id)
-			if err != nil {
-				logger.Printf("cleanExpired() Error removing device %v: %v\n", id, err.Error())
-				break
-			}
-			// Remove secondary indices
-			c.removeIndices(old)
-
 			// notify listeners
 			for _, l := range c.listeners {
-				go l.deleted(*old)
+				go l.deleted(*service)
 			}
 		}
 
 		c.Unlock()
+	}
+	cleanAt(time.Now().UTC())
+
+	for t := range time.NewTicker(expiryCleanupInterval).C {
+		cleanAt(t)
 	}
 }
 
@@ -259,91 +228,8 @@ func (c *Controller) RemoveListener(listener Listener){
 	}
 	c.Unlock()
 }
+
 // Stop the controller
 func (c *Controller) Stop() error {
-	c.ticker.Stop()
 	return c.storage.Close()
-}
-
-// UTILITY FUNCTIONS
-
-// Initialize secondary indices (from a persistent storage backend)
-func (c *Controller) initIndices() error {
-	perPage := MaxPerPage
-	for page := 1; ; page++ {
-		devices, total, err := c.storage.list(page, perPage)
-		if err != nil {
-			return err
-		}
-
-		for i, _ := range devices {
-			c.addIndices(&devices[i])
-		}
-
-		if page*perPage >= total {
-			break
-		}
-	}
-	return nil
-}
-
-// Creates secondary indices
-// WARNING: the caller must obtain the lock before calling
-func (c *Controller) addIndices(s *Service) {
-
-	// Add expiry time index
-	if s.TTL != 0 {
-		c.exp_sid.Add(Map{*s.Expires, s.ID})
-	}
-}
-
-// Removes secondary indices
-// WARNING: the caller must obtain the lock before calling
-func (c *Controller) removeIndices(s *Service) {
-
-	// Remove the expiry time index
-	// INFO:
-	// More than one service can have the same expiry time (i.e. map's key)
-	//	which leads to non-unique keys in the maps.
-	// This code removes keys with that expiry time (keeping them in a temp) until the
-	// 	desired target is reached. It then adds the items in the temp back to the tree.
-	if s.TTL != 0 {
-		var temp []Map
-		for m := range c.exp_sid.Iter() {
-			id := m.(Map).value.(string)
-			if id == s.ID {
-				for { // go through all duplicates (same expiry times)
-					r := c.exp_sid.Remove(m)
-					if r == nil {
-						break
-					}
-					if id != s.ID {
-						temp = append(temp, r.(Map))
-					}
-				}
-				break
-			}
-		}
-		for _, r := range temp {
-			c.exp_sid.Add(r)
-		}
-	}
-}
-
-// AVL Tree: sorted nodes according to keys
-//
-// A node of the AVL Tree (go-avltree)
-type Map struct {
-	key   interface{}
-	value interface{}
-}
-
-// Operator for Time-type key
-func timeKeys(a interface{}, b interface{}) int {
-	if a.(Map).key.(time.Time).Before(b.(Map).key.(time.Time)) {
-		return -1
-	} else if a.(Map).key.(time.Time).After(b.(Map).key.(time.Time)) {
-		return 1
-	}
-	return 0
 }
