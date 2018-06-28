@@ -10,27 +10,30 @@ import org.junit.Test;
 
 import java.io.File;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class ServiceTesterIT {
-    static final String
+    private static final String
             BASE_URL = "http://localhost:8082",
             DEFAULT_FILE_NAME = "test/dummy.json";
 
-    static final String
+    private static final String
             BASE_URL_PATH = "base_url",
+            SERVICE_URL_PATH = "service_url",
+            SERVICE_TIMEOUT_PATH = "service_url",
             FILENAME = "filename";
     @Test
     public void registration(){
         System.out.println("Start registration Integration Test");
+        int i=0;
+        // just wait till service is reachable if service_url env var was set
+        do{try {Thread.sleep(500); i++;}catch (Exception ignored){}}while (!isAvailable() && i<Integer.valueOf(System.getenv().getOrDefault(SERVICE_TIMEOUT_PATH, "120")));
+
         ApiClient client = new ApiClient();
         ObjectMapper mapper = new ObjectMapper();
 
@@ -48,6 +51,7 @@ public class ServiceTesterIT {
 
             if(!file.exists()){
                 System.err.println("File do not exist: File must exist in "+DEFAULT_FILE_NAME+" or the environmental variable "+FILENAME+" must be set!");
+                fail("File do not exist: File must exist in "+DEFAULT_FILE_NAME+" or the environmental variable "+FILENAME+" must be set!");
                 System.exit(-1);
             }
 
@@ -57,7 +61,7 @@ public class ServiceTesterIT {
 
             if(!optional.isPresent()) {
                 System.err.println("The service "+template.getName()+" was not found in the Service Catalog");
-                fail();
+                fail("The service "+template.getName()+" was not found in the Service Catalog");
             }
 
             cmp(template,optional.get());
@@ -68,6 +72,27 @@ public class ServiceTesterIT {
         }
 
         System.out.println("Registration Integration Test finished");
+    }
+    private boolean isAvailable(){
+        String url;
+        if((url=System.getenv().getOrDefault(SERVICE_URL_PATH, null))!=null){
+            try {
+                URL siteURL = new URL(url);
+                HttpURLConnection connection = (HttpURLConnection) siteURL
+                        .openConnection();
+                connection.setRequestMethod("GET");
+                connection.connect();
+
+                int code = connection.getResponseCode();
+                if (code == 200) {
+                    return true;
+                }
+            } catch (Exception e) {
+                return false;
+            }
+            return true;
+        }
+        return true;
     }
     private void cmp(Service template, Service s2){
 
