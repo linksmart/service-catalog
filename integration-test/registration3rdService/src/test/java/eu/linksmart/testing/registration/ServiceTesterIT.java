@@ -25,14 +25,20 @@ public class ServiceTesterIT {
     private static final String
             BASE_URL_PATH = "base_url",
             SERVICE_URL_PATH = "service_url",
-            SERVICE_TIMEOUT_PATH = "service_url",
+            SERVICE_TIMEOUT_PATH = "service_wait_timeout",
             FILENAME = "filename";
     @Test
     public void registration(){
         System.out.println("Start registration Integration Test");
         int i=0;
         // just wait till service is reachable if service_url env var was set
-        do{try {Thread.sleep(500); i++;}catch (Exception ignored){}}while (!isAvailable() && i<Integer.valueOf(System.getenv().getOrDefault(SERVICE_TIMEOUT_PATH, "120")));
+        do{
+            try {
+                Thread.sleep(1000);
+                i++;
+                System.out.println("Waiting...");
+            }catch (Exception ignored){}
+        }while (!isAvailable() && i<Integer.valueOf(System.getenv().getOrDefault(SERVICE_TIMEOUT_PATH, "60")));
 
         ApiClient client = new ApiClient();
         ObjectMapper mapper = new ObjectMapper();
