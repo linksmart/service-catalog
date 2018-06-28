@@ -4,14 +4,20 @@
 [[projects]]
   branch = "master"
   name = "code.linksmart.eu/com/go-sec"
-  packages = ["auth/keycloak/obtainer","auth/keycloak/validator","auth/obtainer","auth/validator","authz"]
+  packages = [
+    "auth/keycloak/obtainer",
+    "auth/keycloak/validator",
+    "auth/obtainer",
+    "auth/validator",
+    "authz"
+  ]
   revision = "5abeee54723444678d878c5bb556e5c4218f69ce"
 
 [[projects]]
-  branch = "master"
   name = "github.com/ancientlore/go-avltree"
   packages = ["."]
-  revision = "4ba4b949e04ae520ba87de82bb82d8f3a6be7e11"
+  revision = "b2eb526dd47ba854b70e5da6e62514c0688ff968"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/codegangsta/negroni"
@@ -27,7 +33,10 @@
 
 [[projects]]
   name = "github.com/eclipse/paho.mqtt.golang"
-  packages = [".","packets"]
+  packages = [
+    ".",
+    "packets"
+  ]
   revision = "aff15770515e3c57fc6109da73d42b0d46f7f483"
   version = "v1.1.0"
 
@@ -62,6 +71,12 @@
   version = "1.0.0"
 
 [[projects]]
+  name = "github.com/kelseyhightower/envconfig"
+  packages = ["."]
+  revision = "f611eb38b3875cc3bd991ca91c51d06446afa14c"
+  version = "v1.3.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/miekg/dns"
   packages = ["."]
@@ -82,18 +97,39 @@
 [[projects]]
   branch = "master"
   name = "github.com/syndtr/goleveldb"
-  packages = ["leveldb","leveldb/cache","leveldb/comparer","leveldb/errors","leveldb/filter","leveldb/iterator","leveldb/journal","leveldb/memdb","leveldb/opt","leveldb/storage","leveldb/table","leveldb/util"]
+  packages = [
+    "leveldb",
+    "leveldb/cache",
+    "leveldb/comparer",
+    "leveldb/errors",
+    "leveldb/filter",
+    "leveldb/iterator",
+    "leveldb/journal",
+    "leveldb/memdb",
+    "leveldb/opt",
+    "leveldb/storage",
+    "leveldb/table",
+    "leveldb/util"
+  ]
   revision = "b89cc31ef7977104127d34c1bd31ebd1a9db2199"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["bpf","internal/iana","internal/socket","ipv4","ipv6","proxy","websocket"]
+  packages = [
+    "bpf",
+    "internal/iana",
+    "internal/socket",
+    "ipv4",
+    "ipv6",
+    "proxy",
+    "websocket"
+  ]
   revision = "57efc9c3d9f91fb3277f8da1cff370539c4d3dc5"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "46d7960fe908d61a405606a84fd8e81bd5e846b4d8aa47d2b99f23db73f919c5"
+  inputs-digest = "515bdcb6f72e145673f91c194009e356eb7bd4a7365a44320c9d00080f91a207"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -11,6 +11,7 @@ import (
 
 	"code.linksmart.eu/com/go-sec/authz"
 	"code.linksmart.eu/sc/service-catalog/catalog"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
@@ -57,8 +58,14 @@ func loadConfig(confPath string) (*Config, error) {
 		return nil, err
 	}
 
-	config := new(Config)
-	err = json.Unmarshal(file, config)
+	var config Config
+	err = json.Unmarshal(file, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	// Override loaded values with environment variables
+	err = envconfig.Process("sc", &config)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +73,7 @@ func loadConfig(confPath string) (*Config, error) {
 	if err = config.validate(); err != nil {
 		return nil, err
 	}
-	return config, nil
+	return &config, nil
 }
 
 type StorageConf struct {
@@ -91,7 +98,7 @@ type HTTPConf struct {
 }
 
 func (c HTTPConf) validate() error {
-	if c.BindAddr == ""{
+	if c.BindAddr == "" {
 		return fmt.Errorf("http: bindAddr not defined")
 	}
 	if c.BindPort == 0 {

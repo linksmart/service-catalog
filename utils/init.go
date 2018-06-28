@@ -1,20 +1,17 @@
 // Copyright 2014-2016 Fraunhofer Institute for Applied Information Technology FIT
 
+// Package utils offers utility functions for http requests, pagination, and filtering
 package utils
 
 import (
-	"log"
-	"os"
-	"strconv"
+	"github.com/farshidtz/elog"
 )
 
-var logger *log.Logger
+var logger *elog.Logger
 
 func init() {
-	logger = log.New(os.Stdout, "[utils] ", 0)
-
-	v, err := strconv.Atoi(os.Getenv("DEBUG"))
-	if err == nil && v == 1 {
-		logger.SetFlags(log.Ltime | log.Lshortfile)
-	}
+	logger = elog.New("[utils] ", &elog.Config{
+		DebugPrefix: "[utils-debug] ",
+		DebugTrace:  elog.NoTrace,
+	})
 }

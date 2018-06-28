@@ -105,6 +105,7 @@ type Storage interface {
 	delete(id string) error
 	list(page, perPage int) ([]Service, int, error)
 	total() (int, error)
+	iterator() <-chan *Service
 	Close() error
 }
 
@@ -113,5 +114,5 @@ type Storage interface {
 type Listener interface {
 	added(s Service)
 	updated(s Service)
-	deleted(id string)
+	deleted(s Service)
 }

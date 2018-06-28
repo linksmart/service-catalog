@@ -1,20 +1,19 @@
 // Copyright 2014-2016 Fraunhofer Institute for Applied Information Technology FIT
 
+// Package discovery contains utility functions, which help to implement
+// various use-cases of executing some logic as a result of DNS-SD service
+// lookup
 package discovery
 
 import (
-	"log"
-	"os"
-	"strconv"
+	"github.com/farshidtz/elog"
 )
 
-var logger *log.Logger
+var logger *elog.Logger
 
 func init() {
-	logger = log.New(os.Stdout, "[discovery] ", 0)
-
-	v, err := strconv.Atoi(os.Getenv("DEBUG"))
-	if err == nil && v == 1 {
-		logger.SetFlags(log.Ltime | log.Lshortfile)
-	}
+	logger = elog.New("[discovery] ", &elog.Config{
+		DebugPrefix: "[discovery-debug] ",
+		DebugTrace:  elog.NoTrace,
+	})
 }

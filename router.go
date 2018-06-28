@@ -51,3 +51,17 @@ func (r *router) options(path string, handler http.Handler) {
 	r.Methods("OPTIONS").Path(path).Handler(handler)
 	r.Methods("OPTIONS").Path(fmt.Sprintf("%s/", path)).Handler(handler)
 }
+
+// Add headers to handler's chain
+func commonHeaders(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+
+		// Headers for HTTP access control (CORS)
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS")
+		w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
+}

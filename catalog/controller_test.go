@@ -262,6 +262,8 @@ func TestFilterService(t *testing.T) {
 
 func TestCleanExpired(t *testing.T) {
 	t.Log(TestStorageType)
+	ControllerExpiryCleanupInterval = 5 * time.Second
+
 	controller, shutdown, err := setup()
 	if err != nil {
 		t.Fatal(err.Error())

@@ -12,5 +12,6 @@ var logger *elog.Logger
 func init() {
 	logger = elog.New(catalog.LoggerPrefix, &elog.Config{
 		DebugPrefix: catalog.LoggerPrefix,
+		DebugTrace:  elog.NoTrace,
 	})
 }

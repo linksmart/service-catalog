@@ -1,0 +1,27 @@
+# Dockerfile for Bamboo plans
+FROM alpine
+
+ARG VERSION
+ARG BUILD
+LABEL NAME="LinkSmart® Service Catalog"
+LABEL CODENAME="SC"
+LABEL VERSION=${VERSION}
+LABEL BUILD=${BUILD}
+
+RUN apk --no-cache add ca-certificates
+
+COPY sample_conf/service-catalog.json /conf/
+COPY service-catalog-linux-amd64 /home/service-catalog
+
+WORKDIR /home
+RUN chmod +x service-catalog
+
+ENV SC_DNSSDENABLED=false
+ENV SC_STORAGE_TYPE=leveldb
+ENV SC_STORAGE_DSN=/data
+
+VOLUME /conf /data
+EXPOSE 8082
+
+ENTRYPOINT ["./service-catalog"]
+CMD ["-conf", "/conf/service-catalog.json"]

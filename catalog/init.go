@@ -1,5 +1,7 @@
 // Copyright 2014-2016 Fraunhofer Institute for Applied Information Technology FIT
 
+// Package catalog contains the core functionalities of service catalog and
+// exposes functions and structs for service representation, processing, and storage
 package catalog
 
 import (
@@ -15,6 +17,7 @@ var logger *elog.Logger
 func init() {
 	logger = elog.New(LoggerPrefix, &elog.Config{
 		DebugPrefix: LoggerPrefix,
+		DebugTrace:  elog.NoTrace,
 	})
 
 	if os.Getenv("PAHO_DEBUG") == "1" {
