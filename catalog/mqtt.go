@@ -15,7 +15,9 @@ import (
 )
 
 const (
-	mqttRetryInterval = 10 // seconds
+	mqttRetryInterval            = 10 // seconds
+	mqttServiceTTL               = 10 * time.Minute
+	mqttServiceHeartbeatInterval = mqttServiceTTL / 2
 )
 
 type MQTTConf struct {
@@ -95,12 +97,15 @@ func StartMQTTConnector(controller *Controller, mqttConf MQTTConf, scDescription
 		failedRegistrations: make(map[string]MQTTClient),
 	}
 	controller.AddListener(c)
-	for _, client := range append(mqttConf.AdditionalClients, mqttConf.Client) {
+	clientList := append(mqttConf.AdditionalClients, mqttConf.Client)
+
+	for id, client := range clientList {
 		if client.BrokerURI == "" {
 			continue
 		}
 		if client.BrokerID == "" {
 			client.BrokerID = uuid.NewV4().String()
+			clientList[id].BrokerID = client.BrokerID //Update the original array element too
 		}
 		client.will = make(map[string]bool)
 		for _, topic := range append(mqttConf.CommonWillTopics, client.WillTopics...) {
@@ -119,12 +124,14 @@ func StartMQTTConnector(controller *Controller, mqttConf MQTTConf, scDescription
 
 	c.topicPrefix = mqttConf.TopicPrefix
 
-	c.retryRegistrations()
+	go c.retryRegistrations()
+	go c.registerBrokersAsServices(clientList)
 }
 
 func (c *MQTTConnector) retryRegistrations() {
-	for {
+	for len(c.failedRegistrations) > 0 {
 		time.Sleep(mqttRetryInterval * time.Second)
+
 		c.Lock()
 		for id, client := range c.failedRegistrations {
 			err := c.register(client)
@@ -138,6 +145,45 @@ func (c *MQTTConnector) retryRegistrations() {
 	}
 }
 
+func (c *MQTTConnector) registerBrokersAsServices(clientList []MQTTClient) {
+	for ; true; <-time.NewTicker(mqttServiceHeartbeatInterval).C {
+		for _, client := range clientList {
+			service, err := c.controller.get(client.BrokerID)
+			if err != nil {
+				switch err.(type) {
+				case *NotFoundError:
+					// First registration
+					service = &Service{
+						ID:          client.BrokerID,
+						Name:        "_mqtt._tcp",
+						Description: "MQTT Broker",
+						Meta: map[string]interface{}{
+							"registrator": c.scID,
+							"connected":   false,
+						},
+						APIs: map[string]string{
+							APITypeMQTT: client.BrokerURI,
+						},
+						TTL: uint(mqttServiceTTL / time.Second),
+					}
+					_, err := c.controller.add(*service)
+					if err != nil {
+						logger.Printf("MQTT: Error registering broker %s: %s", client.BrokerURI, err)
+					}
+					logger.Printf("MQTT: %s: Registered as %s", client.BrokerURI, client.BrokerID)
+
+				default:
+					logger.Printf("MQTT: Error retrieving broker %s: %s", client.BrokerURI, err)
+				}
+			} else {
+				_, err = c.controller.update(client.BrokerID, *service)
+				if err != nil {
+					logger.Printf("MQTT: Error updating broker %s: %s", client.BrokerID, err)
+				}
+			}
+		}
+	}
+}
 func (c *MQTTConnector) register(client MQTTClient) error {
 	// TODO
 	// the else section can be removed because no one will use two broker configuration blocks for the same client
@@ -280,62 +326,33 @@ func (m *ClientManager) onConnectHandler(client paho.Client) {
 	}
 
 	//Add this broker to list of MQTT brokers
-	m.addBrokerAsService()
+	m.changeConnectionStatus(true)
 }
 
-func (m *ClientManager) addBrokerAsService() {
-	service, err := m.connector.controller.get(m.id)
-	if err != nil {
-		switch err.(type) {
-		case *NotFoundError:
-			// First registration
-			service = &Service{
-				ID:          m.id,
-				Name:        "_mqtt._tcp",
-				Description: "MQTT Broker",
-				Meta: map[string]interface{}{
-					"registrator": m.connector.scID,
-					"connected":   true,
-				},
-				APIs: map[string]string{
-					APITypeMQTT: m.uri,
-				},
-			}
-			_, err := m.connector.controller.add(*service)
-			if err != nil {
-				logger.Printf("MQTT: Error registering broker %s: %s", m.id, err)
-			}
-			logger.Printf("MQTT: %s: Registered as %s", m.uri, m.id)
-			return
-		default:
-			logger.Printf("MQTT: Error retrieving broker %s: %s", m.id, err)
-		}
-	}
-	// MQTTClient re-connect
-	if service.Meta == nil {
-		service.Meta = make(map[string]interface{})
-	}
-	service.Meta["connected"] = true
-	_, err = m.connector.controller.update(m.id, *service)
-	if err != nil {
-		logger.Printf("MQTT: Error updating broker %s: %s", m.id, err)
-	}
-	logger.Printf("MQTT: %s: Updated broker %s", m.uri, m.id)
+func (client *MQTTClient) registerAndKeepAliveService() {
+
 }
 
-func (m *ClientManager) onConnectionLostHandler(client paho.Client, err error) {
-	logger.Printf("MQTT: %s: Connection lost: %v", m.uri, err)
+func (m *ClientManager) changeConnectionStatus(connected bool) {
 	service, err := m.connector.controller.get(m.id)
 	if err != nil {
 		logger.Printf("MQTT: Error retrieving broker %s: %s", m.id, err)
+	} else {
+		// MQTTClient re-connect
+		if service.Meta == nil {
+			service.Meta = make(map[string]interface{})
+		}
+		service.Meta["connected"] = connected
+		_, err = m.connector.controller.update(m.id, *service)
+		if err != nil {
+			logger.Printf("MQTT: Error updating broker %s: %s", m.id, err)
+		}
+		logger.Printf("MQTT: %s: Updated broker %s", m.uri, m.id)
 	}
+}
 
-	service.Meta["connected"] = false
-	_, err = m.connector.controller.update(m.id, *service)
-	if err != nil {
-		logger.Printf("MQTT: Error updating broker %s: %s", m.id, err)
-	}
-	logger.Printf("MQTT: %s: Updated broker %s", m.uri, m.id)
+func (m *ClientManager) onConnectionLostHandler(client paho.Client, err error) {
+	m.changeConnectionStatus(false)
 }
 
 func (s *Subscription) onMessage(client paho.Client, msg paho.Message) {

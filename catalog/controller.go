@@ -46,12 +46,8 @@ func (c *Controller) add(s Service) (*Service, error) {
 	}
 	s.Created = time.Now().UTC()
 	s.Updated = s.Created
-	if s.TTL == 0 {
-		s.Expires = nil
-	} else {
-		expires := s.Created.Add(time.Duration(s.TTL) * time.Second)
-		s.Expires = &expires
-	}
+
+	s.Expires = s.Created.Add(time.Duration(s.TTL) * time.Second)
 
 	err := c.storage.add(&s)
 	if err != nil {
@@ -91,12 +87,8 @@ func (c *Controller) update(id string, s Service) (*Service, error) {
 	ss.Meta = s.Meta
 	ss.TTL = s.TTL
 	ss.Updated = time.Now().UTC()
-	if ss.TTL == 0 {
-		ss.Expires = nil
-	} else {
-		expires := ss.Updated.Add(time.Duration(ss.TTL) * time.Second)
-		ss.Expires = &expires
-	}
+
+	ss.Expires = ss.Updated.Add(time.Duration(ss.TTL) * time.Second)
 
 	err = c.storage.update(id, ss)
 	if err != nil {
@@ -179,13 +171,19 @@ func (c *Controller) total() (int, error) {
 func (c *Controller) cleanExpired() {
 	logger.Println("cleanExpired() started cleanup routine.")
 
-	cleanAt := func(t time.Time){
+	//cleanAt(time.Now().UTC())
+
+	//for t := range time.NewTicker(ControllerExpiryCleanupInterval).C {
+	//	cleanAt(t)
+	//}
+
+	for ; ; <-time.NewTicker(ControllerExpiryCleanupInterval).C {
 		c.Lock()
 
 		var expiredServices []*Service
 
 		for s := range c.storage.iterator() {
-			if s.TTL != 0 && s.Expires.Before(t.UTC()) {
+			if s.TTL != 0 && s.Expires.Before(time.Now().UTC()) {
 				expiredServices = append(expiredServices, s)
 			}
 		}
@@ -204,23 +202,18 @@ func (c *Controller) cleanExpired() {
 
 		c.Unlock()
 	}
-	cleanAt(time.Now().UTC())
-
-	for t := range time.NewTicker(ControllerExpiryCleanupInterval).C {
-		cleanAt(t)
-	}
 }
 
-func (c *Controller) AddListener(listener Listener){
+func (c *Controller) AddListener(listener Listener) {
 	c.Lock()
 	c.listeners = append(c.listeners, listener)
 	c.Unlock()
 }
 
-func (c *Controller) RemoveListener(listener Listener){
+func (c *Controller) RemoveListener(listener Listener) {
 	c.Lock()
 	for i, l := range c.listeners {
-		if(l == listener ){
+		if l == listener {
 			//delete the entry and break
 			c.listeners = append(c.listeners[:i], c.listeners[i+1:]...)
 			break

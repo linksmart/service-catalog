@@ -24,7 +24,7 @@ type Service struct {
 	Created     time.Time              `json:"created"`
 	Updated     time.Time              `json:"updated"`
 	// Expires is the time when service will be removed from the system (Only when TTL is set)
-	Expires *time.Time `json:"expires,omitempty"`
+	Expires time.Time `json:"expires,omitempty"`
 }
 
 // API is representation of service's API
@@ -59,6 +59,9 @@ func (s Service) validate() error {
 		return fmt.Errorf("service name must not contain spaces")
 	}
 
+	if s.TTL == 0 || s.TTL > uint(time.Hour)*24 {
+		return fmt.Errorf("service TTL should be between 1 and 86400 (i.e. 1 second to one day)")
+	}
 	for _, URL := range s.APIs {
 		if _, err := url.Parse(URL); err != nil {
 			return fmt.Errorf("invalid service API url: %s", URL)
