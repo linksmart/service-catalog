@@ -242,10 +242,12 @@ func TestFilterService(t *testing.T) {
 	controller.add(Service{
 		Description: "interesting_1",
 		Name:        "_test._tcp",
+		TTL:         30,
 	})
 	controller.add(Service{
 		Description: "interesting_2",
 		Name:        "_test._tcp",
+		TTL:         30,
 	})
 
 	services, total, err := controller.filter("description", utils.FOpPrefix, "interesting", 1, 10)
