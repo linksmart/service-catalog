@@ -59,7 +59,7 @@ func (s Service) validate() error {
 		return fmt.Errorf("service name must not contain spaces")
 	}
 
-	if s.TTL == 0 || s.TTL > uint(time.Hour)*24 {
+	if s.TTL == 0 || s.TTL > MaxServiceTTL {
 		return fmt.Errorf("service TTL should be between 1 and 86400 (i.e. 1 second to one day)")
 	}
 	for _, URL := range s.APIs {

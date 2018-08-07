@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	mqttRetryInterval            = 10 // seconds
+	mqttRetryInterval            = 10 * time.Second // seconds
 	mqttServiceTTL               = 10 * time.Minute
 	mqttServiceHeartbeatInterval = mqttServiceTTL / 2
 )
@@ -117,7 +117,7 @@ func StartMQTTConnector(controller *Controller, mqttConf MQTTConf, scDescription
 
 		err := c.register(client)
 		if err != nil {
-			logger.Printf("MQTT: Error registering subscription: %v. Retrying in %ds", err, mqttRetryInterval)
+			logger.Printf("MQTT: Error registering subscription: %v. Retrying in %v", err, mqttRetryInterval)
 			c.failedRegistrations[client.BrokerID] = client
 		}
 	}
@@ -130,13 +130,13 @@ func StartMQTTConnector(controller *Controller, mqttConf MQTTConf, scDescription
 
 func (c *MQTTConnector) retryRegistrations() {
 	for len(c.failedRegistrations) > 0 {
-		time.Sleep(mqttRetryInterval * time.Second)
+		time.Sleep(mqttRetryInterval)
 
 		c.Lock()
 		for id, client := range c.failedRegistrations {
 			err := c.register(client)
 			if err != nil {
-				logger.Printf("MQTT: Error registering subscription: %v. Retrying in %ds", err, mqttRetryInterval)
+				logger.Printf("MQTT: Error registering subscription: %v. Retrying in %v", err, mqttRetryInterval)
 				continue
 			}
 			delete(c.failedRegistrations, id)
@@ -176,6 +176,10 @@ func (c *MQTTConnector) registerBrokersAsServices(clientList []MQTTClient) {
 					logger.Printf("MQTT: Error retrieving broker %s: %s", client.BrokerURI, err)
 				}
 			} else {
+				service.Meta = map[string]interface{}{
+					"registrator": c.scID,
+					"connected":   false,
+				}
 				_, err = c.controller.update(client.BrokerID, *service)
 				if err != nil {
 					logger.Printf("MQTT: Error updating broker %s: %s", client.BrokerID, err)
