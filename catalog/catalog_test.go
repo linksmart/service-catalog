@@ -21,6 +21,7 @@ func TestValidate(t *testing.T) {
 			APIs:        []string{"API 1"},
 		}},
 		Meta: map[string]interface{}{"pub_key": "qwertyuiopasdfghjklzxcvbnm"},
+		TTL:  30,
 	}
 
 	err := s.validate()
@@ -35,35 +36,46 @@ func TestValidate(t *testing.T) {
 	}
 
 	// INVALID REGISTRATIONS
-
-	bad := Service{ID: "id with space"}
+	var bad Service
+	bad = *s
+	bad.ID = "id with space"
 	err = bad.validate()
 	if err == nil {
 		t.Fatalf("Failed to invalidate a registration with ID including whitespace")
 	}
 
-	bad = Service{Name: ""}
+	bad = *s
+	bad.Name = ""
 	err = bad.validate()
 	if err == nil {
 		t.Fatalf("Failed to invalidate a registration with no name")
 	}
 
-	bad = Service{APIs: map[string]string{"API 1": ":://localhost"}}
+	bad = *s
+	bad.APIs = map[string]string{"API 1": ":://localhost"}
 	err = bad.validate()
 	if err == nil {
 		t.Fatalf("Failed to invalidate a registration with invalid API url")
 	}
 
-	bad = Service{Docs: []Doc{{URL: ":://doc.linksmart.eu/DC"}}}
+	bad = *s
+	bad.Docs = []Doc{{URL: ":://doc.linksmart.eu/DC"}}
 	err = bad.validate()
 	if err == nil {
 		t.Fatalf("Failed to invalidate a registration with invalid doc url")
 	}
 
-	bad = Service{Docs: []Doc{{Type: "//"}}}
+	bad = *s
+	bad.Docs = []Doc{{Type: "//"}}
 	err = bad.validate()
 	if err == nil {
 		t.Fatalf("Failed to invalidate a registration with invalid doc MIME type")
 	}
 
+	bad = *s
+	bad.TTL = 0
+	err = bad.validate()
+	if err == nil {
+		t.Fatalf("Failed to invalidate a registration with invalid TTL")
+	}
 }

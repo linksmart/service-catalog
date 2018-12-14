@@ -71,6 +71,7 @@ func TestAddService(t *testing.T) {
 	// System-generated id
 	var r2 Service
 	r2.Name = "_test._tcp"
+	r2.TTL = 30
 	s, err = controller.add(r2)
 	if err != nil {
 		t.Fatalf("Unexpected error on add: %v", err.Error())
@@ -231,6 +232,7 @@ func TestFilterService(t *testing.T) {
 		_, err := controller.add(Service{
 			Description: fmt.Sprintf("boring_%d", i),
 			Name:        "_test._tcp",
+			TTL:         30,
 		})
 		if err != nil {
 			t.Fatal("Error adding a service:", err.Error())
@@ -240,10 +242,12 @@ func TestFilterService(t *testing.T) {
 	controller.add(Service{
 		Description: "interesting_1",
 		Name:        "_test._tcp",
+		TTL:         30,
 	})
 	controller.add(Service{
 		Description: "interesting_2",
 		Name:        "_test._tcp",
+		TTL:         30,
 	})
 
 	services, total, err := controller.filter("description", utils.FOpPrefix, "interesting", 1, 10)

@@ -12,6 +12,8 @@ const (
 
 	APITypeHTTP = "HTTP"
 	APITypeMQTT = "MQTT"
+
+	MaxServiceTTL = 24 * 60 * 60 //in seconds
 )
 
 var SupportedBackends = map[string]bool{
