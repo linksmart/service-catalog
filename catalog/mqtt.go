@@ -97,15 +97,14 @@ func StartMQTTConnector(controller *Controller, mqttConf MQTTConf, scDescription
 		failedRegistrations: make(map[string]MQTTClient),
 	}
 	controller.AddListener(c)
-	clientList := append(mqttConf.AdditionalClients, mqttConf.Client)
 
-	for id, client := range clientList {
+	var clients []MQTTClient
+	for _, client := range append(mqttConf.AdditionalClients, mqttConf.Client) {
 		if client.BrokerURI == "" {
 			continue
 		}
 		if client.BrokerID == "" {
 			client.BrokerID = uuid.NewV4().String()
-			clientList[id].BrokerID = client.BrokerID //Update the original array element too
 		}
 		client.will = make(map[string]bool)
 		for _, topic := range append(mqttConf.CommonWillTopics, client.WillTopics...) {
@@ -120,12 +119,14 @@ func StartMQTTConnector(controller *Controller, mqttConf MQTTConf, scDescription
 			logger.Printf("MQTT: Error registering subscription: %v. Retrying in %v", err, mqttRetryInterval)
 			c.failedRegistrations[client.BrokerID] = client
 		}
+
+		clients = append(clients, client)
 	}
 
 	c.topicPrefix = mqttConf.TopicPrefix
 
 	go c.retryRegistrations()
-	go c.registerBrokersAsServices(clientList)
+	go c.registerBrokersAsServices(clients)
 }
 
 func (c *MQTTConnector) retryRegistrations() {
