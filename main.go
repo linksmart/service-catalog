@@ -148,7 +148,11 @@ func serveHTTP(httpAPI *catalog.HttpAPI, config *Config) {
 
 	// Configure http router
 	r := newRouter()
-	// Handlers
+	// generic handlers
+	r.get("/health", commonHandlers.ThenFunc(healthHandler))
+	r.options("/{path:.*}", commonHandlers.ThenFunc(optionsHandler))
+
+	// service handlers
 	r.get("/", commonHandlers.ThenFunc(httpAPI.List))
 	r.post("/", commonHandlers.ThenFunc(httpAPI.Post))
 	// Accept an id with zero or one slash: [^/]+/?[^/]*

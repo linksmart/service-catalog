@@ -59,9 +59,17 @@ func commonHeaders(next http.Handler) http.Handler {
 		// Headers for HTTP access control (CORS)
 		w.Header().Add("Access-Control-Allow-Origin", "*")
 		w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS")
-		w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Add("Access-Control-Allow-Headers", "Authorization")
 
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "OK")
+}
+
+func optionsHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
