@@ -5,63 +5,19 @@ package catalog
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"strings"
 	"sync"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 )
 
 const (
-	mqttRetryInterval            = 10 * time.Second // seconds
+	mqttRetryInterval            = 10 * time.Second
 	mqttServiceTTL               = 10 * time.Minute
 	mqttServiceHeartbeatInterval = mqttServiceTTL / 2
 )
-
-type MQTTConf struct {
-	Client            MQTTClient   `json:"client"`
-	AdditionalClients []MQTTClient `json:"additionalClients"`
-	CommonRegTopics   []string     `json:"commonRegTopics"`
-	CommonWillTopics  []string     `json:"commonWillTopics"`
-	TopicPrefix       string       `json:"topicPrefix"`
-}
-
-func (c MQTTConf) Validate() error {
-
-	for _, client := range append(c.AdditionalClients, c.Client) {
-		if client.BrokerURI == "" {
-			continue
-		}
-		_, err := url.Parse(client.BrokerURI)
-		if err != nil {
-			return err
-		}
-		if client.QoS > 2 {
-			return fmt.Errorf("QoS must be 0, 1, or 2")
-		}
-		if len(c.CommonRegTopics) == 0 && len(client.RegTopics) == 0 {
-			return fmt.Errorf("regTopics not defined")
-		}
-	}
-	return nil
-}
-
-type MQTTClient struct {
-	BrokerID   string   `json:"brokerID"`
-	BrokerURI  string   `json:"brokerURI"`
-	RegTopics  []string `json:"regTopics"`
-	WillTopics []string `json:"willTopics"`
-	QoS        byte     `json:"qos"`
-	Username   string   `json:"username,omitempty"`
-	Password   string   `json:"password,omitempty"`
-	CaFile     string   `json:"caFile,omitempty"`   // trusted CA certificates file path
-	CertFile   string   `json:"certFile,omitempty"` // client certificate file path
-	KeyFile    string   `json:"keyFile,omitempty"`  // client private key file path
-	topics     []string
-	will       map[string]bool
-}
 
 type MQTTConnector struct {
 	sync.Mutex
