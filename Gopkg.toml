@@ -56,3 +56,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/syndtr/goleveldb"
+
+[[constraint]]
+  name = "github.com/farshidtz/mqtt-match"
+  version = "1.0.1"

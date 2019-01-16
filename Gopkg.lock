@@ -3,99 +3,136 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:8652a291fc92c45986d4871e458416bf08b13f2646c46fb5c4db22ed2da2198d"
   name = "code.linksmart.eu/com/go-sec"
   packages = [
     "auth/keycloak/obtainer",
     "auth/keycloak/validator",
     "auth/obtainer",
     "auth/validator",
-    "authz"
+    "authz",
   ]
+  pruneopts = ""
   revision = "5abeee54723444678d878c5bb556e5c4218f69ce"
 
 [[projects]]
+  branch = "master"
+  digest = "1:396dbc0d3bf224c554496cb87abbe4e7689642a5437577e68a95a17aadc78261"
   name = "github.com/ancientlore/go-avltree"
   packages = ["."]
-  revision = "b2eb526dd47ba854b70e5da6e62514c0688ff968"
-  version = "v1.0.0"
+  pruneopts = ""
+  revision = "da83409fdfb761103cef93a2e2e71f97349d42d6"
 
 [[projects]]
+  digest = "1:80cf22cc45eb6fdfce2515a2401b04bffa2be83261577761ab788688dad699a1"
   name = "github.com/codegangsta/negroni"
   packages = ["."]
+  pruneopts = ""
   revision = "fde5e16d32adc7ad637e9cd9ad21d4ebc6192535"
   version = "v0.2.0"
 
 [[projects]]
+  digest = "1:bb522d6790c531be0b6631f1110e47623d3307672d66749054fa31ddd8878a7d"
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
+  pruneopts = ""
   revision = "d2709f9f1f31ebcda9651b03077758c1f3a0018c"
   version = "v3.0.0"
 
 [[projects]]
+  digest = "1:eecb3e6cef98036972582ffff7d3e340aef15f075236da353aa3e7fb798fdb21"
   name = "github.com/eclipse/paho.mqtt.golang"
   packages = [
     ".",
-    "packets"
+    "packets",
   ]
+  pruneopts = ""
   revision = "aff15770515e3c57fc6109da73d42b0d46f7f483"
   version = "v1.1.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:5bfc9aceb6f2006a1aa350106a9a4e043e743b5b39bd239c0bc149fa5f29d65f"
   name = "github.com/farshidtz/elog"
   packages = ["."]
+  pruneopts = ""
   revision = "122e062de95f1f03e80baa633e2e62e21bcc80c9"
 
 [[projects]]
+  digest = "1:db634b6f9069a977928d076b4de5fa8703f408418fbd864a71a951de25881941"
+  name = "github.com/farshidtz/mqtt-match"
+  packages = ["."]
+  pruneopts = ""
+  revision = "51c532390f4ef01be8f783177266a17846a0a1b6"
+  version = "v1.0.1"
+
+[[projects]]
   branch = "master"
+  digest = "1:09307dfb1aa3f49a2bf869dcfa4c6c06ecd3c207221bd1c1a1141f0e51f209eb"
   name = "github.com/golang/snappy"
   packages = ["."]
+  pruneopts = ""
   revision = "553a641470496b2327abcac10b36396bd98e45c9"
 
 [[projects]]
+  digest = "1:20ed7daa9b3b38b6d1d39b48ab3fd31122be5419461470d0c28de3e121c93ecf"
   name = "github.com/gorilla/context"
   packages = ["."]
+  pruneopts = ""
   revision = "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
   version = "v1.1"
 
 [[projects]]
+  digest = "1:783fde5796ef54ba05de240f2529b6c9fbabc541e70ea43585c53b3f1bbabb5b"
   name = "github.com/gorilla/mux"
   packages = ["."]
+  pruneopts = ""
   revision = "bcd8bc72b08df0f70df986b97f95590779502d31"
   version = "v1.4.0"
 
 [[projects]]
+  digest = "1:51a94d9b97f7a88a0ab5b10ad965e506c48114ebe4445aa05b888632d89fde88"
   name = "github.com/justinas/alice"
   packages = ["."]
+  pruneopts = ""
   revision = "052b8b6c18edb9db317af86806d8e00ebaa94160"
   version = "1.0.0"
 
 [[projects]]
+  digest = "1:b60a24f942c7031ece6c48bcab0b683c7d3d6aa9fd17e21459d9ae604da258fa"
   name = "github.com/kelseyhightower/envconfig"
   packages = ["."]
+  pruneopts = ""
   revision = "f611eb38b3875cc3bd991ca91c51d06446afa14c"
   version = "v1.3.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:e80c6c838621c45abdc2191493c1c05e490acba25e105e6dc102d9651383f218"
   name = "github.com/miekg/dns"
   packages = ["."]
+  pruneopts = ""
   revision = "e4205768578dc90c2669e75a2f8a8bf77e3083a4"
 
 [[projects]]
   branch = "master"
+  digest = "1:1a0539f293ad62dd34cce1c5cc11b0aa2c1c322b2352682e22ecf5aecaf4a8bd"
   name = "github.com/oleksandr/bonjour"
   packages = ["."]
+  pruneopts = ""
   revision = "5dcf00d8b228be86307f952f550f2191d956b9e2"
 
 [[projects]]
+  digest = "1:6b55df4b0517a459af9d3879c99330af4367adcf45f3d0d37ded80a6272ae057"
   name = "github.com/satori/go.uuid"
   packages = ["."]
+  pruneopts = ""
   revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
   version = "v1.1.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:7be251171c7dbde2244fff0ae93fe452d99e74c854ad3a4482417f39b242324b"
   name = "github.com/syndtr/goleveldb"
   packages = [
     "leveldb",
@@ -109,12 +146,14 @@
     "leveldb/opt",
     "leveldb/storage",
     "leveldb/table",
-    "leveldb/util"
+    "leveldb/util",
   ]
+  pruneopts = ""
   revision = "b89cc31ef7977104127d34c1bd31ebd1a9db2199"
 
 [[projects]]
   branch = "master"
+  digest = "1:6e4f9fe77e4f2311ceb7025fd5c5134c16f336a4d5009c20e676f859096a5c0c"
   name = "golang.org/x/net"
   packages = [
     "bpf",
@@ -123,13 +162,32 @@
     "ipv4",
     "ipv6",
     "proxy",
-    "websocket"
+    "websocket",
   ]
+  pruneopts = ""
   revision = "57efc9c3d9f91fb3277f8da1cff370539c4d3dc5"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "515bdcb6f72e145673f91c194009e356eb7bd4a7365a44320c9d00080f91a207"
+  input-imports = [
+    "code.linksmart.eu/com/go-sec/auth/keycloak/validator",
+    "code.linksmart.eu/com/go-sec/auth/obtainer",
+    "code.linksmart.eu/com/go-sec/auth/validator",
+    "code.linksmart.eu/com/go-sec/authz",
+    "github.com/ancientlore/go-avltree",
+    "github.com/codegangsta/negroni",
+    "github.com/eclipse/paho.mqtt.golang",
+    "github.com/farshidtz/elog",
+    "github.com/farshidtz/mqtt-match",
+    "github.com/gorilla/context",
+    "github.com/gorilla/mux",
+    "github.com/justinas/alice",
+    "github.com/kelseyhightower/envconfig",
+    "github.com/oleksandr/bonjour",
+    "github.com/satori/go.uuid",
+    "github.com/syndtr/goleveldb/leveldb",
+    "github.com/syndtr/goleveldb/leveldb/opt",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

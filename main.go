@@ -89,7 +89,7 @@ func main() {
 	go serveHTTP(httpAPI, config)
 
 	// Create mqtt api
-	go catalog.StartMQTTConnector(controller, config.MQTT, config.ID)
+	go catalog.StartMQTTManager(controller, config.MQTT, config.ID)
 
 	// Announce service using DNS-SD
 	var bonjourS *bonjour.Server
