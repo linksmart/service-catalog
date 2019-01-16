@@ -68,25 +68,6 @@ func StartMQTTManager(controller *Controller, mqttConf MQTTConf, scID string) {
 	}
 }
 
-func (m *MQTTManager) registerAsService(client *MQTTClient) {
-	service := Service{
-		ID:          client.BrokerID,
-		Name:        mqttServiceName,
-		Description: "MQTT Broker",
-		Meta: map[string]interface{}{
-			"registrator": m.scID,
-		},
-		APIs: map[string]string{
-			APITypeMQTT: client.BrokerURI,
-		},
-		TTL: uint(mqttServiceTTL / time.Second),
-	}
-
-	for ; true; <-time.NewTicker(mqttServiceHeartbeatInterval).C {
-		m.addService(service)
-	}
-}
-
 func (c *MQTTClient) connect() {
 	for {
 		opts, err := c.pahoOptions()
@@ -109,6 +90,79 @@ func (c *MQTTClient) connect() {
 
 		go c.manager.registerAsService(c)
 		break
+	}
+}
+
+func (c *MQTTClient) onConnect(pahoClient paho.Client) {
+	logger.Printf("MQTT: %s: Connected.", c.BrokerURI)
+
+	for _, topic := range c.topics {
+		if token := pahoClient.Subscribe(topic, c.QoS, c.onMessage); token.Wait() && token.Error() != nil {
+			logger.Printf("MQTT: %s: Error subscribing: %v", c.BrokerURI, token.Error())
+		}
+		logger.Printf("MQTT: %s: Subscribed to %s", c.BrokerURI, topic)
+	}
+}
+
+func (c *MQTTClient) onDisconnect(pahoClient paho.Client, err error) {
+	logger.Printf("MQTT: %s: Disconnected: %s", c.BrokerURI, err)
+}
+
+func (c *MQTTClient) onMessage(_ paho.Client, msg paho.Message) {
+	topic, payload := msg.Topic(), msg.Payload()
+	logger.Debugf("MQTT: %s %s", topic, payload)
+
+	// Will message has ID in topic
+	// Get id from topic. Expects: <prefix>will/<id>
+	for _, filter := range c.willTopics {
+		if mqtttopic.Match(filter, topic) {
+			if parts := strings.SplitAfter(msg.Topic(), "will/"); len(parts) == 2 && parts[1] != "" {
+				c.manager.removeService(Service{ID: parts[1]})
+				return
+			}
+		}
+	}
+
+	// Get id from topic. Expects: <prefix>service/<id>
+	var id string
+	if parts := strings.SplitAfter(msg.Topic(), "service/"); len(parts) == 2 {
+		id = parts[1]
+	}
+
+	var service Service
+	err := json.Unmarshal(payload, &service)
+	if err != nil {
+		logger.Printf("MQTT: Error parsing json: %s : %v", payload, err)
+		return
+	}
+
+	if service.ID == "" && id == "" {
+		logger.Printf("MQTT: Invalid registration: ID not provided")
+		return
+	} else if service.ID == "" {
+		logger.Debugf("MQTT: Getting id from topic: %s", id)
+		service.ID = id
+	}
+
+	c.manager.addService(service)
+}
+
+func (m *MQTTManager) registerAsService(client *MQTTClient) {
+	service := Service{
+		ID:          client.BrokerID,
+		Name:        mqttServiceName,
+		Description: "MQTT Broker",
+		Meta: map[string]interface{}{
+			"registrator": m.scID,
+		},
+		APIs: map[string]string{
+			APITypeMQTT: client.BrokerURI,
+		},
+		TTL: uint(mqttServiceTTL / time.Second),
+	}
+
+	for ; true; <-time.NewTicker(mqttServiceHeartbeatInterval).C {
+		m.addService(service)
 	}
 }
 
@@ -173,58 +227,13 @@ func (m *MQTTManager) publishDeadService(s Service) {
 	}
 }
 
-func (c *MQTTClient) onConnect(pahoClient paho.Client) {
-	logger.Printf("MQTT: %s: Connected.", c.BrokerURI)
-
-	for _, topic := range c.topics {
-		if token := pahoClient.Subscribe(topic, c.QoS, c.onMessage); token.Wait() && token.Error() != nil {
-			logger.Printf("MQTT: %s: Error subscribing: %v", c.BrokerURI, token.Error())
-		}
-		logger.Printf("MQTT: %s: Subscribed to %s", c.BrokerURI, topic)
-	}
-}
-
-func (c *MQTTClient) onDisconnect(pahoClient paho.Client, err error) {
-	logger.Printf("MQTT: %s: Disconnected: %s", c.BrokerURI, err)
-}
-
-func (c *MQTTClient) onMessage(_ paho.Client, msg paho.Message) {
-	topic, payload := msg.Topic(), msg.Payload()
-	logger.Debugf("MQTT: %s %s", topic, payload)
-
-	// Will message has ID in topic
-	// Get id from topic. Expects: <prefix>will/<id>
-	for _, filter := range c.willTopics {
-		if mqtttopic.Match(filter, topic) {
-			if parts := strings.SplitAfter(msg.Topic(), "will/"); len(parts) == 2 && parts[1] != "" {
-				c.manager.removeService(Service{ID: parts[1]})
-				return
-			}
-		}
-	}
-
-	// Get id from topic. Expects: <prefix>service/<id>
-	var id string
-	if parts := strings.SplitAfter(msg.Topic(), "service/"); len(parts) == 2 {
-		id = parts[1]
-	}
-
-	var service Service
-	err := json.Unmarshal(payload, &service)
+func (m *MQTTManager) removeService(service Service) {
+	err := m.controller.delete(service.ID)
 	if err != nil {
-		logger.Printf("MQTT: Error parsing json: %s : %v", payload, err)
+		logger.Printf("MQTT: Error removing service: %s: %s", service.ID, err)
 		return
 	}
-
-	if service.ID == "" && id == "" {
-		logger.Printf("MQTT: Invalid registration: ID not provided")
-		return
-	} else if service.ID == "" {
-		logger.Debugf("MQTT: Getting id from topic: %s", id)
-		service.ID = id
-	}
-
-	c.manager.addService(service)
+	logger.Printf("MQTT: Removed service: %s", service.ID)
 }
 
 func (m *MQTTManager) addService(service Service) {
@@ -252,13 +261,4 @@ func (m *MQTTManager) addService(service Service) {
 	} else {
 		logger.Printf("MQTT: Updated service: %s", service.ID)
 	}
-}
-
-func (m *MQTTManager) removeService(service Service) {
-	err := m.controller.delete(service.ID)
-	if err != nil {
-		logger.Printf("MQTT: Error removing service: %s: %s", service.ID, err)
-		return
-	}
-	logger.Printf("MQTT: Removed service: %s", service.ID)
 }
