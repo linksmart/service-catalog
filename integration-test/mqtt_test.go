@@ -80,7 +80,7 @@ func (m *ClientManager) onConnectionLostHandler(client paho.Client, err error) {
 
 func MockedService(id string) *catalog.Service {
 	return &catalog.Service{
-		ID:          "TestHost/" + id,
+		ID:          id,
 		Meta:        map[string]interface{}{"test-id": id},
 		Description: "Test Service " + id,
 		Name:        "_test._tcp",
@@ -185,7 +185,7 @@ func TestCreateDelete(t *testing.T) {
 	//destroy the service
 	time.Sleep(sleepTime)
 
-	if token := manager.client.Publish("LS/v2/IT/someid/will", 1, false, b); token.Wait() && token.Error() != nil {
+	if token := manager.client.Publish("LS/v2/IT/someid/will/"+service.ID, 1, false, b); token.Wait() && token.Error() != nil {
 		t.Fatalf("Error publishing: %s", token.Error())
 	}
 
@@ -330,7 +330,7 @@ func TestAnnouncement(t *testing.T) {
 				return
 			}
 			if sameServices(updateService, &gotService, false) {
-				log.Println("Announcement: Service deleted %s", gotService.ID)
+				log.Printf("Announcement: Service deleted %s", gotService.ID)
 				gotDead <- true
 			}
 		} else {

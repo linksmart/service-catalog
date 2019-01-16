@@ -13,7 +13,7 @@
     "client" : {
       "brokerID": "main_broker",
       "brokerURI": "",
-      "regTopics": [],
+      "regTopics": [a,v,d,d,f,g],
       "willTopics": [],
       "qos": 1,
       "username": "",

@@ -26,7 +26,7 @@ type MQTTManager struct {
 	scID        string
 	topicPrefix string
 
-	clients []MQTTClient
+	clients []*MQTTClient
 }
 
 type MQTTClient struct {
@@ -38,12 +38,12 @@ type MQTTClient struct {
 }
 
 func StartMQTTManager(controller *Controller, mqttConf MQTTConf, scID string) {
-	c := &MQTTManager{
+	m := &MQTTManager{
 		controller:  controller,
 		scID:        scID,
 		topicPrefix: mqttConf.TopicPrefix,
 	}
-	controller.AddListener(c)
+	controller.AddListener(m)
 
 	for _, clientConf := range append(mqttConf.AdditionalClients, mqttConf.Client) {
 		if clientConf.BrokerURI == "" {
@@ -52,18 +52,16 @@ func StartMQTTManager(controller *Controller, mqttConf MQTTConf, scID string) {
 
 		var client MQTTClient
 		client.MQTTClientConf = clientConf
-		client.manager = c
+		client.manager = m
 
 		if client.BrokerID == "" {
 			client.BrokerID = uuid.NewV4().String()
 		}
 
+		client.topics = append(mqttConf.CommonRegTopics, client.RegTopics...)
 		client.willTopics = append(mqttConf.CommonWillTopics, client.WillTopics...)
 
-		for _, topics := range [][]string{mqttConf.CommonRegTopics, mqttConf.CommonWillTopics, client.RegTopics, client.WillTopics} {
-			client.topics = append(client.topics, topics...)
-		}
-
+		m.clients = append(m.clients, &client)
 		go client.connect()
 	}
 }
@@ -72,7 +70,7 @@ func (c *MQTTClient) connect() {
 	for {
 		opts, err := c.pahoOptions()
 		if err != nil {
-			log.Fatalf("Unable to configure MQTT c: %s", err)
+			log.Fatalf("MQTT: Error configuring Paho options: %s", err)
 		}
 		// Add handlers
 		opts.SetOnConnectHandler(c.onConnect)
@@ -80,6 +78,7 @@ func (c *MQTTClient) connect() {
 		opts.SetAutoReconnect(true)
 
 		c.paho = paho.NewClient(opts)
+		log.Printf("%+#v", c)
 		logger.Printf("MQTT: %s: Connecting...", c.BrokerURI)
 
 		if token := c.paho.Connect(); token.Wait() && token.Error() != nil {
@@ -96,7 +95,7 @@ func (c *MQTTClient) connect() {
 func (c *MQTTClient) onConnect(pahoClient paho.Client) {
 	logger.Printf("MQTT: %s: Connected.", c.BrokerURI)
 
-	for _, topic := range c.topics {
+	for _, topic := range append(c.topics, c.willTopics...) {
 		if token := pahoClient.Subscribe(topic, c.QoS, c.onMessage); token.Wait() && token.Error() != nil {
 			logger.Printf("MQTT: %s: Error subscribing: %v", c.BrokerURI, token.Error())
 		}
@@ -160,7 +159,7 @@ func (m *MQTTManager) registerAsService(client *MQTTClient) {
 		},
 		TTL: uint(mqttServiceTTL / time.Second),
 	}
-
+	// keepalive starting from right now
 	for ; true; <-time.NewTicker(mqttServiceHeartbeatInterval).C {
 		m.addService(service)
 	}
@@ -194,27 +193,27 @@ func (m *MQTTManager) publishAliveService(s Service) {
 		return
 	}
 	topic := m.topicPrefix + s.Name + "/" + s.ID + "/alive"
-	logger.Printf("MQTT: Publishing service %s to topic %s", s.ID, topic)
 	for _, client := range m.clients {
 		if token := client.paho.Publish(topic, 1, true, payload); token.Wait() && token.Error() != nil {
 			logger.Printf("MQTT: %s: Error publishing: %v", client.BrokerURI, token.Error())
 		}
+		logger.Printf("MQTT: %s: Published service %s with topic %s", client.BrokerURI, s.ID, topic)
 	}
 }
 
 func (m *MQTTManager) publishDeadService(s Service) {
 	// remove the retained message
 	topic := m.topicPrefix + s.Name + "/" + s.ID + "/alive"
-	logger.Printf("MQTT: Removing the retain message topic: %s", topic)
+
 	for _, client := range m.clients {
 		if token := client.paho.Publish(topic, 1, true, ""); token.Wait() && token.Error() != nil {
 			logger.Printf("MQTT: %s: Error publishing: %v", client.BrokerURI, token.Error())
 		}
+		logger.Printf("MQTT: %s: Removed the retain message topic: %s", client.BrokerURI, topic)
 	}
 
 	// publish dead message
 	topic = m.topicPrefix + s.Name + "/" + s.ID + "/dead"
-	logger.Printf("MQTT: Publishing deletion Service topic:%s", topic)
 	payload, err := json.Marshal(s)
 	if err != nil {
 		logger.Printf("MQTT: Error parsing json: %s ", err)
@@ -224,6 +223,7 @@ func (m *MQTTManager) publishDeadService(s Service) {
 		if token := client.paho.Publish(topic, 1, false, payload); token.Wait() && token.Error() != nil {
 			logger.Printf("MQTT: %s: Error publishing: %v", client.BrokerURI, token.Error())
 		}
+		logger.Printf("MQTT: %s: Published delete for service %s with topic %s", client.BrokerURI, s.ID, topic)
 	}
 }
 
