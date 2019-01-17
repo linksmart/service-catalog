@@ -7,23 +7,21 @@ import (
 	"io/ioutil"
 	"net/url"
 	"strings"
-	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
-	mqttConnectTimeout = 5 * time.Second
 	mqttClientIDPrefix = "SC-"
 )
 
 type MQTTConf struct {
 	Client            MQTTClientConf   `json:"client"`
 	AdditionalClients []MQTTClientConf `json:"additionalClients"`
-	CommonRegTopics   []string     `json:"commonRegTopics"`
-	CommonWillTopics  []string     `json:"commonWillTopics"`
-	TopicPrefix       string       `json:"topicPrefix"`
+	CommonRegTopics   []string         `json:"commonRegTopics"`
+	CommonWillTopics  []string         `json:"commonWillTopics"`
+	TopicPrefix       string           `json:"topicPrefix"`
 }
 
 type MQTTClientConf struct {
@@ -59,12 +57,10 @@ func (c MQTTConf) Validate() error {
 	return nil
 }
 
-
 func (client MQTTClientConf) pahoOptions() (*paho.ClientOptions, error) {
 	opts := paho.NewClientOptions() // uses defaults: https://godoc.org/github.com/eclipse/paho.mqtt.golang#NewClientOptions
 	opts.AddBroker(client.BrokerURI)
 	opts.SetClientID(fmt.Sprintf("%s%s", mqttClientIDPrefix, uuid.NewV4().String()))
-	opts.SetConnectTimeout(mqttConnectTimeout)
 
 	if client.Username != "" {
 		opts.SetUsername(client.Username)

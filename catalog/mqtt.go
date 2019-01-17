@@ -62,6 +62,7 @@ func StartMQTTManager(controller *Controller, mqttConf MQTTConf, scID string) {
 		client.topics = append(mqttConf.CommonRegTopics, client.RegTopics...)
 		client.willTopics = append(mqttConf.CommonWillTopics, client.WillTopics...)
 
+		logger.Printf("MQTT: Added client for %s", client.BrokerURI)
 		m.clients = append(m.clients, &client)
 		go client.connect()
 	}
@@ -77,10 +78,8 @@ func (c *MQTTClient) connect() {
 		// Add handlers
 		opts.SetOnConnectHandler(c.onConnect)
 		opts.SetConnectionLostHandler(c.onDisconnect)
-		opts.SetAutoReconnect(true)
 
 		c.paho = paho.NewClient(opts)
-
 		if token := c.paho.Connect(); token.Wait() && token.Error() != nil {
 			log.Printf("Error connecting to broker: %v. Retry in %v", token.Error(), interval)
 			time.Sleep(interval)
