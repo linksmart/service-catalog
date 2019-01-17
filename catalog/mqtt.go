@@ -15,6 +15,7 @@ import (
 )
 
 const (
+	mqttMaxRetryInterval         = 10 * time.Minute
 	mqttServiceTTL               = 1 * time.Minute
 	mqttServiceHeartbeatInterval = mqttServiceTTL / 2
 	mqttServiceName              = "_mqtt._tcp"
@@ -67,6 +68,7 @@ func StartMQTTManager(controller *Controller, mqttConf MQTTConf, scID string) {
 }
 
 func (c *MQTTClient) connect() {
+	interval := 15 * time.Second
 	for {
 		opts, err := c.pahoOptions()
 		if err != nil {
@@ -78,13 +80,14 @@ func (c *MQTTClient) connect() {
 		opts.SetAutoReconnect(true)
 
 		c.paho = paho.NewClient(opts)
-		log.Printf("%+#v", c)
-		logger.Printf("MQTT: %s: Connecting...", c.BrokerURI)
 
 		if token := c.paho.Connect(); token.Wait() && token.Error() != nil {
-			log.Printf("Error connecting to broker: %v", token.Error())
+			log.Printf("Error connecting to broker: %v. Retry in %v", token.Error(), interval)
+			time.Sleep(interval)
+			if interval *= 2; interval > mqttMaxRetryInterval {
+				interval = mqttMaxRetryInterval
+			}
 			continue
-			// TODO sleep?
 		}
 
 		go c.manager.registerAsService(c)
