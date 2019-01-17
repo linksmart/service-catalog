@@ -16,7 +16,7 @@ import (
 
 const (
 	mqttMaxRetryInterval         = 10 * time.Minute
-	mqttServiceTTL               = 1 * time.Minute
+	mqttServiceTTL               = 10 * time.Minute
 	mqttServiceHeartbeatInterval = mqttServiceTTL / 2
 	mqttServiceName              = "_mqtt._tcp"
 )
