@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"log"
 	"strings"
-	"sync"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
@@ -22,7 +21,6 @@ const (
 )
 
 type MQTTManager struct {
-	sync.Mutex
 	controller  *Controller
 	scID        string
 	topicPrefix string
