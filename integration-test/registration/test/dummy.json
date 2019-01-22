@@ -13,5 +13,6 @@
       "type":"application/json",
       "url":"http://my.great.docs.location"
     }
-  ]
+  ],
+  "ttl": 86400
 }
