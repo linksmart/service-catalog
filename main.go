@@ -19,7 +19,7 @@ import (
 	"github.com/gorilla/context"
 	"github.com/justinas/alice"
 	"github.com/oleksandr/bonjour"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 var (
@@ -29,7 +29,7 @@ var (
 )
 
 const LINKSMART = `
-╦   ╦ ╔╗╔ ╦╔═  ╔═╗ ╔╦╗ ╔═╗ ╦═╗ ╔╦╗ R
+╦   ╦ ╔╗╔ ╦╔═  ╔═╗ ╔╦╗ ╔═╗ ╦═╗ ╔╦╗
 ║   ║ ║║║ ╠╩╗  ╚═╗ ║║║ ╠═╣ ╠╦╝  ║
 ╩═╝ ╩ ╝╚╝ ╩ ╩  ╚═╝ ╩ ╩ ╩ ╩ ╩╚═  ╩
 `

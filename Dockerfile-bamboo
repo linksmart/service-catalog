@@ -3,7 +3,7 @@ FROM alpine
 
 ARG VERSION
 ARG BUILD
-LABEL NAME="LinkSmart® Service Catalog"
+LABEL NAME="LinkSmart Service Catalog"
 LABEL CODENAME="SC"
 LABEL VERSION=${VERSION}
 LABEL BUILD=${BUILD}
