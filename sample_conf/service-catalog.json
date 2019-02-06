@@ -20,7 +20,7 @@
       "password": ""
     },
     "additionalClients": [],
-    "commonRegTopics":  ["LS/v2/+/+/service", "LS/v2/+/+/service/+"],
+    "commonRegTopics":  ["LS/v2/+/+/service/+"],
     "commonWillTopics": ["LS/v2/+/+/will/+"],
     "topicPrefix": "LS/v2/SC/"
   },
