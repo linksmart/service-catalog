@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"code.linksmart.eu/sc/service-catalog/utils"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
-var ControllerExpiryCleanupInterval = 30 * time.Second // to be modified in unit tests
+var ControllerExpiryCleanupInterval = 60 * time.Second // to be modified in unit tests
 
 type Controller struct {
 	wg sync.WaitGroup
