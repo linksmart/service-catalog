@@ -172,7 +172,7 @@ func (c *Controller) total() (int, error) {
 func (c *Controller) cleanExpired() {
 	logger.Println("cleanExpired() started cleanup routine.")
 
-	for {
+	clean := func() {
 		c.Lock()
 		start := time.Now()
 
@@ -198,8 +198,13 @@ func (c *Controller) cleanExpired() {
 
 		log.Printf("cleanExpired() took %s", time.Since(start))
 		c.Unlock()
-		time.Sleep(ControllerExpiryCleanupInterval)
 	}
+
+	clean()
+	for range time.NewTicker(ControllerExpiryCleanupInterval).C { // first iteration starts immediately
+		clean()
+	}
+
 }
 
 func (c *Controller) AddListener(listener Listener) {
