@@ -4,7 +4,6 @@ package catalog
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -174,7 +173,6 @@ func (c *Controller) cleanExpired() {
 
 	clean := func() {
 		c.Lock()
-		start := time.Now()
 
 		var expiredServices []*Service
 
@@ -196,15 +194,13 @@ func (c *Controller) cleanExpired() {
 			}
 		}
 
-		log.Printf("cleanExpired() took %s", time.Since(start))
 		c.Unlock()
 	}
 
 	clean()
-	for range time.NewTicker(ControllerExpiryCleanupInterval).C { // first iteration starts immediately
+	for range time.NewTicker(ControllerExpiryCleanupInterval).C {
 		clean()
 	}
-
 }
 
 func (c *Controller) AddListener(listener Listener) {
