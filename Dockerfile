@@ -1,12 +1,9 @@
-FROM golang:1.9-alpine as builder
+FROM golang:1.12-alpine as builder
 
-ENV PACKAGE code.linksmart.eu/sc/service-catalog
-# copy code
-COPY . /home/src/${PACKAGE}
+COPY . /home
 
-# build
-ENV GOPATH /home
-RUN go install ${PACKAGE}
+WORKDIR /home
+RUN go build -mod=vendor -o service-catalog
 
 ###########
 FROM alpine
@@ -14,7 +11,7 @@ FROM alpine
 RUN apk --no-cache add ca-certificates
 
 WORKDIR /home
-COPY --from=builder /home/bin/* .
+COPY --from=builder /home/service-catalog .
 COPY sample_conf/* /conf/
 
 ENV SC_DNSSDENABLED=false
