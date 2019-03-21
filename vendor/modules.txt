@@ -1,4 +1,4 @@
-# code.linksmart.eu/com/go-sec v0.0.0-20170826195214-5abeee547234
+# code.linksmart.eu/com/go-sec v1.0.0
 code.linksmart.eu/com/go-sec/auth/keycloak/validator
 code.linksmart.eu/com/go-sec/auth/validator
 code.linksmart.eu/com/go-sec/authz
@@ -13,13 +13,13 @@ github.com/dgrijalva/jwt-go
 # github.com/eclipse/paho.mqtt.golang v1.1.0
 github.com/eclipse/paho.mqtt.golang
 github.com/eclipse/paho.mqtt.golang/packets
-# github.com/farshidtz/elog v0.0.0-20171218102240-122e062de95f
+# github.com/farshidtz/elog v0.9.0
 github.com/farshidtz/elog
 # github.com/farshidtz/mqtt-match v1.0.1
 github.com/farshidtz/mqtt-match
 # github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
 github.com/golang/snappy
-# github.com/gorilla/context v0.0.0-20160226214623-1ea25387ff6f
+# github.com/gorilla/context v1.1.1
 github.com/gorilla/context
 # github.com/gorilla/mux v1.4.0
 github.com/gorilla/mux

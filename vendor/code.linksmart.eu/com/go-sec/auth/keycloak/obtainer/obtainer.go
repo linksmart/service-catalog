@@ -52,6 +52,7 @@ func (o *KeycloakObtainer) Login(serverAddr, username, password, clientID string
 		"client_id":  {clientID},
 		"username":   {username},
 		"password":   {password},
+		"scope":      {"openid"},
 	})
 	if err != nil {
 		return "", err

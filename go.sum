@@ -1,5 +1,5 @@
-code.linksmart.eu/com/go-sec v0.0.0-20170826195214-5abeee547234 h1:Gor/AzKoB5OaxcR28lNgffUhMPe2BrsinM3xwmypksQ=
-code.linksmart.eu/com/go-sec v0.0.0-20170826195214-5abeee547234/go.mod h1:qEBhVkhL1BqKa8LqWYsr2JdpbrAsLn2cVtnuoNneE5Y=
+code.linksmart.eu/com/go-sec v1.0.0 h1:3KDJLrEwb5boGBDs+QZeOlvA5Hy/PQ6k1F1gcBW3bl8=
+code.linksmart.eu/com/go-sec v1.0.0/go.mod h1:qEBhVkhL1BqKa8LqWYsr2JdpbrAsLn2cVtnuoNneE5Y=
 github.com/ancientlore/go-avltree v0.0.0-20180928192319-da83409fdfb7 h1:oIquyipmpCIO2I2+4MrsZ+PgGYUeR0HpIUrQxrrKiRU=
 github.com/ancientlore/go-avltree v0.0.0-20180928192319-da83409fdfb7/go.mod h1:nfJ32Li6TWi3iVi9M3XF19FNqdfTlmoI87CPVgtgqoc=
 github.com/codegangsta/negroni v0.2.0 h1:MqNkcR831ZSHwZmP9IdlZWGMxc1T8briBhBW649DkXs=
@@ -10,8 +10,8 @@ github.com/dgrijalva/jwt-go v3.0.0+incompatible h1:nfVqwkkhaRUethVJaQf5TUFdFr3YU
 github.com/dgrijalva/jwt-go v3.0.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/eclipse/paho.mqtt.golang v1.1.0 h1:Em29HD1CwLHdRFnX7yfg+kBjHHw6DSDok9I+ia4znT4=
 github.com/eclipse/paho.mqtt.golang v1.1.0/go.mod h1:H9keYFcgq3Qr5OUJm/JZI/i6U7joQ8SYLhZwfeOo6Ts=
-github.com/farshidtz/elog v0.0.0-20171218102240-122e062de95f h1:hSu+oA65sEBNh97cm4iS9EOzcQ0UloFewGVNNPXz33c=
-github.com/farshidtz/elog v0.0.0-20171218102240-122e062de95f/go.mod h1:wsS8gMzj561vyWJviCBUeK6YAy9CdKmsH+moY5DA+Ms=
+github.com/farshidtz/elog v0.9.0 h1:pfNMCBpqAT/Uky6aNwqcTzZBHRfsYMp9vd1LmuBOQ6o=
+github.com/farshidtz/elog v0.9.0/go.mod h1:wsS8gMzj561vyWJviCBUeK6YAy9CdKmsH+moY5DA+Ms=
 github.com/farshidtz/mqtt-match v1.0.1 h1:VEBojQL9P5F7E3gu9XULIUZnzZknn7byF2rJ7RX20cQ=
 github.com/farshidtz/mqtt-match v1.0.1/go.mod h1:Kwf4JfzMhR3aPmVY5jqTkLXY/E3DgHsRlCUekyqdQHw=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
@@ -20,8 +20,8 @@ github.com/golang/protobuf v1.2.0 h1:P3YflyNX/ehuJFLhxviNdFxQPkGK5cDcApsge1SqnvM
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db h1:woRePGFeVFfLKN/pOkfl+p/TAqKOfFu+7KPlMVpok/w=
 github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
-github.com/gorilla/context v0.0.0-20160226214623-1ea25387ff6f h1:9oNbS1z4rVpbnkHBdPZU4jo9bSmrLpII768arSyMFgk=
-github.com/gorilla/context v0.0.0-20160226214623-1ea25387ff6f/go.mod h1:kBGZzfjB9CEq2AlWe17Uuf7NDRt0dE0s8S51q0aT7Yg=
+github.com/gorilla/context v1.1.1 h1:AWwleXJkX/nhcU9bZSnZoi3h/qGYqQAGhq6zZe/aQW8=
+github.com/gorilla/context v1.1.1/go.mod h1:kBGZzfjB9CEq2AlWe17Uuf7NDRt0dE0s8S51q0aT7Yg=
 github.com/gorilla/mux v1.4.0 h1:N6R8isjoRv7IcVVlf0cTBbo0UDc9V6ZXWEm0HQoQmLo=
 github.com/gorilla/mux v1.4.0/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
