@@ -40,7 +40,7 @@ services:
     environment:
       - SC_ENDPOINT=http://sc2:8082
       - BROKERS=tcp://broker:1883
-    command: go test -mod=vendor -v ./catalog
+    command: go test -mod=vendor -v ./integration-test
 
 # RUN INTEGRATION TESTS
 # docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build integration-test
