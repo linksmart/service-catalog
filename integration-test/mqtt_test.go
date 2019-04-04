@@ -99,7 +99,7 @@ func MockedService(id string) *catalog.Service {
 func TestMain(m *testing.M) {
 
 	// Take urls from envs (if provided)
-	if url := os.Getenv("SC"); url != "" {
+	if url := os.Getenv("SC_ENDPOINT"); url != "" {
 		log.Println("Setting service catalog:", url)
 		ServiceCatalogURL = url
 	}

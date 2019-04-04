@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"code.linksmart.eu/sc/service-catalog/utils"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 func setup() (*Controller, func(), error) {
@@ -107,7 +107,7 @@ func TestUpdateService(t *testing.T) {
 
 	rg, err := controller.get(r.ID)
 	if err != nil {
-		t.Error("Unexpected error on get: %v", err.Error())
+		t.Errorf("Unexpected error on get: %v", err.Error())
 	}
 
 	if rg.Description != r.Description {
@@ -136,7 +136,7 @@ func TestGetService(t *testing.T) {
 
 	rg, err := controller.get(r.ID)
 	if err != nil {
-		t.Error("Unexpected error on get: %v", err.Error())
+		t.Errorf("Unexpected error on get: %v", err.Error())
 	}
 
 	if rg.ID != r.ID || rg.Description != r.Description || rg.TTL != r.TTL {
@@ -164,7 +164,7 @@ func TestDeleteService(t *testing.T) {
 
 	err = controller.delete(r.ID)
 	if err != nil {
-		t.Error("Unexpected error on delete: %v", err.Error())
+		t.Errorf("Unexpected error on delete: %v", err.Error())
 	}
 
 	err = controller.delete(r.ID)
@@ -186,7 +186,7 @@ func TestListServices(t *testing.T) {
 
 	// Add 10 entries
 	for i := 0; i < 11; i++ {
-		r.ID = "TestID_" + string(i)
+		r.ID = fmt.Sprintf("TestID_%d", i)
 		r.TTL = 30
 		_, err := controller.add(r)
 

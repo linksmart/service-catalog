@@ -1,0 +1,46 @@
+# Run either unit-test or integration-test. See below.
+
+version: '2.4'
+
+services:
+  sc:
+    build:
+      context: .
+
+  unit-test:
+    build:
+      context: .
+      dockerfile: Dockerfile-test
+    depends_on:
+      - sc
+    environment:
+      - SC_ENDPOINT=http://sc:8082
+    command: go test -mod=vendor -v ./catalog
+
+# RUN UNIT TESTS
+# docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build unit-test
+
+  sc2:
+    build:
+      context: .
+    environment:
+      - SC_MQTT_CLIENT_BROKERURI=tcp://broker:1883
+      - SC_MQTT_CLIENT_REGTOPICS=LS/v2/+/+/service
+
+  broker:
+    image: eclipse-mosquitto
+
+  integration-test:
+    build:
+      context: .
+      dockerfile: Dockerfile-test
+    depends_on:
+      - sc2
+      - broker
+    environment:
+      - SC_ENDPOINT=http://sc2:8082
+      - BROKERS=tcp://broker:1883
+    command: go test -mod=vendor -v ./catalog
+
+# RUN INTEGRATION TESTS
+# docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build integration-test
