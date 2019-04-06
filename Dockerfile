@@ -3,6 +3,7 @@ FROM golang:1.12-alpine as builder
 COPY . /home
 
 WORKDIR /home
+ENV CGO_ENABLED=0
 RUN go build -mod=vendor -o service-catalog
 
 ###########

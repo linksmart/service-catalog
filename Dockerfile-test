@@ -1,8 +1,0 @@
-FROM golang:1.12-alpine
-
-RUN apk --no-cache add build-base
-
-COPY . /home
-
-WORKDIR /home
-RUN go test -mod=vendor ./catalog

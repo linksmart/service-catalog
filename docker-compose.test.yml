@@ -1,5 +1,4 @@
 # Run either unit-test or integration-test. See below.
-
 version: '2.4'
 
 services:
@@ -10,7 +9,7 @@ services:
   unit-test:
     build:
       context: .
-      dockerfile: Dockerfile-test
+      target: builder
     depends_on:
       - sc
     environment:
@@ -33,7 +32,7 @@ services:
   integration-test:
     build:
       context: .
-      dockerfile: Dockerfile-test
+      target: builder
     depends_on:
       - sc2
       - broker
