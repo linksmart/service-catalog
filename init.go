@@ -3,8 +3,8 @@
 package main
 
 import (
-	"code.linksmart.eu/sc/service-catalog/catalog"
 	"github.com/farshidtz/elog"
+	"github.com/linksmart/service-catalog/catalog"
 )
 
 var logger *elog.Logger

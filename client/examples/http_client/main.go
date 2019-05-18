@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"code.linksmart.eu/sc/service-catalog/catalog"
-	"code.linksmart.eu/sc/service-catalog/client"
+	"github.com/linksmart/service-catalog/catalog"
+	"github.com/linksmart/service-catalog/client"
 )
 
 func main() {

@@ -14,10 +14,10 @@ import (
 
 	_ "code.linksmart.eu/com/go-sec/auth/keycloak/validator"
 	"code.linksmart.eu/com/go-sec/auth/validator"
-	"code.linksmart.eu/sc/service-catalog/catalog"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
 	"github.com/justinas/alice"
+	"github.com/linksmart/service-catalog/catalog"
 	"github.com/oleksandr/bonjour"
 	uuid "github.com/satori/go.uuid"
 )

@@ -10,8 +10,8 @@ import (
 	"net/url"
 
 	"code.linksmart.eu/com/go-sec/authz"
-	"code.linksmart.eu/sc/service-catalog/catalog"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/linksmart/service-catalog/catalog"
 )
 
 type Config struct {

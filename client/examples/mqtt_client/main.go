@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"code.linksmart.eu/sc/service-catalog/catalog"
 	paho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/linksmart/service-catalog/catalog"
 )
 
 func main() {

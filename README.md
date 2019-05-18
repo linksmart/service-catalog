@@ -1,5 +1,5 @@
 # Service Catalog
-[![GoDoc](https://godoc.org/code.linksmart.eu/sc/service-catalog?status.svg)](https://godoc.org/code.linksmart.eu/sc/service-catalog)
+[![GoDoc](https://godoc.org/github.com/linksmart/service-catalog?status.svg)](https://godoc.org/github.com/linksmart/service-catalog)
 [![Build Status](https://pipelines.linksmart.eu/plugins/servlet/wittified/build-status/SC-BUILD)](https://pipelines.linksmart.eu/browse/SC-BUILD)
 
 LinkSmart Service Catalog is a registry enabling discovery of other web services via a RESTful API or through an MQTT broker.

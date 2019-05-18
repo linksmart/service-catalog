@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"code.linksmart.eu/com/go-sec/auth/obtainer"
-	"code.linksmart.eu/sc/service-catalog/catalog"
+	"github.com/linksmart/service-catalog/catalog"
 )
 
 // RegisterService registers service into a catalog

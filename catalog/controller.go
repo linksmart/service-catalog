@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"code.linksmart.eu/sc/service-catalog/utils"
+	"github.com/linksmart/service-catalog/utils"
 	uuid "github.com/satori/go.uuid"
 )
 
