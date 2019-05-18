@@ -1,4 +1,12 @@
 language: go
 
 go:
-  - 1.12
+  - 1.12.x
+
+env:
+  - DOCKER_COMPOSE_VERSION=1.24.0
+
+script:
+  - docker-compose -v
+  - docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build unit-test
+  - docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build integration-test

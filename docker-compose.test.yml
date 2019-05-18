@@ -1,5 +1,5 @@
 # Run either unit-test or integration-test. See below.
-version: '2.4'
+version: '2.3'
 
 services:
   sc:

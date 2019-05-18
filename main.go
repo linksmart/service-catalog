@@ -56,7 +56,7 @@ func main() {
 	// Load configuration
 	config, err := loadConfig(*confPath)
 	if err != nil {
-		logger.Fatalf("Error reading config file %v: %v", *confPath, err)
+		logger.Fatalf("Error reading config file %v: %s", *confPath, err)
 	}
 	if config.ID == "" {
 		config.ID = uuid.NewV4().String()
@@ -71,17 +71,17 @@ func main() {
 	case catalog.CatalogBackendLevelDB:
 		storage, err = catalog.NewLevelDBStorage(config.Storage.DSN, nil)
 		if err != nil {
-			logger.Fatal("Failed to start LevelDB storage: %v", err)
+			logger.Fatalf("Failed to start LevelDB storage: %s", err)
 		}
 	default:
-		logger.Fatal("Could not create catalog API storage. Unsupported type: %v", config.Storage.Type)
+		logger.Fatalf("Could not create catalog API storage. Unsupported type: %v", config.Storage.Type)
 	}
 
 	var listeners []catalog.Listener
 	controller, err := catalog.NewController(storage, listeners...)
 	if err != nil {
 		storage.Close()
-		logger.Fatal("Failed to start the controller: %v", err)
+		logger.Fatalf("Failed to start the controller: %s", err)
 	}
 
 	// Create http api
@@ -96,7 +96,7 @@ func main() {
 	if config.DNSSDEnabled {
 		bonjourS, err = bonjour.Register(config.Description, catalog.DNSSDServiceType, "", config.HTTP.BindPort, []string{"uri=/"}, nil)
 		if err != nil {
-			logger.Printf("Failed to register DNS-SD service: %s", err.Error())
+			logger.Printf("Failed to register DNS-SD service: %s", err)
 		} else {
 			logger.Println("Registered service via DNS-SD using type", catalog.DNSSDServiceType)
 		}
