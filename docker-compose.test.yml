@@ -5,6 +5,7 @@ services:
   sc:
     build:
       context: .
+    image: linksmart/service-catalog
 
   unit-test:
     build:
@@ -22,6 +23,7 @@ services:
   sc2:
     build:
       context: .
+    image: linksmart/service-catalog
     environment:
       - SC_MQTT_CLIENT_BROKERURI=tcp://broker:1883
       - SC_MQTT_CLIENT_REGTOPICS=LS/v2/+/+/service
