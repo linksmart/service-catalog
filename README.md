@@ -1,5 +1,7 @@
 # Service Catalog
 [![GoDoc](https://godoc.org/github.com/linksmart/service-catalog?status.svg)](https://godoc.org/github.com/linksmart/service-catalog)
+[![Docker Pulls](https://img.shields.io/docker/pulls/linksmart/service-catalog.svg)](https://hub.docker.com/r/linksmart/service-catalog/tags)
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/linksmart/service-catalog.svg)](https://github.com/linksmart/service-catalog/tags)
 [![Build Status](https://travis-ci.com/linksmart/service-catalog.svg?branch=master)](https://travis-ci.com/linksmart/service-catalog)
 
 LinkSmart Service Catalog is a registry enabling discovery of other web services via a RESTful API or through an MQTT broker.
@@ -19,7 +21,7 @@ The dependencies of this package are managed by [Go Modules](https://blog.golang
 
 To compile from source:
 ```
-git clone https://code.linksmart.eu/scm/sc/service-catalog.git
+git clone https://github.com/linksmart/service-catalog.git
 cd service-catalog
-go build
+go build -mod=vendor
 ```
