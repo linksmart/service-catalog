@@ -23,9 +23,11 @@ import (
 )
 
 var (
-	confPath = flag.String("conf", "conf/service-catalog.json", "Service catalog configuration file path")
-	profile  = flag.Bool("profile", false, "Enable the HTTP server for runtime profiling")
-	version  = flag.Bool("version", false, "Show the Service Catalog API version")
+	confPath    = flag.String("conf", "conf/service-catalog.json", "Configuration file path")
+	profile     = flag.Bool("profile", false, "Enable the HTTP server for runtime profiling")
+	version     = flag.Bool("version", false, "Print the API version")
+	Version     string // set with build flag
+	BuildNumber string // set with build flag
 )
 
 const LINKSMART = `
@@ -33,9 +35,6 @@ const LINKSMART = `
 ║   ║ ║║║ ╠╩╗  ╚═╗ ║║║ ╠═╣ ╠╦╝  ║
 ╩═╝ ╩ ╝╚╝ ╩ ╩  ╚═╝ ╩ ╩ ╩ ╩ ╩╚═  ╩
 `
-
-var Version = "N/A"
-var BuildNumber = "N/A"
 
 func main() {
 	flag.Parse()
@@ -45,8 +44,13 @@ func main() {
 	}
 	fmt.Print(LINKSMART)
 	logger.Printf("Starting Service Catalog")
-	logger.Printf("Version: %s", Version)
-	logger.Printf("Build Number: %s", BuildNumber)
+
+	if Version != "" {
+		logger.Printf("Version: %s", Version)
+	}
+	if BuildNumber != "" {
+		logger.Printf("Build Number: %s", BuildNumber)
+	}
 
 	if *profile {
 		logger.Println("Starting runtime profiling server")
