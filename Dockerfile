@@ -4,7 +4,11 @@ COPY . /home
 
 WORKDIR /home
 ENV CGO_ENABLED=0
-RUN go build -mod=vendor -o service-catalog
+
+ARG version
+ARG buildnum
+RUN go build -mod=vendor -o service-catalog \
+        -ldflags "-X main.Version=$version -X main.BuildNumber=$buildnum"
 
 ###########
 FROM alpine

@@ -1,12 +1,19 @@
-language: go
-
-go:
-  - 1.12.x
 
 script:
   - docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build unit-test
   - docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build integration-test
 
-after_script:
+before_deploy:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-  - docker push linksmart/service-catalog
+
+deploy:
+  - provider: script
+    script: docker push linksmart/service-catalog:latest
+    on:
+      branch: master
+  - provider: script
+    script: docker tag linksmart/service-catalog linksmart/service-catalog:${TRAVIS_TAG} &&
+      docker push linksmart/service-catalog:${TRAVIS_TAG}
+    on:
+      tags: true
+

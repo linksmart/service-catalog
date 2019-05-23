@@ -5,6 +5,9 @@ services:
   sc:
     build:
       context: .
+      args:
+        version: ${TRAVIS_BRANCH}
+        buildnum: ${TRAVIS_BUILD_NUMBER}
     image: linksmart/service-catalog
 
   unit-test:
@@ -20,24 +23,25 @@ services:
 # RUN UNIT TESTS
 # docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build unit-test
 
+  broker:
+    image: eclipse-mosquitto
+    
   sc2:
     build:
       context: .
-    image: linksmart/service-catalog
+    depends_on:
+      - broker
     environment:
       - SC_MQTT_CLIENT_BROKERURI=tcp://broker:1883
       - SC_MQTT_CLIENT_REGTOPICS=LS/v2/+/+/service
-
-  broker:
-    image: eclipse-mosquitto
 
   integration-test:
     build:
       context: .
       target: builder
     depends_on:
-      - sc2
       - broker
+      - sc2
     environment:
       - SC_ENDPOINT=http://sc2:8082
       - BROKERS=tcp://broker:1883
