@@ -1,5 +1,7 @@
 language: minimal
 
+before_script:
+  - export VERSION=${TRAVIS_BRANCH}  BUILDNUM=${TRAVIS_BUILD_NUMBER}
 script:
   - docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build unit-test
   - docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build integration-test
@@ -9,12 +11,12 @@ before_deploy:
 
 deploy:
   - provider: script
-    script: docker push linksmart/service-catalog:latest
+    script: docker push linksmart/sc:latest
     on:
       branch: master
   - provider: script
-    script: docker tag linksmart/service-catalog linksmart/service-catalog:${TRAVIS_TAG} &&
-      docker push linksmart/service-catalog:${TRAVIS_TAG}
+    script: docker tag linksmart/sc linksmart/sc:${TRAVIS_TAG} &&
+      docker push linksmart/sc:${TRAVIS_TAG}
     on:
       tags: true
 

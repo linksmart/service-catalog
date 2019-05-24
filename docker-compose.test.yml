@@ -6,9 +6,9 @@ services:
     build:
       context: .
       args:
-        version: ${TRAVIS_BRANCH}
-        buildnum: ${TRAVIS_BUILD_NUMBER}
-    image: linksmart/service-catalog
+        version: ${VERSION}
+        buildnum: ${BUILDNUM}
+    image: linksmart/sc
 
   unit-test:
     build:

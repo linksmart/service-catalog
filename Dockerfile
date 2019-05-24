@@ -15,6 +15,12 @@ FROM alpine
 
 RUN apk --no-cache add ca-certificates
 
+ARG version
+ARG buildnum
+LABEL NAME="LinkSmart Service Catalog"
+LABEL VERSION=${version}
+LABEL BUILD=${buildnum}
+
 WORKDIR /home
 COPY --from=builder /home/service-catalog .
 COPY sample_conf/* /conf/
