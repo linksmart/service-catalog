@@ -7,7 +7,7 @@ ENV CGO_ENABLED=0
 
 ARG version
 ARG buildnum
-RUN go build -mod=vendor -o service-catalog \
+RUN go build -v -mod=vendor -o service-catalog \
         -ldflags "-X main.Version=$version -X main.BuildNumber=$buildnum"
 
 ###########
