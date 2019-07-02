@@ -31,5 +31,11 @@ deploy:
     script: export NAME=service-catalog LDFLAGS="-X main.Version=$version -X main.BuildNumber=$buildnum" &&
       curl -s https://raw.githubusercontent.com/linksmart/ci-scripts/master/go/go-build.sh | bash
     on:
-      branch: master
-
+      tags: true
+  - provider: releases
+    api_key: $GITHUB_KEY
+    file_glob: true
+    file: bin/*
+    skip_cleanup: true
+    on:
+      tags: true
