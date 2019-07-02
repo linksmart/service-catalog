@@ -1,4 +1,12 @@
-language: minimal
+language: go
+
+go:
+- 1.12.x
+
+env:
+  - GO111MODULE=on
+
+install: true # skips default installation step
 
 before_script:
   - export VERSION=${TRAVIS_BRANCH}  BUILDNUM=${TRAVIS_BUILD_NUMBER}
@@ -19,4 +27,9 @@ deploy:
       docker push linksmart/sc:${TRAVIS_TAG}
     on:
       tags: true
+  - provider: script
+    script: export NAME=service-catalog LDFLAGS="-X main.Version=$version -X main.BuildNumber=$buildnum" &&
+      curl -s https://raw.githubusercontent.com/linksmart/ci-scripts/master/go/go-build.sh | bash
+    on:
+      branch: master
 
