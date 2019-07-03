@@ -169,7 +169,6 @@ func (c *Controller) total() (int, error) {
 }
 
 func (c *Controller) cleanExpired() {
-	logger.Println("cleanExpired() started cleanup routine.")
 
 	clean := func() {
 		c.Lock()
