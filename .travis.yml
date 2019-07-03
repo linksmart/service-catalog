@@ -3,8 +3,14 @@ language: go
 go:
 - 1.12.x
 
-before_script:
-  - export VERSION=${TRAVIS_BRANCH}  BUILDNUM=${TRAVIS_BUILD_NUMBER}
+env:
+  global:
+    - NAME=service-catalog
+    - VERSION=${TRAVIS_BRANCH}
+    - BUILDNUM=$TRAVIS_BUILD_NUMBER
+
+install: true # skips default installation step
+
 script:
   - docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build unit-test
   - docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build integration-test
@@ -23,8 +29,14 @@ deploy:
     on:
       tags: true
   - provider: script
-    script: export NAME=service-catalog LDFLAGS="-X main.Version=$version -X main.BuildNumber=$buildnum" &&
-      curl -s https://raw.githubusercontent.com/linksmart/ci-scripts/master/go/go-build.sh | bash
+    script: curl -s https://raw.githubusercontent.com/linksmart/ci-scripts/master/go/go-build.sh | bash
     on:
-      branch: master
-
+      tags: true
+  - provider: releases
+    api_key: $GITHUB_KEY
+    file_glob: true
+    file: bin/*
+    skip_cleanup: true
+    overwrite: true
+    on:
+      tags: true
