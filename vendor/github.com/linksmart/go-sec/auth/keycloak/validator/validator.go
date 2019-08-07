@@ -3,19 +3,18 @@
 package validator
 
 import (
-	"fmt"
-	"log"
-	"os"
-	"strconv"
-
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"strconv"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"code.linksmart.eu/com/go-sec/auth/validator"
+	"github.com/linksmart/go-sec/auth/validator"
 )
 
 const DriverName = "keycloak"

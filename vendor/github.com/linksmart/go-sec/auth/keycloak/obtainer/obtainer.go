@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"code.linksmart.eu/com/go-sec/auth/obtainer"
+	"github.com/linksmart/go-sec/auth/obtainer"
 )
 
 const (

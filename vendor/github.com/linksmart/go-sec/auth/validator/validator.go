@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"sync"
 
-	"code.linksmart.eu/com/go-sec/authz"
+	"github.com/linksmart/go-sec/authz"
 )
 
 // Interface methods to validate Service Ticket

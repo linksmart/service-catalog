@@ -1,9 +1,3 @@
-# code.linksmart.eu/com/go-sec v1.0.0
-code.linksmart.eu/com/go-sec/auth/keycloak/validator
-code.linksmart.eu/com/go-sec/auth/validator
-code.linksmart.eu/com/go-sec/authz
-code.linksmart.eu/com/go-sec/auth/obtainer
-code.linksmart.eu/com/go-sec/auth/keycloak/obtainer
 # github.com/ancientlore/go-avltree v0.0.0-20180928192319-da83409fdfb7
 github.com/ancientlore/go-avltree
 # github.com/codegangsta/negroni v0.2.0
@@ -27,6 +21,12 @@ github.com/gorilla/mux
 github.com/justinas/alice
 # github.com/kelseyhightower/envconfig v1.3.0
 github.com/kelseyhightower/envconfig
+# github.com/linksmart/go-sec v1.0.1
+github.com/linksmart/go-sec/auth/keycloak/validator
+github.com/linksmart/go-sec/auth/validator
+github.com/linksmart/go-sec/authz
+github.com/linksmart/go-sec/auth/obtainer
+github.com/linksmart/go-sec/auth/keycloak/obtainer
 # github.com/miekg/dns v0.0.0-20170818131442-e4205768578d
 github.com/miekg/dns
 # github.com/oleksandr/bonjour v0.0.0-20160508152359-5dcf00d8b228

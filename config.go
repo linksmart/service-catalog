@@ -9,8 +9,8 @@ import (
 	"io/ioutil"
 	"net/url"
 
-	"code.linksmart.eu/com/go-sec/authz"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/linksmart/go-sec/authz"
 	"github.com/linksmart/service-catalog/catalog"
 )
 

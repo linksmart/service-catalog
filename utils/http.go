@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"code.linksmart.eu/com/go-sec/auth/obtainer"
+	"github.com/linksmart/go-sec/auth/obtainer"
 )
 
 // Constructs and submits an HTTP request and returns the response

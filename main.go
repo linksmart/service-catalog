@@ -12,11 +12,11 @@ import (
 	"strconv"
 	"time"
 
-	_ "code.linksmart.eu/com/go-sec/auth/keycloak/validator"
-	"code.linksmart.eu/com/go-sec/auth/validator"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
 	"github.com/justinas/alice"
+	_ "github.com/linksmart/go-sec/auth/keycloak/validator"
+	"github.com/linksmart/go-sec/auth/validator"
 	"github.com/linksmart/service-catalog/catalog"
 	"github.com/oleksandr/bonjour"
 	uuid "github.com/satori/go.uuid"
