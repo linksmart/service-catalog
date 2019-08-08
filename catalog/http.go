@@ -5,9 +5,7 @@ package catalog
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -70,14 +68,8 @@ func (a *HttpAPI) List(w http.ResponseWriter, req *http.Request) {
 		Total:       total,
 	}
 
-	b, err := json.Marshal(coll)
-	if err != nil {
-		a.ErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json;version="+a.version)
-	w.Write(b)
+	json.NewEncoder(w).Encode(coll)
 }
 
 // Filters services
@@ -114,13 +106,8 @@ func (a *HttpAPI) Filter(w http.ResponseWriter, req *http.Request) {
 		Total:       total,
 	}
 
-	b, err := json.Marshal(coll)
-	if err != nil {
-		a.ErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
-	}
 	w.Header().Set("Content-Type", "application/json;version="+a.version)
-	w.Write(b)
+	json.NewEncoder(w).Encode(coll)
 }
 
 // Retrieves a service
@@ -139,14 +126,8 @@ func (a *HttpAPI) Get(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	b, err := json.Marshal(s)
-	if err != nil {
-		a.ErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json;version="+a.version)
-	w.Write(b)
+	json.NewEncoder(w).Encode(s)
 }
 
 func (a *HttpAPI) createService(w http.ResponseWriter, s *Service) {
@@ -165,29 +146,17 @@ func (a *HttpAPI) createService(w http.ResponseWriter, s *Service) {
 		}
 	}
 
-	b, err := json.Marshal(addedS)
-	if err != nil {
-		a.ErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json;version="+a.version)
 	w.Header().Set("Location", fmt.Sprintf("/%s", addedS.ID))
 	w.WriteHeader(http.StatusCreated)
-	w.Write(b)
+	json.NewEncoder(w).Encode(addedS)
 }
 
 // Adds a service
 func (a *HttpAPI) Post(w http.ResponseWriter, req *http.Request) {
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		a.ErrorResponse(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	req.Body.Close()
-
 	var s Service
-	if err := json.Unmarshal(body, &s); err != nil {
+	err := json.NewDecoder(req.Body).Decode(&s)
+	if err != nil {
 		a.ErrorResponse(w, http.StatusBadRequest, "Error processing the request:", err.Error())
 		return
 	}
@@ -206,15 +175,9 @@ func (a *HttpAPI) Post(w http.ResponseWriter, req *http.Request) {
 func (a *HttpAPI) Put(w http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 
-	body, err := ioutil.ReadAll(req.Body)
-	req.Body.Close()
-	if err != nil {
-		a.ErrorResponse(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
 	var s Service
-	if err := json.Unmarshal(body, &s); err != nil {
+	err := json.NewDecoder(req.Body).Decode(&s)
+	if err != nil {
 		a.ErrorResponse(w, http.StatusBadRequest, "Error processing the request:", err.Error())
 		return
 	}
@@ -239,15 +202,9 @@ func (a *HttpAPI) Put(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	b, err := json.Marshal(updatedS)
-	if err != nil {
-		a.ErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json;version="+a.version)
 	w.WriteHeader(http.StatusOK)
-	w.Write(b)
+	json.NewEncoder(w).Encode(updatedS)
 }
 
 // Deletes a service
@@ -280,8 +237,8 @@ func (a *HttpAPI) ErrorResponse(w http.ResponseWriter, code int, msgs ...string)
 	if code >= 500 {
 		logger.Println("ERROR:", msg)
 	}
-	b, _ := json.Marshal(e)
+
 	w.Header().Set("Content-Type", "application/json;version="+a.version)
 	w.WriteHeader(code)
-	w.Write(b)
+	json.NewEncoder(w).Encode(e)
 }
