@@ -131,6 +131,7 @@ func serveHTTP(httpAPI *catalog.HttpAPI, config *Config) {
 
 	commonHandlers := alice.New(
 		context.ClearHandler,
+		loggingHandler,
 		commonHeaders,
 	)
 
@@ -169,7 +170,6 @@ func serveHTTP(httpAPI *catalog.HttpAPI, config *Config) {
 	// Configure the middleware
 	n := negroni.New(
 		negroni.NewRecovery(),
-		logger,
 	)
 	// Mount router
 	n.UseHandler(r)

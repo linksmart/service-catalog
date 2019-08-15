@@ -6,7 +6,7 @@ require (
 	github.com/ancientlore/go-avltree v0.0.0-20180928192319-da83409fdfb7
 	github.com/codegangsta/negroni v0.2.0
 	github.com/eclipse/paho.mqtt.golang v1.1.0
-	github.com/farshidtz/elog v0.9.0
+	github.com/farshidtz/elog v1.0.1
 	github.com/farshidtz/mqtt-match v1.0.1
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.4.0
