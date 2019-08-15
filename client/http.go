@@ -14,31 +14,33 @@ import (
 	"github.com/linksmart/service-catalog/v2/utils"
 )
 
-type httpClient struct {
+// HTTPClient is the http client struct
+type HTTPClient struct {
 	serverEndpoint *url.URL
 	ticket         *obtainer.Client
 }
 
+// FilterArgs are the filtering arguments
 type FilterArgs struct {
 	Path, Op, Value string
 }
 
 // NewHTTPClient creates a new HTTP client for SC's REST API
-func NewHTTPClient(serverEndpoint string, ticket *obtainer.Client) (*httpClient, error) {
+func NewHTTPClient(serverEndpoint string, ticket *obtainer.Client) (*HTTPClient, error) {
 
 	endpointUrl, err := url.Parse(serverEndpoint)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing catalog endpoint url: %s", err)
+		return nil, fmt.Errorf("error parsing endpoint: %s", err)
 	}
 
-	return &httpClient{
+	return &HTTPClient{
 		serverEndpoint: endpointUrl,
 		ticket:         ticket,
 	}, nil
 }
 
 // Ping returns true if health endpoint responds OK
-func (c *httpClient) Ping() (bool, error) {
+func (c *HTTPClient) Ping() (bool, error) {
 	res, err := utils.HTTPRequest("GET",
 		fmt.Sprintf("%v/health", c.serverEndpoint),
 		nil,
@@ -58,7 +60,7 @@ func (c *httpClient) Ping() (bool, error) {
 }
 
 // Get gets a service
-func (c *httpClient) Get(id string) (*catalog.Service, error) {
+func (c *HTTPClient) Get(id string) (*catalog.Service, error) {
 	res, err := utils.HTTPRequest("GET",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		nil,
@@ -94,9 +96,9 @@ func (c *httpClient) Get(id string) (*catalog.Service, error) {
 }
 
 // Post posts a service
-func (c *httpClient) Post(service *catalog.Service) (*catalog.Service, error) {
+func (c *HTTPClient) Post(service *catalog.Service) (*catalog.Service, error) {
 	if service.ID != "" {
-		return nil, fmt.Errorf("Cannot POST a service with pre-defined ID. Use Put method.")
+		return nil, fmt.Errorf("cannot POST a service with pre-defined ID. Use PUT method instead")
 	}
 
 	b, err := json.Marshal(service)
@@ -106,7 +108,7 @@ func (c *httpClient) Post(service *catalog.Service) (*catalog.Service, error) {
 
 	res, err := utils.HTTPRequest("POST",
 		c.serverEndpoint.String()+"/",
-		map[string][]string{"Content-Type": []string{"application/json"}},
+		map[string][]string{"Content-Type": {"application/json"}},
 		bytes.NewReader(b),
 		c.ticket,
 	)
@@ -139,15 +141,15 @@ func (c *httpClient) Post(service *catalog.Service) (*catalog.Service, error) {
 }
 
 // Put puts a service
-func (c *httpClient) Put(service *catalog.Service) (*catalog.Service, error) {
+func (c *HTTPClient) Put(service *catalog.Service) (*catalog.Service, error) {
 	if service.ID == "" {
-		return nil, fmt.Errorf("Cannot PUT a service without ID.")
+		return nil, fmt.Errorf("cannot PUT a service without ID")
 	}
 
 	b, _ := json.Marshal(service)
 	res, err := utils.HTTPRequest("PUT",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, service.ID),
-		map[string][]string{"Content-Type": []string{"application/ld+json"}},
+		map[string][]string{"Content-Type": {"application/ld+json"}},
 		bytes.NewReader(b),
 		c.ticket,
 	)
@@ -180,7 +182,7 @@ func (c *httpClient) Put(service *catalog.Service) (*catalog.Service, error) {
 }
 
 // Delete deletes a service
-func (c *httpClient) Delete(id string) error {
+func (c *HTTPClient) Delete(id string) error {
 	res, err := utils.HTTPRequest("DELETE",
 		fmt.Sprintf("%v/%v", c.serverEndpoint, id),
 		nil,
@@ -209,7 +211,7 @@ func (c *httpClient) Delete(id string) error {
 }
 
 // GetMany retrieves a page from the service collection
-func (c *httpClient) GetMany(page, perPage int, filter *FilterArgs) ([]catalog.Service, int, error) {
+func (c *HTTPClient) GetMany(page, perPage int, filter *FilterArgs) ([]catalog.Service, int, error) {
 	var err error
 	var res *http.Response
 	if filter == nil {
@@ -257,7 +259,7 @@ func (c *httpClient) GetMany(page, perPage int, filter *FilterArgs) ([]catalog.S
 	return coll.Services, len(coll.Services), nil
 }
 
-// Returns the message field of a resource.Error response
+// ErrorMsg extracts the message field of a resource.Error response
 func ErrorMsg(res *http.Response) string {
 
 	var e catalog.Error
