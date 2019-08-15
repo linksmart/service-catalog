@@ -8,8 +8,6 @@ github.com/dgrijalva/jwt-go v3.0.0+incompatible h1:nfVqwkkhaRUethVJaQf5TUFdFr3YU
 github.com/dgrijalva/jwt-go v3.0.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/eclipse/paho.mqtt.golang v1.1.0 h1:Em29HD1CwLHdRFnX7yfg+kBjHHw6DSDok9I+ia4znT4=
 github.com/eclipse/paho.mqtt.golang v1.1.0/go.mod h1:H9keYFcgq3Qr5OUJm/JZI/i6U7joQ8SYLhZwfeOo6Ts=
-github.com/farshidtz/elog v0.9.0 h1:pfNMCBpqAT/Uky6aNwqcTzZBHRfsYMp9vd1LmuBOQ6o=
-github.com/farshidtz/elog v0.9.0/go.mod h1:wsS8gMzj561vyWJviCBUeK6YAy9CdKmsH+moY5DA+Ms=
 github.com/farshidtz/elog v1.0.1 h1:GXdAmbHVyJ5l6V37gLK+Pedjd/sMRt0RPLzB/HcVFj0=
 github.com/farshidtz/elog v1.0.1/go.mod h1:OXTASC4gfW1KTSCg/qieXdyo9SoUA+c4U8qGkp6DW9I=
 github.com/farshidtz/mqtt-match v1.0.1 h1:VEBojQL9P5F7E3gu9XULIUZnzZknn7byF2rJ7RX20cQ=

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/linksmart/service-catalog/utils"
+	"github.com/linksmart/service-catalog/v2/utils"
 
 	avl "github.com/ancientlore/go-avltree"
 )

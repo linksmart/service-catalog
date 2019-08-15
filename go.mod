@@ -1,4 +1,4 @@
-module github.com/linksmart/service-catalog
+module github.com/linksmart/service-catalog/v2
 
 go 1.12
 

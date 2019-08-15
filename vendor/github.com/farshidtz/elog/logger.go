@@ -3,10 +3,6 @@ package elog
 import (
 	"fmt"
 	"log"
-	"net/http"
-	"time"
-
-	"github.com/codegangsta/negroni"
 )
 
 type Logger struct {
@@ -98,13 +94,4 @@ func (l *Logger) Errorf(format string, a ...interface{}) error {
 		l.debug.Output(2, fmt.Sprintf(format, a...))
 	}
 	return fmt.Errorf(format, a...)
-}
-
-// ServeHTTP logs HTTP requests and can be used as a negroni.Logger
-func (l *Logger) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	l.DebugOutput(3, fmt.Sprintf("%s \"%s %s\"\n", r.RemoteAddr, r.Method, r.URL.String()))
-	start := time.Now()
-	nw := negroni.NewResponseWriter(w)
-	next(nw, r)
-	l.Output(3, fmt.Sprintf("\"%s %s %s\" %d %v\n", r.Method, r.URL.String(), r.Proto, nw.Status(), time.Now().Sub(start)))
 }

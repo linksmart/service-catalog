@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/linksmart/service-catalog/client"
+	"github.com/linksmart/service-catalog/v2/client"
 
 	"strings"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/linksmart/service-catalog/catalog"
+	"github.com/linksmart/service-catalog/v2/catalog"
 	uuid "github.com/satori/go.uuid"
 )
 

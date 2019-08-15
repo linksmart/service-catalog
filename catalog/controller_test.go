@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/linksmart/service-catalog/utils"
+	"github.com/linksmart/service-catalog/v2/utils"
 	uuid "github.com/satori/go.uuid"
 )
 

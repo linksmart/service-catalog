@@ -1,5 +1,6 @@
 # elog
 [![GoDoc](https://godoc.org/github.com/farshidtz/elog?status.svg)](https://godoc.org/github.com/farshidtz/elog)
+[![Build Status](https://travis-ci.org/farshidtz/elog.svg?branch=master)](https://travis-ci.org/farshidtz/elog)
 
 elog extends Go's built-in [log](https://golang.org/pkg/log) package to enable simple levelled logging and to modify the formatting. 
 

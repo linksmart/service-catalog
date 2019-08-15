@@ -17,7 +17,7 @@ import (
 	"github.com/justinas/alice"
 	_ "github.com/linksmart/go-sec/auth/keycloak/validator"
 	"github.com/linksmart/go-sec/auth/validator"
-	"github.com/linksmart/service-catalog/catalog"
+	"github.com/linksmart/service-catalog/v2/catalog"
 	"github.com/oleksandr/bonjour"
 	uuid "github.com/satori/go.uuid"
 )

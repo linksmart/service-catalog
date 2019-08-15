@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"sync"
 
-	"github.com/linksmart/service-catalog/utils"
+	"github.com/linksmart/service-catalog/v2/utils"
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"

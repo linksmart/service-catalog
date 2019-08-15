@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/linksmart/service-catalog/utils"
+	"github.com/linksmart/service-catalog/v2/utils"
 )
 
 type HttpAPI struct {

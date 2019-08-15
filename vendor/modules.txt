@@ -7,7 +7,7 @@ github.com/dgrijalva/jwt-go
 # github.com/eclipse/paho.mqtt.golang v1.1.0
 github.com/eclipse/paho.mqtt.golang
 github.com/eclipse/paho.mqtt.golang/packets
-# github.com/farshidtz/elog v0.9.0
+# github.com/farshidtz/elog v1.0.1
 github.com/farshidtz/elog
 # github.com/farshidtz/mqtt-match v1.0.1
 github.com/farshidtz/mqtt-match
