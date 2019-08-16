@@ -24,7 +24,7 @@ import (
 
 var (
 	confPath    = flag.String("conf", "conf/service-catalog.json", "Configuration file path")
-	profile     = flag.Bool("profile", false, "Enable the HTTP server for runtime profiling")
+	profile     = flag.Int("profile", 0, "Activate runtime profiling HTTP server on the given port")
 	version     = flag.Bool("version", false, "Print the API version")
 	Version     string // set with build flag
 	BuildNumber string // set with build flag
@@ -52,9 +52,9 @@ func main() {
 		logger.Printf("Build Number: %s", BuildNumber)
 	}
 
-	if *profile {
-		logger.Println("Starting runtime profiling server")
-		go func() { logger.Println(http.ListenAndServe("0.0.0.0:6060", nil)) }()
+	if *profile != 0 {
+		logger.Println("Activating runtime profiling server on port", *profile)
+		go func() { logger.Println(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", *profile), nil)) }()
 	}
 
 	// Load configuration
