@@ -169,36 +169,30 @@ func (c *Controller) total() (int, error) {
 }
 
 func (c *Controller) cleanExpired() {
-
-	clean := func() {
+	for t := time.Now(); true; t = <-time.Tick(ControllerExpiryCleanupInterval) {
 		c.Lock()
-
 		var expiredServices []*Service
 
 		for s := range c.storage.iterator() {
-			if s.TTL != 0 && s.Expires.Before(time.Now().UTC()) {
+			// remove if expiry is overdue by half-TTL
+			if t.After(s.Expires.Add(time.Duration(s.TTL/2) * time.Second)) {
 				expiredServices = append(expiredServices, s)
 			}
 		}
 
-		for _, service := range expiredServices {
-			logger.Printf("cleanExpired() Removing expired registration: %s", service.ID)
-			err := c.storage.delete(service.ID)
+		for i := range expiredServices {
+			logger.Printf("cleanExpired() Removing expired registration: %s", expiredServices[i].ID)
+			err := c.storage.delete(expiredServices[i].ID)
 			if err != nil {
-				logger.Printf("cleanExpired() Error removing expired registration: %s: %s", service.ID, err)
+				logger.Printf("cleanExpired() Error removing expired registration: %s: %s", expiredServices[i].ID, err)
+				continue
 			}
 			// notify listeners
-			for _, l := range c.listeners {
-				go l.deleted(*service)
+			for li := range c.listeners {
+				go c.listeners[li].deleted(*expiredServices[i])
 			}
 		}
-
 		c.Unlock()
-	}
-
-	clean()
-	for range time.NewTicker(ControllerExpiryCleanupInterval).C {
-		clean()
 	}
 }
 

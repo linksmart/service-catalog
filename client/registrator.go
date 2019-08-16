@@ -56,7 +56,7 @@ func RegisterServiceAndKeepalive(endpoint string, service catalog.Service, ticke
 		return nil, nil, err
 	}
 
-	ticker := time.NewTicker(time.Duration(service.TTL/2) * time.Second)
+	ticker := time.NewTicker(time.Duration(service.TTL) * time.Second)
 	go func() {
 		for ; true; <-ticker.C {
 			mutex.RLock()
