@@ -19,24 +19,31 @@ before_deploy:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
 deploy:
+  # push latest docker image
   - provider: script
     script: docker push linksmart/sc:latest
     on:
       branch: master
+  # push tagged docker image
   - provider: script
     script: docker tag linksmart/sc linksmart/sc:${TRAVIS_TAG} &&
       docker push linksmart/sc:${TRAVIS_TAG}
     on:
       tags: true
+  # cross-compile (uses global environment variables)
   - provider: script
     script: curl -s https://raw.githubusercontent.com/linksmart/ci-scripts/master/go/go-build.sh | bash
     on:
       tags: true
+  # publish artifacts and sample config file
   - provider: releases
     api_key: $GITHUB_KEY
     file_glob: true
-    file: bin/*
+    file:
+      - bin/*
+      - sample_conf/*
     skip_cleanup: true
     overwrite: true
+    prerelease: true # release manually after QC
     on:
       tags: true
