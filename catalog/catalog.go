@@ -27,12 +27,6 @@ type Service struct {
 	Expires time.Time `json:"expires,omitempty"`
 }
 
-// API is representation of service's API
-type API struct {
-	Protocol string `json:"protocol"`
-	URL      string `json:"url"`
-}
-
 // Doc is an external resource documenting the service and/or APIs. E.g. OpenAPI specs, Wiki page
 type Doc struct {
 	Description string   `json:"description"`
