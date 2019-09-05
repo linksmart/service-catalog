@@ -27,3 +27,8 @@ git clone https://github.com/linksmart/service-catalog.git
 cd service-catalog
 go build -mod=vendor
 ```
+
+## Contributing
+Contributions are welcome. 
+
+Please fork, make your changes, and submit a pull request. For major changes, please open an issue first and discuss it with the other authors.
