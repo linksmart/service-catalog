@@ -1,7 +1,7 @@
 # Service Catalog
 [![GoDoc](https://godoc.org/github.com/linksmart/service-catalog?status.svg)](https://godoc.org/github.com/linksmart/service-catalog)
 [![Docker Pulls](https://img.shields.io/docker/pulls/linksmart/sc.svg)](https://hub.docker.com/r/linksmart/sc/tags)
-[![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/linksmart/service-catalog.svg)](https://github.com/linksmart/service-catalog/tags)
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/linksmart/service-catalog)](https://github.com/linksmart/service-catalog/releases)
 [![Build Status](https://travis-ci.com/linksmart/service-catalog.svg?branch=master)](https://travis-ci.com/linksmart/service-catalog)
 
 LinkSmart Service Catalog is a registry enabling discovery of other web services via a RESTful API or through an MQTT broker.
