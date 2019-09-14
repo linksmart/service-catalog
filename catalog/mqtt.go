@@ -67,8 +67,13 @@ func StartMQTTManager(controller *Controller, mqttConf MQTTConf, scID string) {
 }
 
 func (c *MQTTClient) connect() {
-	interval := 15 * time.Second
-	for {
+	for interval := 15 * time.Second; ; {
+		if interval <= mqttMaxRetryInterval/2 {
+			interval *= 2
+		} else if interval < mqttMaxRetryInterval {
+			interval = mqttMaxRetryInterval
+		}
+
 		opts, err := c.pahoOptions()
 		if err != nil {
 			log.Fatalf("MQTT: Error configuring Paho options: %s", err)
@@ -81,15 +86,11 @@ func (c *MQTTClient) connect() {
 		if token := c.paho.Connect(); token.Wait() && token.Error() != nil {
 			log.Printf("Error connecting to broker: %v. Retry in %v", token.Error(), interval)
 			time.Sleep(interval)
-			if interval *= 2; interval > mqttMaxRetryInterval {
-				interval = mqttMaxRetryInterval
-			}
-			continue
+		} else {
+			break
 		}
-
-		go c.manager.registerAsService(c)
-		break
 	}
+	c.manager.registerAsService(c)
 }
 
 func (c *MQTTClient) onConnect(pahoClient paho.Client) {
@@ -150,7 +151,7 @@ func (m *MQTTManager) registerAsService(client *MQTTClient) {
 	service := Service{
 		ID:          client.BrokerID,
 		Name:        mqttServiceName,
-		Description: "MQTT Broker",
+		Description: "This broker is registered as used by service catalog",
 		Meta: map[string]interface{}{
 			"registrator": m.scID,
 		},
@@ -160,7 +161,7 @@ func (m *MQTTManager) registerAsService(client *MQTTClient) {
 		TTL: uint(mqttServiceTTL / time.Second),
 	}
 	// keepalive starting from right now
-	for ; true; <-time.NewTicker(mqttServiceHeartbeatInterval).C {
+	for ; true; <-time.Tick(mqttServiceHeartbeatInterval) {
 		m.addService(service)
 	}
 }
