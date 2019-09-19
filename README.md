@@ -6,16 +6,31 @@
 
 LinkSmart Service Catalog is a registry enabling discovery of other web services via a RESTful API or through an MQTT broker.
  
-* [Documentation](https://docs.linksmart.eu/display/SC)
+## Getting Started
+* Read the [Documentation](https://docs.linksmart.eu/display/SC)
 
-## Run
+## Deployment
+### Configuration
+The configuration is possible using a JSON file or by setting environment variables. It is described [here](https://docs.linksmart.eu/display/SC/Configuration).
+
+### Docker
 The following command runs the latest release of service catalog with the default configurations:
 ```
 docker run -p 8082:8082 linksmart/sc
 ```
-Images for other architectures (e.g. `arm`, `arm64`) can be build locally by running:
+The index of the RESTful API should now be accessible at: http://localhost:8082
+
+To run on other architectures (e.g. `arm32`, `arm64`), clone this repo and build the image locally first by running:
 ```
 docker build -t linksmart/sc .
+```
+
+### Binary Distributions
+These are available for released versions and for several platforms [here](https://github.com/linksmart/service-catalog/releases).  
+
+Download and run:
+```
+./service-catalog-<os-arch> --help
 ```
 
 ## Development
