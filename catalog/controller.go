@@ -169,7 +169,7 @@ func (c *Controller) total() (int, error) {
 }
 
 func (c *Controller) cleanExpired() {
-	for t := time.Now(); true; t = <-time.Tick(ControllerExpiryCleanupInterval) {
+	clean := func(t time.Time) {
 		c.Lock()
 		var expiredServices []*Service
 
@@ -193,6 +193,11 @@ func (c *Controller) cleanExpired() {
 			}
 		}
 		c.Unlock()
+	}
+
+	clean(time.Now())
+	for t := range time.Tick(ControllerExpiryCleanupInterval) {
+		clean(t)
 	}
 }
 
