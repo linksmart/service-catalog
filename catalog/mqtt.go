@@ -98,7 +98,8 @@ func (c *MQTTClient) onConnect(pahoClient paho.Client) {
 
 	for _, topic := range append(c.topics, c.willTopics...) {
 		if token := pahoClient.Subscribe(topic, c.QoS, c.onMessage); token.Wait() && token.Error() != nil {
-			logger.Printf("MQTT: %s: Error subscribing: %v", c.BrokerURI, token.Error())
+			logger.Printf("MQTT: %s: Error subscribing to %s: %v", c.BrokerURI, topic, token.Error())
+			continue
 		}
 		logger.Printf("MQTT: %s: Subscribed to %s", c.BrokerURI, topic)
 	}
@@ -196,7 +197,8 @@ func (m *MQTTManager) publishAliveService(s Service) {
 	topic := m.topicPrefix + s.Name + "/" + s.ID + "/alive"
 	for _, client := range m.clients {
 		if token := client.paho.Publish(topic, 1, true, payload); token.Wait() && token.Error() != nil {
-			logger.Printf("MQTT: %s: Error publishing: %v", client.BrokerURI, token.Error())
+			logger.Printf("MQTT: %s: Error publishing service %s with topic %s: %v", client.BrokerURI, s.ID, topic, token.Error())
+			continue
 		}
 		logger.Printf("MQTT: %s: Published service %s with topic %s", client.BrokerURI, s.ID, topic)
 	}
@@ -208,9 +210,10 @@ func (m *MQTTManager) publishDeadService(s Service) {
 
 	for _, client := range m.clients {
 		if token := client.paho.Publish(topic, 1, true, ""); token.Wait() && token.Error() != nil {
-			logger.Printf("MQTT: %s: Error publishing: %v", client.BrokerURI, token.Error())
+			logger.Printf("MQTT: %s: Error removing retained message with topic %s: %v", client.BrokerURI, topic, token.Error())
+			continue
 		}
-		logger.Printf("MQTT: %s: Removed the retain message topic: %s", client.BrokerURI, topic)
+		logger.Printf("MQTT: %s: Removed the retain message with topic %s", client.BrokerURI, topic)
 	}
 
 	// publish dead message
@@ -222,7 +225,8 @@ func (m *MQTTManager) publishDeadService(s Service) {
 	}
 	for _, client := range m.clients {
 		if token := client.paho.Publish(topic, 1, false, payload); token.Wait() && token.Error() != nil {
-			logger.Printf("MQTT: %s: Error publishing: %v", client.BrokerURI, token.Error())
+			logger.Printf("MQTT: %s: Error publishing delete for service %s: %v", client.BrokerURI, s.ID, token.Error())
+			continue
 		}
 		logger.Printf("MQTT: %s: Published delete for service %s with topic %s", client.BrokerURI, s.ID, topic)
 	}
