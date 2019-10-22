@@ -4,7 +4,6 @@ package catalog
 
 import (
 	"fmt"
-	"mime"
 	"net/url"
 	"strings"
 	"time"
@@ -14,25 +13,49 @@ import (
 
 // Service is a service entry in the catalog
 type Service struct {
-	ID          string                 `json:"id"`
-	Description string                 `json:"description"`
-	Name        string                 `json:"name"`
-	APIs        map[string]string      `json:"apis"`
-	Docs        []Doc                  `json:"docs"`
-	Meta        map[string]interface{} `json:"meta"`
-	TTL         uint                   `json:"ttl,omitempty"`
-	Created     time.Time              `json:"created"`
-	Updated     time.Time              `json:"updated"`
+	ID          string                	`json:"id"`
+	Description string                	`json:"description"`
+	Title 		string                	`json:"title"`
+	Type        string                	`json:"type"`
+	APIs        []API			      	`json:"apis"`
+	//Docs        []Doc                  `json:"docs"`
+	Meta        map[string]interface{}	`json:"meta"`
+	Doc         string                 	`json:"doc"`
+	TTL         uint                   	`json:"ttl,omitempty"`
+	Created     time.Time              	`json:"created"`
+	Updated     time.Time              	`json:"updated"`
+	CreatedBy   string  	            `json:"created_by"`
+	UpdatedBy   string	     	        `json:"updated_by"`
 	// Expires is the time when service will be removed from the system (Only when TTL is set)
-	Expires time.Time `json:"expires,omitempty"`
+	Expires 	time.Time 				`json:"expires,omitempty"`
 }
 
-// Doc is an external resource documenting the service and/or APIs. E.g. OpenAPI specs, Wiki page
+/*// Doc is an external resource documenting the service and/or APIs. E.g. OpenAPI specs, Wiki page
 type Doc struct {
 	Description string   `json:"description"`
 	Type        string   `json:"type"`
 	URL         string   `json:"url"`
 	APIs        []string `json:"apis"`
+}*/
+
+// API - an API (e.g. REST API, MQTT API, etc.) exposed by the service
+type API struct{
+	ID			string                 	`json:"id"`
+	Title		string                 	`json:"title"`
+	Description	string                 	`json:"description"`
+	Protocol	string                 	`json:"protocol"`
+	Endpoint	string                 	`json:"endpoint"`
+	Spec		Spec					`json:"spec"`
+	Meta		map[string]interface{} 	`json:"meta"`
+}
+
+// API.spec - the complete specification of the interface exposed by the service
+// spec in the form of an url to external specification document is preferred, if not present, the 'schema' could be used
+// Recommended - Request-response: OpenAPI/Swagger Spec, PubSub: AsyncAPI Spec
+type Spec struct{
+	Type	string                 `json:"type"`
+	Url		string                 `json:"url"`
+	Schema	map[string]interface{} `json:"schema"`
 }
 
 // Validates the Service configuration
@@ -46,23 +69,26 @@ func (s Service) validate() error {
 		return fmt.Errorf("service is is no valid invalid: %v", err)
 	}
 
-	if s.Name == "" {
+	if s.Type == "" {
 		return fmt.Errorf("service name not defined")
 	}
-	if strings.ContainsAny(s.Name, " ") {
+	if strings.ContainsAny(s.Type, " ") {
 		return fmt.Errorf("service name must not contain spaces")
 	}
 
 	if s.TTL == 0 || s.TTL > MaxServiceTTL {
 		return fmt.Errorf("service TTL should be between 1 and 86400 (i.e. 1 second to one day)")
 	}
-	for _, URL := range s.APIs {
+
+	// TODO: apply non-null checks to the new corresponding fields
+
+	/*for _, URL := range s.APIs {
 		if _, err := url.Parse(URL); err != nil {
 			return fmt.Errorf("invalid service API url: %s", URL)
 		}
-	}
+	}*/
 
-	for _, doc := range s.Docs {
+	/*for _, doc := range s.Docs {
 		// if doc.Type == "" {
 		// 	return fmt.Errorf("doc type not defined")
 		// }
@@ -79,7 +105,7 @@ func (s Service) validate() error {
 		// 		}
 		// 	}
 		// }
-	}
+	}*/
 
 	return nil
 }

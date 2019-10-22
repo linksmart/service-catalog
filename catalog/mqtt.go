@@ -17,7 +17,7 @@ const (
 	mqttMaxRetryInterval         = 10 * time.Minute
 	mqttServiceTTL               = 10 * time.Minute
 	mqttServiceHeartbeatInterval = mqttServiceTTL / 2
-	mqttServiceName              = "_mqtt._tcp"
+	mqttServiceType              = "_mqtt._tcp"				// TODO update the default type
 )
 
 type MQTTManager struct {
@@ -151,13 +151,26 @@ func (c *MQTTClient) onMessage(_ paho.Client, msg paho.Message) {
 func (m *MQTTManager) registerAsService(client *MQTTClient) {
 	service := Service{
 		ID:          client.BrokerID,
-		Name:        mqttServiceName,
+		Type:        mqttServiceType,
+		Title: 		 "This broker is registered as used by service catalog",
 		Description: "This broker is registered as used by service catalog",
 		Meta: map[string]interface{}{
 			"registrator": m.scID,
 		},
-		APIs: map[string]string{
-			APITypeMQTT: client.BrokerURI,
+		APIs: []API{
+			{
+				ID:				client.BrokerID + "-api",
+				Title: 			"SC primary broker's API",
+				Description: 	"SC primary broker's API",
+				Protocol: 		APITypeMQTT,
+				Endpoint: 		client.BrokerURI,
+				Spec: 			Spec{
+									Type:   "",
+									Url:    "",
+									Schema: map[string]interface{}{},
+				},
+				Meta: map[string]interface{}{},
+			},
 		},
 		TTL: uint(mqttServiceTTL / time.Second),
 	}
@@ -194,7 +207,7 @@ func (m *MQTTManager) publishAliveService(s Service) {
 		logger.Printf("MQTT: Error parsing json: %s ", err)
 		return
 	}
-	topic := m.topicPrefix + s.Name + "/" + s.ID + "/alive"
+	topic := m.topicPrefix + s.Type + "/" + s.ID + "/alive"
 	for _, client := range m.clients {
 		if token := client.paho.Publish(topic, 1, true, payload); token.Wait() && token.Error() != nil {
 			logger.Printf("MQTT: %s: Error publishing service %s with topic %s: %v", client.BrokerURI, s.ID, topic, token.Error())
@@ -206,7 +219,7 @@ func (m *MQTTManager) publishAliveService(s Service) {
 
 func (m *MQTTManager) publishDeadService(s Service) {
 	// remove the retained message
-	topic := m.topicPrefix + s.Name + "/" + s.ID + "/alive"
+	topic := m.topicPrefix + s.Type + "/" + s.ID + "/alive"
 
 	for _, client := range m.clients {
 		if token := client.paho.Publish(topic, 1, true, ""); token.Wait() && token.Error() != nil {
@@ -217,7 +230,7 @@ func (m *MQTTManager) publishDeadService(s Service) {
 	}
 
 	// publish dead message
-	topic = m.topicPrefix + s.Name + "/" + s.ID + "/dead"
+	topic = m.topicPrefix + s.Type + "/" + s.ID + "/dead"
 	payload, err := json.Marshal(s)
 	if err != nil {
 		logger.Printf("MQTT: Error parsing json: %s ", err)

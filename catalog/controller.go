@@ -81,9 +81,9 @@ func (c *Controller) update(id string, s Service) (*Service, error) {
 	}
 
 	ss.Description = s.Description
-	ss.Name = s.Name
+	ss.Type = s.Type
 	ss.APIs = s.APIs
-	ss.Docs = s.Docs
+	//ss.Docs = s.Docs
 	ss.Meta = s.Meta
 	ss.TTL = s.TTL
 	ss.Updated = time.Now().UTC()

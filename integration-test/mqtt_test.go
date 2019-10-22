@@ -83,7 +83,7 @@ func MockedService(id string) *catalog.Service {
 		ID:          id,
 		Meta:        map[string]interface{}{"test-id": id},
 		Description: "Test Service " + id,
-		Name:        "_test._tcp",
+		Type:        "_test._tcp",
 		APIs:        map[string]string{"Dummy": "mqtt://test.mosquitto.org:1883"},
 		Docs: []catalog.Doc{{
 			Description: "REST API Specs",
@@ -296,7 +296,7 @@ func TestAnnouncement(t *testing.T) {
 	gotDead := make(chan bool)
 	deleteRetain := make(chan bool)
 
-	aliveTopic := "LS/v2/SC/" + service.Name + "/" + id + "/+"
+	aliveTopic := "LS/v2/SC/" + service.Type + "/" + id + "/+"
 	log.Println("subscribing:", aliveTopic)
 	if token1 := manager.client.Subscribe(aliveTopic, 1, func(client paho.Client, msg paho.Message) {
 		defer log.Println("Got a message exit", msg.Topic())

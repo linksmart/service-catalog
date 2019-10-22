@@ -52,7 +52,7 @@ func TestAddService(t *testing.T) {
 	// User-defined id
 	var r Service
 	r.ID = "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
-	r.Name = "_test._tcp"
+	r.Type = "_test._tcp"
 	r.TTL = 30
 
 	s, err := controller.add(r)
@@ -70,7 +70,7 @@ func TestAddService(t *testing.T) {
 
 	// System-generated id
 	var r2 Service
-	r2.Name = "_test._tcp"
+	r2.Type = "_test._tcp"
 	r2.TTL = 30
 	s, err = controller.add(r2)
 	if err != nil {
@@ -91,7 +91,7 @@ func TestUpdateService(t *testing.T) {
 
 	var r Service
 	r.ID = "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
-	r.Name = "_test._tcp"
+	r.Type = "_test._tcp"
 	r.TTL = 30
 
 	_, err = controller.add(r)
@@ -126,7 +126,7 @@ func TestGetService(t *testing.T) {
 	var r Service
 	r.Description = "some description"
 	r.ID = "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
-	r.Name = "_test._tcp"
+	r.Type = "_test._tcp"
 	r.TTL = 30
 
 	_, err = controller.add(r)
@@ -154,7 +154,7 @@ func TestDeleteService(t *testing.T) {
 
 	var r Service
 	r.ID = "E9203BE9-D705-42A8-8B12-F28E7EA2FC99"
-	r.Name = "_test._tcp"
+	r.Type = "_test._tcp"
 	r.TTL = 30
 
 	_, err = controller.add(r)
@@ -182,7 +182,7 @@ func TestListServices(t *testing.T) {
 	defer shutdown()
 
 	var r Service
-	r.Name = "_test._tcp"
+	r.Type = "_test._tcp"
 
 	// Add 10 entries
 	for i := 0; i < 11; i++ {
@@ -231,7 +231,7 @@ func TestFilterService(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		_, err := controller.add(Service{
 			Description: fmt.Sprintf("boring_%d", i),
-			Name:        "_test._tcp",
+			Type:        "_test._tcp",
 			TTL:         30,
 		})
 		if err != nil {
@@ -241,12 +241,12 @@ func TestFilterService(t *testing.T) {
 
 	controller.add(Service{
 		Description: "interesting_1",
-		Name:        "_test._tcp",
+		Type:        "_test._tcp",
 		TTL:         30,
 	})
 	controller.add(Service{
 		Description: "interesting_2",
-		Name:        "_test._tcp",
+		Type:        "_test._tcp",
 		TTL:         30,
 	})
 
@@ -276,7 +276,7 @@ func TestCleanExpired(t *testing.T) {
 
 	var d = Service{
 		Description: "my_service",
-		Name:        "_test._tcp",
+		Type:        "_test._tcp",
 		TTL:         1,
 	}
 

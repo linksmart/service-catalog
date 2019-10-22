@@ -21,7 +21,7 @@ func main() {
 	// Create and serialize registration object
 	service := catalog.Service{
 		ID:          "unique_id2",
-		Name:        "_service-name._tcp",
+		Type:        "_service-name._tcp",
 		Description: "service description",
 		APIs:        map[string]string{"Data": "mqtt://test.mosquitto.org:1883"},
 		Docs: []catalog.Doc{{

@@ -11,7 +11,7 @@ import (
 func main() {
 	service := catalog.Service{
 		ID:          "unique_id",
-		Name:        "_service-name._tcp",
+		Type:        "_service-name._tcp",
 		Description: "service description",
 		APIs:        map[string]string{"API 1": "http://localhost:8080"},
 		Docs: []catalog.Doc{{
