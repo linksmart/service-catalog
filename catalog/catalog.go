@@ -76,7 +76,9 @@ func (s Service) validate() error {
 		return fmt.Errorf("service type must not contain spaces")
 	}
 
-	if s.TTL == 0 || s.TTL > MaxServiceTTL {
+	// If a service needs to use the TTL functionality, TTL should be between 1 and 86400
+	// Temporary workaround to ~disable the TTL/expiration for a service: No TTL or TTL=0 in request payload implies a TTL of 10 years
+	if s.TTL > MaxServiceTTL {
 		return fmt.Errorf("service TTL should be between 1 and 86400 (i.e. 1 second to one day)")
 	}
 

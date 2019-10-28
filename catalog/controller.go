@@ -47,7 +47,12 @@ func (c *Controller) add(s Service) (*Service, error) {
 	s.Created = time.Now().UTC()
 	s.Updated = s.Created
 
-	s.Expires = s.Created.Add(time.Duration(s.TTL) * time.Second)
+	if s.TTL == 0 {
+		// No TTL or TTL=0 in request payload implies a TTL of 10 years
+		s.Expires = s.Created.AddDate(10, 0, 0)
+	} else {
+		s.Expires = s.Created.Add(time.Duration(s.TTL) * time.Second)
+	}
 
 	err := c.storage.add(&s)
 	if err != nil {
