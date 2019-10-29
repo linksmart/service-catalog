@@ -96,7 +96,12 @@ func (c *Controller) update(id string, s Service) (*Service, error) {
 	ss.Updated = time.Now().UTC()
 	// updated_by =
 
-	ss.Expires = ss.Updated.Add(time.Duration(ss.TTL) * time.Second)
+	if ss.TTL == 0 {
+		// No TTL or TTL=0 in request payload implies a TTL of 10 years
+		ss.Expires = ss.Updated.AddDate(10, 0, 0)
+	} else {
+		ss.Expires = ss.Updated.Add(time.Duration(ss.TTL) * time.Second)
+	}
 
 	err = c.storage.update(id, ss)
 	if err != nil {
