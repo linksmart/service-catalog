@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
 	"github.com/justinas/alice"
 	_ "github.com/linksmart/go-sec/auth/keycloak/validator"
@@ -20,6 +19,7 @@ import (
 	"github.com/linksmart/service-catalog/v2/catalog"
 	"github.com/oleksandr/bonjour"
 	uuid "github.com/satori/go.uuid"
+	"github.com/urfave/negroni"
 )
 
 var (
