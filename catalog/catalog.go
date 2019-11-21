@@ -24,8 +24,8 @@ type Service struct {
 	TTL       uint                   `json:"ttl,omitempty"`
 	Created   time.Time              `json:"created"`
 	Updated   time.Time              `json:"updated"`
-	CreatedBy string                 `json:"created_by"`
-	UpdatedBy string                 `json:"updated_by"`
+	CreatedBy string                 `json:"createdBy"`
+	UpdatedBy string                 `json:"updatedBy"`
 	// Expires is the time when service will be removed from the system (Only when TTL is set)
 	Expires time.Time `json:"expires,omitempty"`
 }
@@ -53,7 +53,7 @@ type API struct {
 // spec in the form of an url to external specification document is preferred, if not present, the 'schema' could be used
 // Recommended - Request-response: OpenAPI/Swagger Spec, PubSub: AsyncAPI Spec
 type Spec struct {
-	Type   string                 `json:"type"`
+	Type   string                 `json:"mediaType"`
 	Url    string                 `json:"url"`
 	Schema map[string]interface{} `json:"schema"`
 }
