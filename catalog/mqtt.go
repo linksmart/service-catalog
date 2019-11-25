@@ -115,21 +115,19 @@ func (c *MQTTClient) onMessage(_ paho.Client, msg paho.Message) {
 	logger.Debugf("MQTT: %s %s", topic, payload)
 
 	// Will message has ID in topic
-	// Get id from topic. Expects: <prefix>will/<id>
+	// Get id from topic. Expects: <prefix as in willTopics or commonWillTopics>/<id>
 	for _, filter := range c.willTopics {
 		if mqtttopic.Match(filter, topic) {
-			if parts := strings.SplitAfter(msg.Topic(), "will/"); len(parts) == 2 && parts[1] != "" {
-				c.manager.removeService(Service{ID: parts[1]})
-				return
-			}
+			parts := strings.Split(msg.Topic(), "/")
+			c.manager.removeService(Service{ID: parts[len(parts)-1]})
+			return
 		}
 	}
 
-	// Get id from topic. Expects: <prefix>service/<id>
+	// Get id from topic. Expects: <prefix as in regTopics or commonRegTopics>/<id>
 	var id string
-	if parts := strings.SplitAfter(msg.Topic(), "service/"); len(parts) == 2 {
-		id = parts[1]
-	}
+	parts := strings.Split(msg.Topic(), "/")
+	id = parts[len(parts)-1]
 
 	var service Service
 	err := json.Unmarshal(payload, &service)
