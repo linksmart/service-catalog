@@ -19,6 +19,7 @@ import (
 	"github.com/linksmart/go-sec/auth/validator"
 	"github.com/linksmart/service-catalog/v2/catalog"
 	"github.com/oleksandr/bonjour"
+	"github.com/rs/cors"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -132,7 +133,8 @@ func serveHTTP(httpAPI *catalog.HttpAPI, config *Config) {
 	commonHandlers := alice.New(
 		context.ClearHandler,
 		loggingHandler,
-		commonHeaders,
+		//commonHeaders,
+		cors.AllowAll().Handler,
 	)
 
 	// Append auth handler if enabled
