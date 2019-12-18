@@ -76,10 +76,10 @@ func (s Service) validate() error {
 		return fmt.Errorf("service type must not contain spaces")
 	}
 
-	// If a service needs to use the TTL functionality, TTL should be between 1 and 86400
-	// Temporary workaround to ~disable the TTL/expiration for a service: No TTL or TTL=0 in request payload implies a TTL of 10 years
+	// If a service needs to use the TTL functionality, TTL should be between 1 and 2147483647
+	// The appropriately value for TTL should be provided by the service provider based on how critical the availability of his/her service is
 	if s.TTL > MaxServiceTTL {
-		return fmt.Errorf("service TTL should be between 1 and 86400 (i.e. 1 second to one day)")
+		return fmt.Errorf("service TTL should be between 1 and 2147483647 (i.e. 1 second to approx. 68 years)")
 	}
 
 	// TODO: request payload validations as described below (create an issue to discuss and finalize):
