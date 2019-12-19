@@ -15,6 +15,7 @@ require (
 	github.com/linksmart/go-sec v1.0.1
 	github.com/miekg/dns v0.0.0-20170818131442-e4205768578d // indirect
 	github.com/oleksandr/bonjour v0.0.0-20160508152359-5dcf00d8b228
+	github.com/rs/cors v1.7.0
 	github.com/satori/go.uuid v1.1.0
 	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/syndtr/goleveldb v1.0.0

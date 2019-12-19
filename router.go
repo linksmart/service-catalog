@@ -55,7 +55,7 @@ func (r *router) options(path string, handler http.Handler) {
 }
 
 // Add headers to handler's chain
-func commonHeaders(next http.Handler) http.Handler {
+/*func commonHeaders(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 
 		// Headers for HTTP access control (CORS)
@@ -66,7 +66,7 @@ func commonHeaders(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
-}
+}*/
 
 func loggingHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
