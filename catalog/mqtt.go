@@ -16,6 +16,7 @@ import (
 const (
 	mqttMaxRetryInterval         = 10 * time.Minute
 	mqttServiceTTL               = 10 * time.Minute
+	mqttWaitTimout               = 5 * time.Second
 	mqttServiceHeartbeatInterval = mqttServiceTTL / 2
 	mqttServiceType              = "_mqtt._tcp"				// TODO update the default type
 )
@@ -83,7 +84,7 @@ func (c *MQTTClient) connect() {
 		opts.SetConnectionLostHandler(c.onDisconnect)
 
 		c.paho = paho.NewClient(opts)
-		if token := c.paho.Connect(); token.Wait() && token.Error() != nil {
+		if token := c.paho.Connect(); token.WaitTimeout(mqttWaitTimout) && token.Error() != nil {
 			log.Printf("Error connecting to broker: %v. Retry in %v", token.Error(), interval)
 			time.Sleep(interval)
 		} else {
@@ -97,7 +98,7 @@ func (c *MQTTClient) onConnect(pahoClient paho.Client) {
 	logger.Printf("MQTT: %s: Connected.", c.BrokerURI)
 
 	for _, topic := range append(c.topics, c.willTopics...) {
-		if token := pahoClient.Subscribe(topic, c.QoS, c.onMessage); token.Wait() && token.Error() != nil {
+		if token := pahoClient.Subscribe(topic, c.QoS, c.onMessage); token.WaitTimeout(mqttWaitTimout) && token.Error() != nil {
 			logger.Printf("MQTT: %s: Error subscribing to %s: %v", c.BrokerURI, topic, token.Error())
 			continue
 		}
@@ -114,21 +115,19 @@ func (c *MQTTClient) onMessage(_ paho.Client, msg paho.Message) {
 	logger.Debugf("MQTT: %s %s", topic, payload)
 
 	// Will message has ID in topic
-	// Get id from topic. Expects: <prefix>will/<id>
+	// Get id from topic. Expects: <prefix as in willTopics or commonWillTopics>/<id>
 	for _, filter := range c.willTopics {
 		if mqtttopic.Match(filter, topic) {
-			if parts := strings.SplitAfter(msg.Topic(), "will/"); len(parts) == 2 && parts[1] != "" {
-				c.manager.removeService(Service{ID: parts[1]})
-				return
-			}
+			parts := strings.Split(msg.Topic(), "/")
+			c.manager.removeService(Service{ID: parts[len(parts)-1]})
+			return
 		}
 	}
 
-	// Get id from topic. Expects: <prefix>service/<id>
+	// Get id from topic. Expects: <prefix as in regTopics or commonRegTopics>/<id>
 	var id string
-	if parts := strings.SplitAfter(msg.Topic(), "service/"); len(parts) == 2 {
-		id = parts[1]
-	}
+	parts := strings.Split(msg.Topic(), "/")
+	id = parts[len(parts)-1]
 
 	var service Service
 	err := json.Unmarshal(payload, &service)
@@ -209,7 +208,7 @@ func (m *MQTTManager) publishAliveService(s Service) {
 	}
 	topic := m.topicPrefix + s.Type + "/" + s.ID + "/alive"
 	for _, client := range m.clients {
-		if token := client.paho.Publish(topic, 1, true, payload); token.Wait() && token.Error() != nil {
+		if token := client.paho.Publish(topic, 1, true, payload); token.WaitTimeout(mqttWaitTimout) && token.Error() != nil {
 			logger.Printf("MQTT: %s: Error publishing service %s with topic %s: %v", client.BrokerURI, s.ID, topic, token.Error())
 			continue
 		}
@@ -222,7 +221,7 @@ func (m *MQTTManager) publishDeadService(s Service) {
 	topic := m.topicPrefix + s.Type + "/" + s.ID + "/alive"
 
 	for _, client := range m.clients {
-		if token := client.paho.Publish(topic, 1, true, ""); token.Wait() && token.Error() != nil {
+		if token := client.paho.Publish(topic, 1, true, ""); token.WaitTimeout(mqttWaitTimout) && token.Error() != nil {
 			logger.Printf("MQTT: %s: Error removing retained message with topic %s: %v", client.BrokerURI, topic, token.Error())
 			continue
 		}
@@ -237,7 +236,7 @@ func (m *MQTTManager) publishDeadService(s Service) {
 		return
 	}
 	for _, client := range m.clients {
-		if token := client.paho.Publish(topic, 1, false, payload); token.Wait() && token.Error() != nil {
+		if token := client.paho.Publish(topic, 1, false, payload); token.WaitTimeout(mqttWaitTimout) && token.Error() != nil {
 			logger.Printf("MQTT: %s: Error publishing delete for service %s: %v", client.BrokerURI, s.ID, token.Error())
 			continue
 		}

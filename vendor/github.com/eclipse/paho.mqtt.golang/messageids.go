@@ -27,7 +27,7 @@ type MId uint16
 
 type messageIds struct {
 	sync.RWMutex
-	index map[uint16]Token
+	index map[uint16]tokenCompletor
 }
 
 const (
@@ -38,20 +38,21 @@ const (
 func (mids *messageIds) cleanUp() {
 	mids.Lock()
 	for _, token := range mids.index {
-		switch t := token.(type) {
+		switch token.(type) {
 		case *PublishToken:
-			t.err = fmt.Errorf("Connection lost before Publish completed")
+			token.setError(fmt.Errorf("Connection lost before Publish completed"))
 		case *SubscribeToken:
-			t.err = fmt.Errorf("Connection lost before Subscribe completed")
+			token.setError(fmt.Errorf("Connection lost before Subscribe completed"))
 		case *UnsubscribeToken:
-			t.err = fmt.Errorf("Connection lost before Unsubscribe completed")
+			token.setError(fmt.Errorf("Connection lost before Unsubscribe completed"))
 		case nil:
 			continue
 		}
 		token.flowComplete()
 	}
-	mids.index = make(map[uint16]Token)
+	mids.index = make(map[uint16]tokenCompletor)
 	mids.Unlock()
+	DEBUG.Println(MID, "cleaned up")
 }
 
 func (mids *messageIds) freeID(id uint16) {
@@ -60,7 +61,19 @@ func (mids *messageIds) freeID(id uint16) {
 	mids.Unlock()
 }
 
-func (mids *messageIds) getID(t Token) uint16 {
+func (mids *messageIds) claimID(token tokenCompletor, id uint16) {
+	mids.Lock()
+	defer mids.Unlock()
+	if _, ok := mids.index[id]; !ok {
+		mids.index[id] = token
+	} else {
+		old := mids.index[id]
+		old.flowComplete()
+		mids.index[id] = token
+	}
+}
+
+func (mids *messageIds) getID(t tokenCompletor) uint16 {
 	mids.Lock()
 	defer mids.Unlock()
 	for i := midMin; i < midMax; i++ {
@@ -72,7 +85,7 @@ func (mids *messageIds) getID(t Token) uint16 {
 	return 0
 }
 
-func (mids *messageIds) getToken(id uint16) Token {
+func (mids *messageIds) getToken(id uint16) tokenCompletor {
 	mids.RLock()
 	defer mids.RUnlock()
 	if token, ok := mids.index[id]; ok {
@@ -100,3 +113,5 @@ func (d *DummyToken) flowComplete() {
 func (d *DummyToken) Error() error {
 	return nil
 }
+
+func (d *DummyToken) setError(e error) {}
