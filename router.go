@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
+	"github.com/urfave/negroni"
 )
 
 type router struct {
