@@ -74,7 +74,22 @@ func (s Service) validate() error {
 	// TODO: request payload validations as described below (create an issue to discuss and finalize):
 	// mandatory: type (done), title, apis[x].title, apis[x].protocol?, apis[x].endpoint?, apis[x].spec?
 
-	for _, API := range s.APIs {
+	for i, API := range s.APIs {
+
+		if API.ID == "" {
+			return fmt.Errorf("API id not defined")
+		}
+
+		if strings.ContainsAny(API.ID, " ") {
+			return fmt.Errorf("API id must not contain spaces")
+		}
+
+		for _, nextAPI := range s.APIs[i+1:] {
+			if API.ID == nextAPI.ID {
+				return fmt.Errorf("API id must be unique among the IDs of APIs of this service")
+			}
+		}
+
 		if _, err := url.Parse(API.Endpoint); err != nil {
 			return fmt.Errorf("invalid service API endpoint: %s", API.Endpoint)
 		}
