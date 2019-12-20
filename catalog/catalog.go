@@ -68,7 +68,7 @@ func (s Service) validate() error {
 	}
 
 	if s.TTL == 0 || s.TTL > MaxServiceTTL {
-		return fmt.Errorf("service TTL should be between 1 and 86400 (i.e. 1 second to one day)")
+		return fmt.Errorf("service TTL should be between 1 and %v (seconds)", MaxServiceTTL)
 	}
 
 	// TODO: request payload validations as described below (create an issue to discuss and finalize):
