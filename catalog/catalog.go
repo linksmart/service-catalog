@@ -78,7 +78,7 @@ func (s Service) validate() error {
 
 	// If a service needs to use the TTL functionality, TTL should be between 1 and 2147483647
 	// The appropriately value for TTL should be provided by the service provider based on how critical the availability of his/her service is
-	if s.TTL > MaxServiceTTL {
+	if s.TTL == 0 || s.TTL > MaxServiceTTL {
 		return fmt.Errorf("service TTL should be between 1 and 2147483647 (i.e. 1 second to approx. 68 years)")
 	}
 
