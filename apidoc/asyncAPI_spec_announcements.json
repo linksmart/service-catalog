@@ -1,0 +1,183 @@
+{
+	"asyncapi": "2.0.0",
+	"info": {
+		"title": "Data Spine Service Registry's MQTT Service Announcement API",
+		"version": "3.0.0",
+		"description": "### Service registration status announcements over MQTT: \n\n * Service Registry announces the service registration and updates via MQTT using retain messages. \n\n * Service Registry also announces the service de-registration (on explicit de-registration request via REST/MQTT API or on expiration due to the set TTL) via MQTT.",
+		"license": {
+			"name": "Apache 2.0",
+			"url": "https://www.apache.org/licenses/LICENSE-2.0"
+		}
+	},
+	"servers": {
+		"ds-message-broker-dev": {
+			"url": "broker.smecluster.com:{port}",
+			"description": "This RabbitMQ broker at SMECluster's servers is Data Spine's Message Broker for the development environment.",
+			"protocol": "mqtt",
+			"variables": {
+				"port": {
+					"description": "Secure connection (TLS) is available through port 8883. Currently MQTTs is not implemented",
+					"default": "1883",
+					"enum": [
+						"1883",
+						"8883"
+					]
+				}
+			}
+		}
+	},
+	"channels": {
+		"sr/v3/announcement/{serviceType}/{serviceId}/alive": {
+			"parameters": {
+				"serviceId": {
+					"$ref": "#/components/parameters/serviceId"
+				},
+				"serviceType": {
+					"$ref": "#/components/parameters/serviceType"
+				}
+			},
+			"subscribe": {
+				"summary": "MQTT topic for service registration/update announcements",
+				"description": "The Service Registry publishes to this topic when the service with ID `{serviceId}` and type {serviceType} is registered or whenever it is updated. The service registration/update messages are retained. Default qos used for the publish operation is 1. \n\n Users can subscribe to this topic to monitor service registration/updates. \n\n Examples: \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/efactory.marketplace-service/eb647488-a53b-4223-89ef-63ae2ce826ae/alive'` \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/efactory.marketplace-service/+/alive'` \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/+/+/alive'`",
+				"message": {
+					"payload": {
+						"type": "object",
+						"$ref": "#/components/schemas/Service"
+					}
+				}
+			}
+		},
+		"sr/v3/announcement/{serviceType}/{serviceId}/dead": {
+			"parameters": {
+				"serviceId": {
+					"$ref": "#/components/parameters/serviceId"
+				},
+				"serviceType": {
+					"$ref": "#/components/parameters/serviceType"
+				}
+			},
+			"subscribe": {
+				"summary": "MQTT topic for service de-registration announcements",
+				"description": "The Service Registry publishes to this topic when the service with ID `{serviceId}` and type {serviceType} is de-registered. The service de-registration messages are not retained. Default qos used for the publish operation is 1. Upon de-registration of services, the associated retained messages of service registration/updates (topic: `sr/v3/announcement/{serviceType}/{serviceId}/alive`) are also removed. \n\n Users can subscribe to this topic to get notified when services become unavailable i.e. when they are removed from the Service Registry upon explicit de-registration or expiration. \n\n Examples: \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/efactory.marketplace-service/eb647488-a53b-4223-89ef-63ae2ce826ae/dead'` \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/efactory.marketplace-service/+/dead'` \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/+/+/dead'`",
+				"message": {
+					"payload": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"parameters": {
+			"serviceId": {
+				"description": "The ID of the service.",
+				"schema": {
+					"type": "string"
+				}
+			},
+			"serviceType": {
+				"description": "The `type` of the service.",
+				"schema": {
+					"type": "string"
+				}
+			}
+		},
+		"schemas": {
+			"Service": {
+				"title": "Service",
+				"type": "object",
+				"required": ["type"],
+				"properties": {
+					"id": {
+						"type": "string",
+						"readOnly": true
+					},
+					"type": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"meta": {
+						"type": "object"
+					},
+					"apis": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"type": "string"
+								},
+								"title": {
+									"type": "string"
+								},
+								"description": {
+									"type": "string"
+								},
+								"protocol": {
+									"type": "string"
+								},
+								"endpoint": {
+									"type": "string"
+								},
+								"spec": {
+									"type": "object",
+									"properties": {
+										"mediaType": {
+											"type": "string"
+										},
+										"url": {
+											"type": "string"
+										},
+										"schema": {
+											"type": "object"
+										}
+									}
+								},
+								"meta": {
+									"type": "object"
+								}
+							}
+						}
+					},
+					"doc": {
+						"type": "string"
+					},
+					"ttl": {
+						"type": "integer",
+						"format": "int64",
+						"minimum": 1,
+						"maximum": 2147483647
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time",
+						"readOnly": true
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time",
+						"readOnly": true
+					},
+					"createdBy": {
+						"type": "string",
+						"readOnly": true
+					},
+					"updatedBy": {
+						"type": "string",
+						"readOnly": true
+					},
+					"expiresAt": {
+						"type": "string",
+						"format": "date-time",
+						"readOnly": true
+					}
+				}
+			}
+		}
+	}
+}
