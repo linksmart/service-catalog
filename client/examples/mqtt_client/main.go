@@ -23,14 +23,21 @@ func main() {
 		ID:          "unique_id2",
 		Type:        "_service-name._tcp",
 		Description: "service description",
-		APIs:        map[string]string{"Data": "mqtt://test.mosquitto.org:1883"},
-		Docs: []catalog.Doc{{
-			Description: "doc description",
-			URL:         "http://doc.linksmart.eu/DC",
-			Type:        "text/html",
-			APIs:        []string{"Data"},
+		APIs: []catalog.API{{
+			ID:          "api-id",
+			Title:       "API title",
+			Description: "API description",
+			Protocol:    "HTTPS",
+			Endpoint:    "http://localhost:8080",
+			Spec: catalog.Spec{
+				Type:   "",
+				Url:    "http://localhost:8080/swaggerSpec.json",
+				Schema: map[string]interface{}{},
+			},
+			Meta: map[string]interface{}{},
 		}},
-		Meta: map[string]interface{}{"pub_key": "qwertyuiopasdfghjklzxcvbnm"},
+		Doc:  "https://docs.linksmart.eu/display/SC",
+		Meta: map[string]interface{}{},
 		TTL:  10,
 	}
 	b, _ := json.Marshal(service)

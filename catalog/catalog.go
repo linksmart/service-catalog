@@ -21,12 +21,12 @@ type Service struct {
 	Meta        map[string]interface{} `json:"meta"`
 	Doc         string                 `json:"doc"`
 	TTL         uint                   `json:"ttl,omitempty"`
-	Created     time.Time              `json:"created"`
-	Updated     time.Time              `json:"updated"`
+	Created     time.Time              `json:"createdAt"`
+	Updated     time.Time              `json:"updatedAt"`
 	CreatedBy   string                 `json:"createdBy"`
 	UpdatedBy   string                 `json:"updatedBy"`
 	// Expires is the time when service will be removed from the system (unless updated within TTL)
-	Expires time.Time `json:"expires,omitempty"`
+	Expires time.Time `json:"expiresAt,omitempty"`
 }
 
 // API - an API (e.g. REST API, MQTT API, etc.) exposed by the service
