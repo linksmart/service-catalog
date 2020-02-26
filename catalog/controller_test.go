@@ -300,8 +300,8 @@ func TestCleanExpired(t *testing.T) {
 	} else {
 		t.Fatalf("Service was not removed after 1 seconds. \nTTL: %v \nCreated: %v \nExpiry: %v \nNot deleted after: %v at %v\n",
 			dd.TTL,
-			dd.Created,
-			dd.Expires,
+			dd.CreatedAt,
+			dd.ExpiresAt,
 			checkingTime.Sub(addingTime),
 			checkingTime.UTC(),
 		)

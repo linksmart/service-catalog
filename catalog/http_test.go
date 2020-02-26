@@ -66,15 +66,24 @@ func setupRouter() (*mux.Router, func(), error) {
 func MockedService(id string) *Service {
 	return &Service{
 		ID:          "TestHost/TestService" + id,
-		Meta:        map[string]interface{}{"test-id": id},
-		Description: "Test Service " + id,
 		Type:        "_test._tcp",
-		Docs: []Doc{{
-			Description: "REST",
-			URL:         "http://link-to-openapi-specs.json",
-			Type:        "openapi",
+		Description: "Test Service " + id,
+		APIs: []API{{
+			ID:          "api-id",
+			Title:       "API title",
+			Description: "API description",
+			Protocol:    "HTTPS",
+			URL:         "http://localhost:8080",
+			Spec: Spec{
+				MediaType: "application/vnd.oai.openapi+json;version=3.0",
+				URL:       "http://localhost:8080/swaggerSpec.json",
+				Schema:    map[string]interface{}{},
+			},
+			Meta: map[string]interface{}{},
 		}},
-		TTL: 30,
+		Doc:  "https://docs.linksmart.eu/display/SC",
+		Meta: map[string]interface{}{},
+		TTL:  30,
 	}
 }
 
@@ -100,8 +109,8 @@ func sameServices(s1, s2 *Service, checkID bool) bool {
 		}
 	}
 
-	// Compare number of protocols
-	if len(s1.Docs) != len(s2.Docs) {
+	// Compare number of APIs
+	if len(s1.APIs) != len(s2.APIs) {
 		return false
 	}
 

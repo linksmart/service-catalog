@@ -18,7 +18,7 @@ const (
 	mqttServiceTTL               = 10 * time.Minute
 	mqttWaitTimout               = 5 * time.Second
 	mqttServiceHeartbeatInterval = mqttServiceTTL / 2
-	mqttServiceType              = "_mqtt._tcp"				// TODO update the default type
+	mqttServiceType              = "_mqtt._tcp" // TODO update the default type
 )
 
 type MQTTManager struct {
@@ -151,27 +151,27 @@ func (m *MQTTManager) registerAsService(client *MQTTClient) {
 	service := Service{
 		ID:          client.BrokerID,
 		Type:        mqttServiceType,
-		Title: 		 "This broker is registered as used by service catalog",
+		Title:       "This broker is registered as used by service catalog",
 		Description: "This broker is registered as used by service catalog",
 		Meta: map[string]interface{}{
 			"registrator": m.scID,
 		},
 		APIs: []API{
 			{
-				ID:				client.BrokerID + "-api",
-				Title: 			"SC primary broker's API",
-				Description: 	"SC primary broker's API",
-				Protocol: 		APITypeMQTT,
-				Endpoint: 		client.BrokerURI,
-				Spec: 			Spec{
-									Type:   "",
-									Url:    "",
-									Schema: map[string]interface{}{},
+				ID:          client.BrokerID + "-api",
+				Title:       "SC primary broker's API",
+				Description: "SC primary broker's API",
+				Protocol:    APITypeMQTT,
+				URL:         client.BrokerURI,
+				Spec: Spec{
+					MediaType: "",
+					URL:       "",
+					Schema:    map[string]interface{}{},
 				},
 				Meta: map[string]interface{}{},
 			},
 		},
-		TTL: uint(mqttServiceTTL / time.Second),
+		TTL: uint32(mqttServiceTTL / time.Second),
 	}
 	// keepalive starting from right now
 	for ; true; <-time.Tick(mqttServiceHeartbeatInterval) {

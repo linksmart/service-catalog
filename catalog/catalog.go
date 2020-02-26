@@ -4,6 +4,7 @@ package catalog
 
 import (
 	"fmt"
+	"mime"
 	"net/url"
 	"strings"
 	"time"
@@ -20,13 +21,10 @@ type Service struct {
 	APIs        []API                  `json:"apis"`
 	Meta        map[string]interface{} `json:"meta"`
 	Doc         string                 `json:"doc"`
-	TTL         uint                   `json:"ttl,omitempty"`
-	Created     time.Time              `json:"createdAt"`
-	Updated     time.Time              `json:"updatedAt"`
-	CreatedBy   string                 `json:"createdBy"`
-	UpdatedBy   string                 `json:"updatedBy"`
-	// Expires is the time when service will be removed from the system (unless updated within TTL)
-	Expires time.Time `json:"expiresAt,omitempty"`
+	TTL         uint32                 `json:"ttl"`
+	CreatedAt   time.Time              `json:"createdAt"`
+	UpdatedAt   time.Time              `json:"updatedAt"`
+	ExpiresAt   time.Time              `json:"expiresAt"` // the time when service will be removed from the system (unless updated within TTL)
 }
 
 // API - an API (e.g. REST API, MQTT API, etc.) exposed by the service
@@ -35,7 +33,7 @@ type API struct {
 	Title       string                 `json:"title"`
 	Description string                 `json:"description"`
 	Protocol    string                 `json:"protocol"`
-	Endpoint    string                 `json:"endpoint"`
+	URL         string                 `json:"url"`
 	Spec        Spec                   `json:"spec"`
 	Meta        map[string]interface{} `json:"meta"`
 }
@@ -44,9 +42,9 @@ type API struct {
 // spec in the form of an url to external specification document is preferred, if not present, the 'schema' could be used
 // Recommended - Request-response: OpenAPI/Swagger Spec, PubSub: AsyncAPI Spec
 type Spec struct {
-	Type   string                 `json:"mediaType"`
-	Url    string                 `json:"url"`
-	Schema map[string]interface{} `json:"schema"`
+	MediaType string                 `json:"mediaType"`
+	URL       string                 `json:"url"`
+	Schema    map[string]interface{} `json:"schema"`
 }
 
 // Validates the Service configuration
@@ -92,12 +90,16 @@ func (s Service) validate() error {
 			}
 		}
 
-		if _, err := url.Parse(API.Endpoint); err != nil {
-			return fmt.Errorf("invalid service API endpoint: %s", API.Endpoint)
+		if _, err := url.Parse(API.URL); err != nil {
+			return fmt.Errorf("invalid service API endpoint: %s", API.URL)
 		}
 
-		if _, err := url.Parse(API.Spec.Url); err != nil {
-			return fmt.Errorf("invalid API spec url: %s", API.Spec.Url)
+		if _, err := url.Parse(API.Spec.URL); err != nil {
+			return fmt.Errorf("invalid API spec url: %s", API.Spec.URL)
+		}
+
+		if _, _, err := mime.ParseMediaType(API.Spec.MediaType); err != nil {
+			return fmt.Errorf("invalid API Spec mediaType: %s: %s", API.Spec.MediaType, err)
 		}
 	}
 
