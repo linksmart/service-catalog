@@ -11,17 +11,24 @@ func TestValidate(t *testing.T) {
 
 	s := &Service{
 		ID:          "unique_id",
+		Type:        "_service-name._tcp",
 		Description: "service description",
-		Type:        "_test._tcp",
-		APIs:        map[string]string{"API 1": "http://localhost:8080"},
-		Docs: []Doc{{
-			Description: "doc description",
-			URL:         "http://doc.linksmart.eu/DC",
-			Type:        "text/html",
-			APIs:        []string{"API 1"},
+		APIs: []API{{
+			ID:          "api-id",
+			Title:       "API title",
+			Description: "API description",
+			Protocol:    "HTTPS",
+			URL:         "http://localhost:8080",
+			Spec: Spec{
+				MediaType: "application/vnd.oai.openapi+json;version=3.0",
+				URL:       "http://localhost:8080/swaggerSpec.json",
+				Schema:    map[string]interface{}{},
+			},
+			Meta: map[string]interface{}{},
 		}},
-		Meta: map[string]interface{}{"pub_key": "qwertyuiopasdfghjklzxcvbnm"},
-		TTL:  30,
+		Doc:  "https://docs.linksmart.eu/display/SC",
+		Meta: map[string]interface{}{},
+		TTL:  10,
 	}
 
 	err := s.validate()
@@ -52,25 +59,50 @@ func TestValidate(t *testing.T) {
 	}
 
 	bad = *s
-	bad.APIs = map[string]string{"API 1": ":://localhost"}
+	bad.APIs = []API{{
+		ID:          "api-id",
+		Title:       "API title",
+		Description: "API description",
+		Protocol:    "HTTPS",
+		URL:         ":://localhost",
+		Spec: Spec{
+			MediaType: "application/vnd.oai.openapi+json;version=3.0",
+			URL:       "http://localhost:8080/swaggerSpec.json",
+			Schema:    map[string]interface{}{},
+		},
+		Meta: map[string]interface{}{},
+	}}
 	err = bad.validate()
 	if err == nil {
 		t.Fatalf("Failed to invalidate a registration with invalid API url")
 	}
 
 	bad = *s
-	bad.Docs = []Doc{{URL: ":://doc.linksmart.eu/DC"}}
+	bad.APIs = []API{{
+		ID:          "api-id",
+		Title:       "API title",
+		Description: "API description",
+		Protocol:    "HTTPS",
+		URL:         "http://localhost:8080",
+		Spec: Spec{
+			MediaType: "//",
+			URL:       "http://localhost:8080/swaggerSpec.json",
+			Schema:    map[string]interface{}{},
+		},
+		Meta: map[string]interface{}{},
+	}}
+	err = bad.validate()
+	if err == nil {
+		t.Fatalf("Failed to invalidate a registration with invalid API Spec mediaType")
+	}
+
+	// No such validation needed for 'doc' after the schema change
+	/*bad = *s
+	bad.Doc = ":://doc.linksmart.eu/DC"
 	err = bad.validate()
 	if err == nil {
 		t.Fatalf("Failed to invalidate a registration with invalid doc url")
-	}
-
-	bad = *s
-	bad.Docs = []Doc{{Type: "//"}}
-	err = bad.validate()
-	if err == nil {
-		t.Fatalf("Failed to invalidate a registration with invalid doc MIME type")
-	}
+	}*/
 
 	bad = *s
 	bad.TTL = 0

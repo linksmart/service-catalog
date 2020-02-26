@@ -13,7 +13,7 @@ const (
 	APITypeHTTP = "HTTP"
 	APITypeMQTT = "MQTT"
 
-	MaxServiceTTL = 24 * 60 * 60 //in seconds
+	MaxServiceTTL = 2147483647 // in seconds i.e. 2^31 - 1 seconds or approx. 68 years, inspired my max TTL value for a DNS record. See RFC 2181
 )
 
 var SupportedBackends = map[string]bool{

@@ -1,9 +1,9 @@
 {
-  "description": "Standalone Service Catalog",
-  "dnssdEnabled": true,
+  "description": "eFactory Data Spine Service Registry",
+  "dnssdEnabled": false,
   "storage": {
-    "type": "memory",
-    "dsn": ""
+    "type": "leveldb",
+    "dsn": "./leveldb"
   },
   "http" : {
     "bindAddr": "0.0.0.0",
@@ -11,8 +11,8 @@
   },
   "mqtt":{
     "client" : {
-      "brokerID": "main_broker",
-      "brokerURI": "",
+      "brokerID": "mqtt-broker-at-localhost",
+      "brokerURI": "tcp://localhost:1883",
       "regTopics": [],
       "willTopics": [],
       "qos": 1,
@@ -20,9 +20,9 @@
       "password": ""
     },
     "additionalClients": [],
-    "commonRegTopics":  ["LS/v2/+/+/service/+"],
-    "commonWillTopics": ["LS/v2/+/+/will/+"],
-    "topicPrefix": "LS/v2/SC/"
+    "commonRegTopics":  ["sr/v3/cud/reg/+"],
+    "commonWillTopics": ["sr/v3/cud/dereg/+"],
+    "topicPrefix": "sr/v3/announcement/"
   },
   "auth": {
     "enabled": false,

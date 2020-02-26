@@ -44,10 +44,10 @@ func (c *Controller) add(s Service) (*Service, error) {
 		// System generated id
 		s.ID = uuid.NewV4().String()
 	}
-	s.Created = time.Now().UTC()
-	s.Updated = s.Created
+	s.CreatedAt = time.Now().UTC()
+	s.UpdatedAt = s.CreatedAt
 
-	s.Expires = s.Created.Add(time.Duration(s.TTL) * time.Second)
+	s.ExpiresAt = s.CreatedAt.Add(time.Duration(s.TTL) * time.Second)
 
 	err := c.storage.add(&s)
 	if err != nil {
@@ -87,8 +87,8 @@ func (c *Controller) update(id string, s Service) (*Service, error) {
 	ss.Doc = s.Doc
 	ss.Meta = s.Meta
 	ss.TTL = s.TTL
-	ss.Updated = time.Now().UTC()
-	ss.Expires = ss.Updated.Add(time.Duration(ss.TTL) * time.Second)
+	ss.UpdatedAt = time.Now().UTC()
+	ss.ExpiresAt = ss.UpdatedAt.Add(time.Duration(ss.TTL) * time.Second)
 
 	err = c.storage.update(id, ss)
 	if err != nil {
@@ -175,7 +175,7 @@ func (c *Controller) cleanExpired() {
 
 		for s := range c.storage.iterator() {
 			// remove if expiry is overdue by half-TTL
-			if t.After(s.Expires.Add(time.Duration(s.TTL/2) * time.Second)) {
+			if t.After(s.ExpiresAt.Add(time.Duration(s.TTL/2) * time.Second)) {
 				expiredServices = append(expiredServices, s)
 			}
 		}

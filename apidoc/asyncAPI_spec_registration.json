@@ -1,0 +1,171 @@
+{
+	"asyncapi": "2.0.0",
+	"info": {
+		"title": "Data Spine Service Registry's MQTT Service Registration/Deregistration API",
+		"version": "3.0.0",
+		"description": "### Lifecycle management of services using MQTT: \n\n * Service Registry (SR) also supports MQTT for service registration, updates and de-registration. \n\n * Service registration/update is similar to PUT method of REST API. Here, a service uses a pre-configured topic defined in the config file (see `commonRegTopics` and `regTopics`) for publishing the message. \n\n * The will message of the registered service is used to de-register it from the SR. The will topic(s) are also defined in the config file (see `commonWillTopics` and `willTopics`).",
+		"license": {
+			"name": "Apache 2.0",
+			"url": "https://www.apache.org/licenses/LICENSE-2.0"
+		}
+	},
+	"servers": {
+		"ds-message-broker-dev": {
+			"url": "broker.smecluster.com:{port}",
+			"description": "This RabbitMQ broker at SMECluster's servers is Data Spine's Message Broker for the development environment.",
+			"protocol": "mqtt",
+			"variables": {
+				"port": {
+					"description": "Secure connection (TLS) is available through port 8883. Currently MQTTs is not implemented",
+					"default": "1883",
+					"enum": [
+						"1883",
+						"8883"
+					]
+				}
+			}
+		}
+	},
+	"channels": {
+		"sr/v3/cud/reg/{serviceId}": {
+			"parameters": {
+				"serviceId": {
+					"$ref": "#/components/parameters/serviceId"
+				}
+			},
+			"publish": {
+				"summary": "MQTT topic for service registration/updates",
+				"description": "The Service Registry subscribes to this topic in `commonRegTopics` for service registrations and updates with the default qos of 1 as defined in the config file. \n\n Users can publish the service registration object as payload to this topic with a custom service `{serviceId}` for registring a service with that id. \n\n Example: \n\n `mosquitto_pub -h localhost -p 1883 -t 'sr/v3/cud/reg/id1' -f ./service_object.json`",
+				"message": {
+					"payload": {
+						"type": "object",
+						"$ref": "#/components/schemas/Service"
+					}
+				}
+			}
+		},
+		"sr/v3/cud/dereg/{serviceId}": {
+			"parameters": {
+				"serviceId": {
+					"$ref": "#/components/parameters/serviceId"
+				}
+			},
+			"publish": {
+				"summary": "MQTT topic for service de-registration",
+				"description": "The Service Registry subscribes to this topic in `commonWillTopics` for service de-registrations with the default qos of 1 as defined in the config file. \n\n Users can publish any random message as payload to this topic with the `{serviceId}` of the service to be de-registered. \n\n Example: \n\n `mosquitto_pub -h localhost -p 1883 -t 'sr/v3/cud/dereg/id1' –m 'foobar'`",
+				"message": {
+					"payload": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"parameters": {
+			"serviceId": {
+				"description": "The ID of the service.",
+				"schema": {
+					"type": "string"
+				}
+			}
+		},
+		"schemas": {
+			"Service": {
+				"title": "Service",
+				"type": "object",
+				"required": ["type"],
+				"properties": {
+					"id": {
+						"type": "string",
+						"readOnly": true
+					},
+					"type": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"meta": {
+						"type": "object"
+					},
+					"apis": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"type": "string"
+								},
+								"title": {
+									"type": "string"
+								},
+								"description": {
+									"type": "string"
+								},
+								"protocol": {
+									"type": "string"
+								},
+								"endpoint": {
+									"type": "string"
+								},
+								"spec": {
+									"type": "object",
+									"properties": {
+										"mediaType": {
+											"type": "string"
+										},
+										"url": {
+											"type": "string"
+										},
+										"schema": {
+											"type": "object"
+										}
+									}
+								},
+								"meta": {
+									"type": "object"
+								}
+							}
+						}
+					},
+					"doc": {
+						"type": "string"
+					},
+					"ttl": {
+						"type": "integer",
+						"format": "int64",
+						"minimum": 1,
+						"maximum": 2147483647
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time",
+						"readOnly": true
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time",
+						"readOnly": true
+					},
+					"createdBy": {
+						"type": "string",
+						"readOnly": true
+					},
+					"updatedBy": {
+						"type": "string",
+						"readOnly": true
+					},
+					"expiresAt": {
+						"type": "string",
+						"format": "date-time",
+						"readOnly": true
+					}
+				}
+			}
+		}
+	}
+}
