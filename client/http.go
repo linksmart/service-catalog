@@ -10,8 +10,8 @@ import (
 	"net/url"
 
 	"github.com/linksmart/go-sec/auth/obtainer"
-	"github.com/linksmart/service-catalog/v2/catalog"
-	"github.com/linksmart/service-catalog/v2/utils"
+	"github.com/linksmart/service-catalog/v3/catalog"
+	"github.com/linksmart/service-catalog/v3/utils"
 )
 
 // HTTPClient is the http client struct

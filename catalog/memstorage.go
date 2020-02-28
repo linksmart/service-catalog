@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/linksmart/service-catalog/v2/utils"
-
 	avl "github.com/ancientlore/go-avltree"
+	"github.com/linksmart/service-catalog/v3/utils"
 )
 
 // In-memory storage

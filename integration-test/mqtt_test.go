@@ -4,15 +4,13 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/linksmart/service-catalog/v2/client"
-
-	"strings"
-
 	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/linksmart/service-catalog/v2/catalog"
+	"github.com/linksmart/service-catalog/v3/catalog"
+	"github.com/linksmart/service-catalog/v3/client"
 	uuid "github.com/satori/go.uuid"
 )
 

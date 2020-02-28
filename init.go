@@ -4,7 +4,7 @@ package main
 
 import (
 	"github.com/farshidtz/elog"
-	"github.com/linksmart/service-catalog/v2/catalog"
+	"github.com/linksmart/service-catalog/v3/catalog"
 )
 
 var logger *elog.Logger

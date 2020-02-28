@@ -25,10 +25,16 @@ github.com/linksmart/go-sec/auth/keycloak/validator
 github.com/linksmart/go-sec/auth/obtainer
 github.com/linksmart/go-sec/auth/validator
 github.com/linksmart/go-sec/authz
-# github.com/miekg/dns v0.0.0-20170818131442-e4205768578d
+# github.com/linksmart/service-catalog/v2 v2.4.1
+github.com/linksmart/service-catalog/v2/catalog
+github.com/linksmart/service-catalog/v2/client
+github.com/linksmart/service-catalog/v2/utils
+# github.com/miekg/dns v1.1.27
 github.com/miekg/dns
 # github.com/oleksandr/bonjour v0.0.0-20160508152359-5dcf00d8b228
 github.com/oleksandr/bonjour
+# github.com/rs/cors v1.7.0
+github.com/rs/cors
 # github.com/satori/go.uuid v1.1.0
 github.com/satori/go.uuid
 # github.com/syndtr/goleveldb v1.0.0
@@ -46,7 +52,10 @@ github.com/syndtr/goleveldb/leveldb/table
 github.com/syndtr/goleveldb/leveldb/util
 # github.com/urfave/negroni v1.0.0
 github.com/urfave/negroni
-# golang.org/x/net v0.0.0-20180906233101-161cd47e91fd
+# golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
+golang.org/x/crypto/ed25519
+golang.org/x/crypto/ed25519/internal/edwards25519
+# golang.org/x/net v0.0.0-20190923162816-aa69164e4478
 golang.org/x/net/bpf
 golang.org/x/net/internal/iana
 golang.org/x/net/internal/socket
@@ -55,3 +64,6 @@ golang.org/x/net/ipv4
 golang.org/x/net/ipv6
 golang.org/x/net/proxy
 golang.org/x/net/websocket
+# golang.org/x/sys v0.0.0-20190924154521-2837fb4f24fe
+golang.org/x/sys/unix
+golang.org/x/sys/windows

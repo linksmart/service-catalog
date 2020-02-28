@@ -11,7 +11,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/linksmart/go-sec/authz"
-	"github.com/linksmart/service-catalog/v2/catalog"
+	"github.com/linksmart/service-catalog/v3/catalog"
 )
 
 type Config struct {

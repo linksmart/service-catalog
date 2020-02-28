@@ -6,7 +6,7 @@ import (
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/linksmart/service-catalog/v2/catalog"
+	"github.com/linksmart/service-catalog/v3/catalog"
 )
 
 func main() {
