@@ -11,16 +11,23 @@ import (
 func main() {
 	service := catalog.Service{
 		ID:          "unique_id",
-		Name:        "_service-name._tcp",
+		Type:        "_service-name._tcp",
 		Description: "service description",
-		APIs:        map[string]string{"API 1": "http://localhost:8080"},
-		Docs: []catalog.Doc{{
-			Description: "doc description",
-			URL:         "http://doc.linksmart.eu/DC",
-			Type:        "text/html",
-			APIs:        []string{"API 1"},
+		APIs: []catalog.API{{
+			ID:          "api-id",
+			Title:       "API title",
+			Description: "API description",
+			Protocol:    "HTTPS",
+			URL:         "http://localhost:8080",
+			Spec: catalog.Spec{
+				MediaType: "application/vnd.oai.openapi+json;version=3.0",
+				URL:       "http://localhost:8080/swaggerSpec.json",
+				Schema:    map[string]interface{}{},
+			},
+			Meta: map[string]interface{}{},
 		}},
-		Meta: map[string]interface{}{"pub_key": "qwertyuiopasdfghjklzxcvbnm"},
+		Doc:  "https://docs.linksmart.eu/display/SC",
+		Meta: map[string]interface{}{},
 		TTL:  10,
 	}
 

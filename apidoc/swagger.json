@@ -1,439 +1,500 @@
 {
-  "swagger": "2.0",
-  "info": {
-    "version": "2.3.4",
-    "title": "LinkSmart Service Catalog REST API"
+  "openapi" : "3.0.0",
+  "info" : {
+    "version" : "3.0.0",
+    "title" : "LinkSmart Service Catalog REST API"
   },
-  "basePath": "/",
-  "produces": [
-    "application/json"
-  ],
-  "tags": [
-    {
-      "name": "sc",
-      "description": "Service Catalog"
-    }
-  ],
-  "definitions": {
-    "Service": {
-      "title": "Service",
-      "type": "object",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "id": {
-          "type": "string",
-          "readOnly": true
-        },
-        "name": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "meta": {
-          "type": "object"
-        },
-        "apis": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "docs": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "description": {
-                "type": "string"
-              },
-              "apis": {
-                "type": "array",
-                "items": {
-                  "type": "string"
+  "tags" : [ {
+    "name" : "sc",
+    "description" : "Service Catalog"
+  } ],
+  "paths" : {
+    "/" : {
+      "get" : {
+        "tags" : [ "sc" ],
+        "summary" : "Retrieves API index.",
+        "parameters" : [ {
+          "$ref" : "#/components/parameters/ParamPage"
+        }, {
+          "$ref" : "#/components/parameters/ParamPerPage"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/APIIndex"
                 }
-              },
-              "type": {
-                "type": "string"
-              },
-              "url": {
-                "type": "string",
-                "format": "url"
               }
             }
-          }
-        },
-        "ttl": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "created": {
-          "type": "string",
-          "format": "date-time",
-          "readOnly": true
-        },
-        "updated": {
-          "type": "string",
-          "format": "date-time",
-          "readOnly": true
-        },
-        "expires": {
-          "type": "string",
-          "format": "date-time",
-          "readOnly": true
-        }
-      }
-    },
-    "APIIndex": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "services": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Service"
-          }
-        },
-        "page": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "per_page": {
-          "type": "integer"
-        },
-        "total": {
-          "type": "integer"
-        }
-      }
-    },
-    "ErrorResponse": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer"
-        },
-        "message": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "responses": {
-    "RespBadRequest": {
-      "description": "Bad Request",
-      "schema": {
-        "$ref": "#/definitions/ErrorResponse"
-      }
-    },
-    "RespUnauthorized": {
-      "description": "Unauthorized",
-      "schema": {
-        "$ref": "#/definitions/ErrorResponse"
-      }
-    },
-    "RespForbidden": {
-      "description": "Forbidden",
-      "schema": {
-        "$ref": "#/definitions/ErrorResponse"
-      }
-    },
-    "RespNotfound": {
-      "description": "Not Found",
-      "schema": {
-        "$ref": "#/definitions/ErrorResponse"
-      }
-    },
-    "RespConflict": {
-      "description": "Conflict",
-      "schema": {
-        "$ref": "#/definitions/ErrorResponse"
-      }
-    },
-    "RespInternalServerError": {
-      "description": "Internal Server Error",
-      "schema": {
-        "$ref": "#/definitions/ErrorResponse"
-      }
-    }
-  },
-  "parameters": {
-    "ParamPage": {
-      "name": "page",
-      "in": "query",
-      "description": "Page number in the pagination",
-      "required": false,
-      "type": "number",
-      "format": "integer"
-    },
-    "ParamPerPage": {
-      "name": "per_page",
-      "in": "query",
-      "description": "Number of entries per page",
-      "required": false,
-      "type": "number",
-      "format": "integer"
-    }
-  },
-  "paths": {
-    "/": {
-      "get": {
-        "tags": [
-          "sc"
-        ],
-        "summary": "Retrieves API index.",
-        "parameters": [
-          {
-            "$ref": "#/parameters/ParamPage"
           },
-          {
-            "$ref": "#/parameters/ParamPerPage"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "schema": {
-              "$ref": "#/definitions/APIIndex"
-            }
+          "401" : {
+            "$ref" : "#/components/responses/RespUnauthorized"
           },
-          "401": {
-            "$ref": "#/responses/RespUnauthorized"
+          "403" : {
+            "$ref" : "#/components/responses/RespForbidden"
           },
-          "403": {
-            "$ref": "#/responses/RespForbidden"
-          },
-          "500": {
-            "$ref": "#/responses/RespInternalServerError"
+          "500" : {
+            "$ref" : "#/components/responses/RespInternalServerError"
           }
         }
       },
-      "post": {
-        "tags": [
-          "sc"
-        ],
-        "summary": "Creates new `Service` object with a random UUID",
-        "parameters": [
-          {
-            "name": "service",
-            "description": "Service to be created",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/Service"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created successfully",
-            "headers": {
-              "Location": {
-                "description": "URL of the newly created Service",
-                "type": "string"
+      "post" : {
+        "tags" : [ "sc" ],
+        "summary" : "Creates new `Service` object with a random UUID",
+        "requestBody" : {
+          "$ref" : "#/components/requestBodies/Service"
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created successfully",
+            "headers" : {
+              "Location" : {
+                "description" : "URL of the newly created Service",
+                "schema" : {
+                  "type" : "string"
+                }
               }
             },
-            "schema": {
-              "$ref": "#/definitions/Service"
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Service"
+                }
+              }
             }
           },
-          "400": {
-            "$ref": "#/responses/RespBadRequest"
+          "400" : {
+            "$ref" : "#/components/responses/RespBadRequest"
           },
-          "401": {
-            "$ref": "#/responses/RespUnauthorized"
+          "401" : {
+            "$ref" : "#/components/responses/RespUnauthorized"
           },
-          "403": {
-            "$ref": "#/responses/RespForbidden"
+          "403" : {
+            "$ref" : "#/components/responses/RespForbidden"
           },
-          "500": {
-            "$ref": "#/responses/RespInternalServerError"
+          "500" : {
+            "$ref" : "#/components/responses/RespInternalServerError"
           }
         }
       }
     },
-    "/{id}": {
-      "get": {
-        "tags": [
-          "sc"
-        ],
-        "summary": "Retrieves a `Service` object",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of the `Service`",
-            "required": true,
-            "type": "string"
+    "/{id}" : {
+      "get" : {
+        "tags" : [ "sc" ],
+        "summary" : "Retrieves a `Service` object",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "ID of the `Service`",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "schema": {
-              "$ref": "#/definitions/Service"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Service"
+                }
+              }
             }
           },
-          "400": {
-            "$ref": "#/responses/RespBadRequest"
+          "400" : {
+            "$ref" : "#/components/responses/RespBadRequest"
           },
-          "401": {
-            "$ref": "#/responses/RespUnauthorized"
+          "401" : {
+            "$ref" : "#/components/responses/RespUnauthorized"
           },
-          "403": {
-            "$ref": "#/responses/RespForbidden"
+          "403" : {
+            "$ref" : "#/components/responses/RespForbidden"
           },
-          "404": {
-            "$ref": "#/responses/RespNotfound"
+          "404" : {
+            "$ref" : "#/components/responses/RespNotfound"
           },
-          "500": {
-            "$ref": "#/responses/RespInternalServerError"
+          "500" : {
+            "$ref" : "#/components/responses/RespInternalServerError"
           }
         }
       },
-      "put": {
-        "tags": [
-          "sc"
-        ],
-        "summary": "Updates the existing `Service` or creates a new one (with the provided ID)",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of the `Service`",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "service",
-            "description": "Service to be created",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/Service"
-            }
+      "put" : {
+        "tags" : [ "sc" ],
+        "summary" : "Updates the existing `Service` or creates a new one (with the provided ID)",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "ID of the `Service`",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Service updated successfully",
-            "schema": {
-              "$ref": "#/definitions/Service"
+        } ],
+        "requestBody" : {
+          "$ref" : "#/components/requestBodies/Service"
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Service updated successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Service"
+                }
+              }
             }
           },
-          "201": {
-            "description": "A new service is created",
-            "schema": {
-              "$ref": "#/definitions/Service"
+          "201" : {
+            "description" : "A new service is created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Service"
+                }
+              }
             }
           },
-          "400": {
-            "$ref": "#/responses/RespBadRequest"
+          "400" : {
+            "$ref" : "#/components/responses/RespBadRequest"
           },
-          "401": {
-            "$ref": "#/responses/RespUnauthorized"
+          "401" : {
+            "$ref" : "#/components/responses/RespUnauthorized"
           },
-          "403": {
-            "$ref": "#/responses/RespForbidden"
+          "403" : {
+            "$ref" : "#/components/responses/RespForbidden"
           },
-          "409": {
-            "$ref": "#/responses/RespConflict"
+          "409" : {
+            "$ref" : "#/components/responses/RespConflict"
           },
-          "500": {
-            "$ref": "#/responses/RespInternalServerError"
+          "500" : {
+            "$ref" : "#/components/responses/RespInternalServerError"
           }
         }
       },
-      "delete": {
-        "tags": [
-          "sc"
-        ],
-        "summary": "Deletes the `Service`",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of the `Service`",
-            "required": true,
-            "type": "string"
+      "delete" : {
+        "tags" : [ "sc" ],
+        "summary" : "Deletes the `Service`",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "ID of the `Service`",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful response"
           },
-          "401": {
-            "$ref": "#/responses/RespUnauthorized"
+          "401" : {
+            "$ref" : "#/components/responses/RespUnauthorized"
           },
-          "403": {
-            "$ref": "#/responses/RespForbidden"
+          "403" : {
+            "$ref" : "#/components/responses/RespForbidden"
           },
-          "404": {
-            "$ref": "#/responses/RespNotfound"
+          "404" : {
+            "$ref" : "#/components/responses/RespNotfound"
           },
-          "500": {
-            "$ref": "#/responses/RespInternalServerError"
+          "500" : {
+            "$ref" : "#/components/responses/RespInternalServerError"
           }
         }
       }
     },
-    "/{jsonpath}/{operator}/{value}": {
-      "get": {
-        "tags": [
-          "sc"
-        ],
-        "summary": "Service filtering API",
-        "description": "The filtering API enables service filtering based on a given path, operator, and value. Below are few examples:\n* Filter all MQTT brokers:\n  `/name/prefix/_mqtt`\n* Filter all services operating on TCP\n  `/name/suffix/_tcp`\n* Filter all services based on address meta field:\n  `/meta.address/contains/Bonn`\n",
-        "parameters": [
-          {
-            "name": "jsonpath",
-            "in": "path",
-            "description": "The dot notation path to search for in service objects",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "operator",
-            "in": "path",
-            "description": "One of (equals, prefix, suffix, contains) string comparison operators",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "value",
-            "in": "path",
-            "description": "The intended value, prefix, suffix, or substring identified by the jsonpath",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "$ref": "#/parameters/ParamPage"
-          },
-          {
-            "$ref": "#/parameters/ParamPerPage"
+    "/{jsonpath}/{operator}/{value}" : {
+      "get" : {
+        "tags" : [ "sc" ],
+        "summary" : "Service filtering API",
+        "description" : "The filtering API enables service filtering based on a given path, operator, and value. Below are few examples:\n* Filter all services belonging to PlatformX (convention for 'type' followed: <platform-name>.<service-type>):\n  `/type/prefix/PlatformX`\n* Filter all services that have MQTT API(s):\n  `/apis.protocol/equals/MQTT`\n* Filter all services based on address meta field:\n  `/meta.address/contains/Bonn`\n",
+        "parameters" : [ {
+          "name" : "jsonpath",
+          "in" : "path",
+          "description" : "The dot notation path to search for in service objects",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Succcessful response",
-            "schema": {
-              "$ref": "#/definitions/APIIndex"
+        }, {
+          "name" : "operator",
+          "in" : "path",
+          "description" : "One of (equals, prefix, suffix, contains) string comparison operators",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "value",
+          "in" : "path",
+          "description" : "The intended value, prefix, suffix, or substring identified by the jsonpath",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "$ref" : "#/components/parameters/ParamPage"
+        }, {
+          "$ref" : "#/components/parameters/ParamPerPage"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Succcessful response",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/APIIndex"
+                }
+              }
             }
           },
-          "401": {
-            "$ref": "#/responses/RespUnauthorized"
+          "401" : {
+            "$ref" : "#/components/responses/RespUnauthorized"
           },
-          "403": {
-            "$ref": "#/responses/RespForbidden"
+          "403" : {
+            "$ref" : "#/components/responses/RespForbidden"
           },
-          "500": {
-            "$ref": "#/responses/RespInternalServerError"
+          "500" : {
+            "$ref" : "#/components/responses/RespInternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "components" : {
+    "parameters" : {
+      "ParamPage" : {
+        "name" : "page",
+        "in" : "query",
+        "description" : "Page number in the pagination",
+        "required" : false,
+        "schema" : {
+          "type" : "number",
+          "format" : "integer"
+        }
+      },
+      "ParamPerPage" : {
+        "name" : "per_page",
+        "in" : "query",
+        "description" : "Number of entries per page",
+        "required" : false,
+        "schema" : {
+          "type" : "number",
+          "format" : "integer"
+        }
+      }
+    },
+    "responses" : {
+      "RespBadRequest" : {
+        "description" : "Bad Request",
+        "content" : {
+          "application/json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "RespUnauthorized" : {
+        "description" : "Unauthorized",
+        "content" : {
+          "application/json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "RespForbidden" : {
+        "description" : "Forbidden",
+        "content" : {
+          "application/json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "RespNotfound" : {
+        "description" : "Not Found",
+        "content" : {
+          "application/json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "RespConflict" : {
+        "description" : "Conflict",
+        "content" : {
+          "application/json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "RespInternalServerError" : {
+        "description" : "Internal Server Error",
+        "content" : {
+          "application/json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "requestBodies" : {
+      "Service" : {
+        "content" : {
+          "application/json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/Service"
+            }
+          }
+        },
+        "description" : "Service to be created",
+        "required" : true
+      }
+    },
+    "schemas" : {
+      "Service" : {
+        "title" : "Service",
+        "type" : "object",
+        "required" : [ "type" ],
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "readOnly" : true
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "meta" : {
+            "type" : "object"
+          },
+          "apis" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
+                "title" : {
+                  "type" : "string"
+                },
+                "description" : {
+                  "type" : "string"
+                },
+                "protocol" : {
+                  "type" : "string"
+                },
+                "endpoint" : {
+                  "type" : "string"
+                },
+                "spec" : {
+                  "type" : "object",
+                  "properties" : {
+                    "mediaType" : {
+                      "type" : "string"
+                    },
+                    "url" : {
+                      "type" : "string"
+                    },
+                    "schema" : {
+                      "type" : "object"
+                    }
+                  }
+                },
+                "meta" : {
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "doc" : {
+            "type" : "string"
+          },
+          "ttl" : {
+            "type" : "integer",
+            "format" : "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "readOnly" : true
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "readOnly" : true
+          },
+          "createdBy" : {
+            "type" : "string",
+            "readOnly" : true
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "readOnly" : true
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "readOnly" : true
+          }
+        }
+      },
+      "APIIndex" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "services" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Service"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "per_page" : {
+            "type" : "integer"
+          },
+          "total" : {
+            "type" : "integer"
+          }
+        }
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer"
+          },
+          "message" : {
+            "type" : "string"
           }
         }
       }

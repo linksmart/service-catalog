@@ -16,23 +16,35 @@ import (
 type Service struct {
 	ID          string                 `json:"id"`
 	Description string                 `json:"description"`
-	Name        string                 `json:"name"`
-	APIs        map[string]string      `json:"apis"`
-	Docs        []Doc                  `json:"docs"`
+	Title       string                 `json:"title"`
+	Type        string                 `json:"type"`
+	APIs        []API                  `json:"apis"`
 	Meta        map[string]interface{} `json:"meta"`
-	TTL         uint                   `json:"ttl,omitempty"`
-	Created     time.Time              `json:"created"`
-	Updated     time.Time              `json:"updated"`
-	// Expires is the time when service will be removed from the system (Only when TTL is set)
-	Expires time.Time `json:"expires,omitempty"`
+	Doc         string                 `json:"doc"`
+	TTL         uint32                 `json:"ttl"`
+	CreatedAt   time.Time              `json:"createdAt"`
+	UpdatedAt   time.Time              `json:"updatedAt"`
+	ExpiresAt   time.Time              `json:"expiresAt"` // the time when service will be removed from the system (unless updated within TTL)
 }
 
-// Doc is an external resource documenting the service and/or APIs. E.g. OpenAPI specs, Wiki page
-type Doc struct {
-	Description string   `json:"description"`
-	Type        string   `json:"type"`
-	URL         string   `json:"url"`
-	APIs        []string `json:"apis"`
+// API - an API (e.g. REST API, MQTT API, etc.) exposed by the service
+type API struct {
+	ID          string                 `json:"id"`
+	Title       string                 `json:"title"`
+	Description string                 `json:"description"`
+	Protocol    string                 `json:"protocol"`
+	URL         string                 `json:"url"`
+	Spec        Spec                   `json:"spec"`
+	Meta        map[string]interface{} `json:"meta"`
+}
+
+// API.spec - the complete specification of the interface exposed by the service
+// spec in the form of an url to external specification document is preferred, if not present, the 'schema' could be used
+// Recommended - Request-response: OpenAPI/Swagger Spec, PubSub: AsyncAPI Spec
+type Spec struct {
+	MediaType string                 `json:"mediaType"`
+	URL       string                 `json:"url"`
+	Schema    map[string]interface{} `json:"schema"`
 }
 
 // Validates the Service configuration
@@ -43,42 +55,52 @@ func (s Service) validate() error {
 	}
 	_, err := url.Parse("http://example.com/" + s.ID)
 	if err != nil {
-		return fmt.Errorf("service is is no valid invalid: %v", err)
+		return fmt.Errorf("service id is invalid: %v", err)
 	}
 
-	if s.Name == "" {
-		return fmt.Errorf("service name not defined")
+	if s.Type == "" {
+		return fmt.Errorf("service type not defined")
 	}
-	if strings.ContainsAny(s.Name, " ") {
-		return fmt.Errorf("service name must not contain spaces")
+	if strings.ContainsAny(s.Type, " ") {
+		return fmt.Errorf("service type must not contain spaces")
 	}
 
+	// If a service needs to use the TTL functionality, TTL should be between 1 and 2147483647
+	// The appropriately value for TTL should be provided by the service provider based on how critical the availability of his/her service is
 	if s.TTL == 0 || s.TTL > MaxServiceTTL {
-		return fmt.Errorf("service TTL should be between 1 and 86400 (i.e. 1 second to one day)")
-	}
-	for _, URL := range s.APIs {
-		if _, err := url.Parse(URL); err != nil {
-			return fmt.Errorf("invalid service API url: %s", URL)
-		}
+		return fmt.Errorf("service TTL should be between 1 and %v (seconds)", MaxServiceTTL)
 	}
 
-	for _, doc := range s.Docs {
-		// if doc.Type == "" {
-		// 	return fmt.Errorf("doc type not defined")
-		// }
-		if _, _, err := mime.ParseMediaType(doc.Type); err != nil {
-			return fmt.Errorf("invalid service doc MIME type: %s: %s", doc.URL, err)
+	// TODO: request payload validations as described below (create an issue to discuss and finalize):
+	// mandatory: type (done), title, apis[x].title, apis[x].protocol?, apis[x].endpoint?, apis[x].spec?
+
+	for i, API := range s.APIs {
+
+		if API.ID == "" {
+			return fmt.Errorf("API id not defined")
 		}
-		if _, err := url.Parse(doc.URL); err != nil {
-			return fmt.Errorf("invalid service doc url: %s", doc.URL)
+
+		if strings.ContainsAny(API.ID, " ") {
+			return fmt.Errorf("API id must not contain spaces")
 		}
-		// if len(s.APIs) != 0 {
-		// 	for _, api := range doc.APIs {
-		// 		if _, found := s.APIs[api]; !found {
-		// 			return fmt.Errorf("service API name in doc does not match any apis: %s", api)
-		// 		}
-		// 	}
-		// }
+
+		for _, nextAPI := range s.APIs[i+1:] {
+			if API.ID == nextAPI.ID {
+				return fmt.Errorf("API id must be unique among the IDs of APIs of this service")
+			}
+		}
+
+		if _, err := url.Parse(API.URL); err != nil {
+			return fmt.Errorf("invalid service API endpoint: %s", API.URL)
+		}
+
+		if _, err := url.Parse(API.Spec.URL); err != nil {
+			return fmt.Errorf("invalid API spec url: %s", API.Spec.URL)
+		}
+
+		if _, _, err := mime.ParseMediaType(API.Spec.MediaType); err != nil {
+			return fmt.Errorf("invalid API Spec mediaType: %s: %s", API.Spec.MediaType, err)
+		}
 	}
 
 	return nil

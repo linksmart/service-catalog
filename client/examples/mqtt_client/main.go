@@ -21,16 +21,23 @@ func main() {
 	// Create and serialize registration object
 	service := catalog.Service{
 		ID:          "unique_id2",
-		Name:        "_service-name._tcp",
+		Type:        "_service-name._tcp",
 		Description: "service description",
-		APIs:        map[string]string{"Data": "mqtt://test.mosquitto.org:1883"},
-		Docs: []catalog.Doc{{
-			Description: "doc description",
-			URL:         "http://doc.linksmart.eu/DC",
-			Type:        "text/html",
-			APIs:        []string{"Data"},
+		APIs: []catalog.API{{
+			ID:          "api-id",
+			Title:       "API title",
+			Description: "API description",
+			Protocol:    "HTTPS",
+			URL:         "http://localhost:8080",
+			Spec: catalog.Spec{
+				MediaType: "application/vnd.oai.openapi+json;version=3.0",
+				URL:       "http://localhost:8080/swaggerSpec.json",
+				Schema:    map[string]interface{}{},
+			},
+			Meta: map[string]interface{}{},
 		}},
-		Meta: map[string]interface{}{"pub_key": "qwertyuiopasdfghjklzxcvbnm"},
+		Doc:  "https://docs.linksmart.eu/display/SC",
+		Meta: map[string]interface{}{},
 		TTL:  10,
 	}
 	b, _ := json.Marshal(service)
