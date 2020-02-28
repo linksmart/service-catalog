@@ -1,4 +1,4 @@
-# github.com/ancientlore/go-avltree v0.0.0-20180928192319-da83409fdfb7
+# github.com/ancientlore/go-avltree v1.0.1
 github.com/ancientlore/go-avltree
 # github.com/dgrijalva/jwt-go v3.0.0+incompatible
 github.com/dgrijalva/jwt-go
@@ -25,10 +25,6 @@ github.com/linksmart/go-sec/auth/keycloak/validator
 github.com/linksmart/go-sec/auth/obtainer
 github.com/linksmart/go-sec/auth/validator
 github.com/linksmart/go-sec/authz
-# github.com/linksmart/service-catalog/v2 v2.4.1
-github.com/linksmart/service-catalog/v2/catalog
-github.com/linksmart/service-catalog/v2/client
-github.com/linksmart/service-catalog/v2/utils
 # github.com/miekg/dns v1.1.27
 github.com/miekg/dns
 # github.com/oleksandr/bonjour v0.0.0-20160508152359-5dcf00d8b228
