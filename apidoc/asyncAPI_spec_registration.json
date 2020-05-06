@@ -109,7 +109,7 @@
 								"protocol": {
 									"type": "string"
 								},
-								"endpoint": {
+								"url": {
 									"type": "string"
 								},
 								"spec": {
@@ -149,14 +149,6 @@
 					"updatedAt": {
 						"type": "string",
 						"format": "date-time",
-						"readOnly": true
-					},
-					"createdBy": {
-						"type": "string",
-						"readOnly": true
-					},
-					"updatedBy": {
-						"type": "string",
 						"readOnly": true
 					},
 					"expiresAt": {
