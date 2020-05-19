@@ -7,11 +7,11 @@
 LinkSmart Service Catalog is a registry enabling discovery of other web services via a RESTful API or through an MQTT broker.
  
 ## Getting Started
-* Read the [Documentation](https://docs.linksmart.eu/display/SC)
+* Read the [Wiki](https://github.com/linksmart/service-catalog/wiki)
 
 ## Deployment
 ### Configuration
-The configuration is possible using a JSON file or by setting environment variables. It is described [here](https://docs.linksmart.eu/display/SC/Configuration).
+The configuration is possible using a JSON file or by setting environment variables. It is described [here](https://github.com/linksmart/service-catalog/wiki/Configuration).
 
 ### Docker
 The following command runs the latest release of service catalog with the default configurations:
