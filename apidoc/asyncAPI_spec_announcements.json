@@ -1,9 +1,9 @@
 {
 	"asyncapi": "2.0.0",
 	"info": {
-		"title": "Data Spine Service Registry's MQTT Service Announcement API",
+		"title": "Service Catalog's MQTT Service Announcement API",
 		"version": "3.0.0",
-		"description": "### Service registration status announcements over MQTT: \n\n * Service Registry announces the service registration and updates via MQTT using retain messages. \n\n * Service Registry also announces the service de-registration (on explicit de-registration request via REST/MQTT API or on expiration due to the set TTL) via MQTT.",
+		"description": "### Service registration status announcements over MQTT: \n\n * Service Catalog announces the service registration and updates via MQTT using retain messages. \n\n * Service Catalog also announces the service de-registration (on explicit de-registration request via REST/MQTT API or on expiration due to the set TTL) via MQTT.",
 		"license": {
 			"name": "Apache 2.0",
 			"url": "https://www.apache.org/licenses/LICENSE-2.0"
@@ -11,12 +11,12 @@
 	},
 	"servers": {
 		"ds-message-broker-dev": {
-			"url": "broker.smecluster.com:{port}",
-			"description": "This RabbitMQ broker at SMECluster's servers is Data Spine's Message Broker for the development environment.",
+			"url": "localhost:{port}",
+			"description": "Message Broker at localhost",
 			"protocol": "mqtt",
 			"variables": {
 				"port": {
-					"description": "Secure connection (TLS) is available through port 8883. Currently MQTTs is not implemented",
+					"description": "Secure connection (TLS) is available through port 8883.",
 					"default": "1883",
 					"enum": [
 						"1883",
@@ -38,7 +38,7 @@
 			},
 			"subscribe": {
 				"summary": "MQTT topic for service registration/update announcements",
-				"description": "The Service Registry publishes to this topic when the service with ID `{serviceId}` and type {serviceType} is registered or whenever it is updated. The service registration/update messages are retained. Default qos used for the publish operation is 1. \n\n Users can subscribe to this topic to monitor service registration/updates. \n\n Examples: \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/efactory.marketplace-service/eb647488-a53b-4223-89ef-63ae2ce826ae/alive'` \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/efactory.marketplace-service/+/alive'` \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/+/+/alive'`",
+				"description": "The Service Catalog publishes to this topic when the service with ID `{serviceId}` and type {serviceType} is registered or whenever it is updated. The service registration/update messages are retained. Default qos used for the publish operation is 1. \n\n Users can subscribe to this topic to monitor service registration/updates. \n\n Examples: \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/platform1.marketplace-service/eb647488-a53b-4223-89ef-63ae2ce826ae/alive'` \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/platform1.marketplace-service/+/alive'` \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/+/+/alive'`",
 				"message": {
 					"payload": {
 						"type": "object",
@@ -58,7 +58,7 @@
 			},
 			"subscribe": {
 				"summary": "MQTT topic for service de-registration announcements",
-				"description": "The Service Registry publishes to this topic when the service with ID `{serviceId}` and type {serviceType} is de-registered. The service de-registration messages are not retained. Default qos used for the publish operation is 1. Upon de-registration of services, the associated retained messages of service registration/updates (topic: `sr/v3/announcement/{serviceType}/{serviceId}/alive`) are also removed. \n\n Users can subscribe to this topic to get notified when services become unavailable i.e. when they are removed from the Service Registry upon explicit de-registration or expiration. \n\n Examples: \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/efactory.marketplace-service/eb647488-a53b-4223-89ef-63ae2ce826ae/dead'` \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/efactory.marketplace-service/+/dead'` \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/+/+/dead'`",
+				"description": "The Service Catalog publishes to this topic when the service with ID `{serviceId}` and type {serviceType} is de-registered. The service de-registration messages are not retained. Default qos used for the publish operation is 1. Upon de-registration of services, the associated retained messages of service registration/updates (topic: `sr/v3/announcement/{serviceType}/{serviceId}/alive`) are also removed. \n\n Users can subscribe to this topic to get notified when services become unavailable i.e. when they are removed from the Service Catalog upon explicit de-registration or expiration. \n\n Examples: \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/platform1.marketplace-service/eb647488-a53b-4223-89ef-63ae2ce826ae/dead'` \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/platform1.marketplace-service/+/dead'` \n\n * `mosquitto_sub -h localhost -p 1883 -t 'sr/v3/announcement/+/+/dead'`",
 				"message": {
 					"payload": {
 						"type": "string"
