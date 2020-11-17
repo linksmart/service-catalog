@@ -1,5 +1,5 @@
 {
-  "description": "eFactory Data Spine Service Registry",
+  "description": "Service Catalog instance",
   "dnssdEnabled": false,
   "storage": {
     "type": "leveldb",
@@ -11,8 +11,8 @@
   },
   "mqtt":{
     "client" : {
-      "brokerID": "mqtt-broker-at-localhost",
-      "brokerURI": "tcp://localhost:1883",
+      "brokerID": "main-broker",
+      "brokerURI": "",
       "regTopics": [],
       "willTopics": [],
       "qos": 1,
@@ -20,9 +20,9 @@
       "password": ""
     },
     "additionalClients": [],
-    "commonRegTopics":  ["sr/v3/cud/reg/+"],
-    "commonWillTopics": ["sr/v3/cud/dereg/+"],
-    "topicPrefix": "sr/v3/announcement/"
+    "commonRegTopics":  ["sc/v3/reg/+"],
+    "commonWillTopics": ["sc/v3/dereg/+"],
+    "topicPrefix": "sc/v3/announcement/"
   },
   "auth": {
     "enabled": false,
