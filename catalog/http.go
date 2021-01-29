@@ -181,6 +181,10 @@ func (a *HttpAPI) Put(w http.ResponseWriter, req *http.Request) {
 		a.ErrorResponse(w, http.StatusBadRequest, "Error processing the request:", err.Error())
 		return
 	}
+	if s.ID != "" && s.ID != params["id"] {
+		a.ErrorResponse(w, http.StatusConflict, "Mismatching IDs in the path and the body")
+		return
+	}
 
 	updatedS, err := a.controller.update(params["id"], s)
 	if err != nil {
