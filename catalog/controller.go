@@ -80,6 +80,7 @@ func (c *Controller) update(id string, s Service) (*Service, error) {
 		return nil, err
 	}
 
+	s.ID = id
 	ss.Title = s.Title
 	ss.Description = s.Description
 	ss.Type = s.Type
