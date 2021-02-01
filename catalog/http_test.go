@@ -325,7 +325,7 @@ func TestUpdate(t *testing.T) {
 		t.Fatalf("The retrieved service is not the same as the added one:\n Added:\n %v \n Retrieved: \n %v", service2, service3)
 	}
 
-	// Create with user-defined ID (PUT for creation)
+	// Check for HTTP 409 response when creating a service with mismatching IDs in URL Path and body (PUT for creation)
 	service4 := MockedService("1")
 	b, _ = json.Marshal(service4)
 	url = ts.URL + "/service123"
@@ -335,18 +335,8 @@ func TestUpdate(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	if res.StatusCode != http.StatusCreated {
-		t.Fatalf("Server should return %v, got instead: %v (%s)", http.StatusCreated, res.StatusCode, res.Status)
-	}
-
-	// Check if user-defined id is in response
-	location, err := res.Location()
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-	parts := strings.Split(location.String(), "/")
-	if parts[len(parts)-1] != "service123" {
-		t.Fatalf("User-defined id is not returned in location. Getting %v\n", location.String())
+	if res.StatusCode != http.StatusConflict {
+		t.Fatalf("Server should return %v, got instead: %v (%s)", http.StatusConflict, res.StatusCode, res.Status)
 	}
 }
 
