@@ -11,7 +11,7 @@ env:
 
 install: true # skips default installation step
 
-script:
+script: # build and test
   - docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build unit-test
   - docker-compose -f docker-compose.test.yml up --abort-on-container-exit --build integration-test
 

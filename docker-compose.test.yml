@@ -3,7 +3,7 @@ version: '2.3'
 
 services:
   sc:
-    build:
+    build: # Build with versions. The CI relies on this
       context: .
       args:
         version: ${VERSION}
