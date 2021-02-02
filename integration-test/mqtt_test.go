@@ -174,7 +174,7 @@ func TestCreateDelete(t *testing.T) {
 	serviceId := uuid.NewV4().String()
 	service := MockedService(serviceId)
 	b, _ := json.Marshal(service)
-	manager.client.Publish("sr/v3/cud/reg/"+serviceId, 1, false, b)
+	manager.client.Publish("sc/v3/cud/reg/"+serviceId, 1, false, b)
 
 	time.Sleep(sleepTime)
 	//verify if the service is created
@@ -191,7 +191,7 @@ func TestCreateDelete(t *testing.T) {
 	//destroy the service
 	time.Sleep(sleepTime)
 
-	if token := manager.client.Publish("sr/v3/cud/dereg/"+service.ID, 1, false, b); token.Wait() && token.Error() != nil {
+	if token := manager.client.Publish("sc/v3/cud/dereg/"+service.ID, 1, false, b); token.Wait() && token.Error() != nil {
 		t.Fatalf("Error publishing: %s", token.Error())
 	}
 
@@ -216,7 +216,7 @@ func TestCreateUpdate(t *testing.T) {
 	//Publish a service
 	service := MockedService(uuid.NewV4().String())
 	b, _ := json.Marshal(service)
-	manager.client.Publish("sr/v3/cud/reg/someid", 1, false, b)
+	manager.client.Publish("sc/v3/cud/reg/someid", 1, false, b)
 	// ID in the service object is given preference over ID passed in the topic (here: 'someid')
 	// Hence, 'someid' will be ignored here
 
@@ -234,7 +234,7 @@ func TestCreateUpdate(t *testing.T) {
 	//update the service
 	service.TTL = 200
 	b, _ = json.Marshal(service)
-	if token := manager.client.Publish("sr/v3/cud/reg/"+service.ID, 1, false, b); token.Wait() && token.Error() != nil {
+	if token := manager.client.Publish("sc/v3/cud/reg/"+service.ID, 1, false, b); token.Wait() && token.Error() != nil {
 		t.Fatalf("Error publishing: %s", token.Error())
 	}
 
@@ -257,7 +257,7 @@ func TestCreateDeleteWithIdInTopic(t *testing.T) {
 	service := MockedService("")
 	service.ID = "" // clear the id field
 	b, _ := json.Marshal(service)
-	manager.client.Publish("sr/v3/cud/reg/"+id, 1, false, b)
+	manager.client.Publish("sc/v3/cud/reg/"+id, 1, false, b)
 
 	time.Sleep(sleepTime)
 	//verify if the service is created
@@ -270,7 +270,7 @@ func TestCreateDeleteWithIdInTopic(t *testing.T) {
 	//destroy the service
 	time.Sleep(sleepTime)
 
-	if token := manager.client.Publish("sr/v3/cud/dereg/"+id, 1, false, b); token.Wait() && token.Error() != nil {
+	if token := manager.client.Publish("sc/v3/cud/dereg/"+id, 1, false, b); token.Wait() && token.Error() != nil {
 		t.Fatalf("Error publishing: %s", token.Error())
 	}
 
@@ -304,7 +304,7 @@ func TestAnnouncement(t *testing.T) {
 	gotDead := make(chan bool)
 	deleteRetain := make(chan bool)
 
-	aliveTopic := "sr/v3/announcement/" + service.Type + "/" + id + "/+"
+	aliveTopic := "sc/v3/announcement/" + service.Type + "/" + id + "/+"
 	log.Println("subscribing:", aliveTopic)
 	if token1 := manager.client.Subscribe(aliveTopic, 1, func(client paho.Client, msg paho.Message) {
 		defer log.Println("Got a message exit", msg.Topic())
@@ -350,7 +350,7 @@ func TestAnnouncement(t *testing.T) {
 	}
 
 	b, _ := json.Marshal(service)
-	if token3 := manager.client.Publish("sr/v3/cud/reg/"+id, 1, false, b); token3.Wait() && token3.Error() != nil {
+	if token3 := manager.client.Publish("sc/v3/cud/reg/"+id, 1, false, b); token3.Wait() && token3.Error() != nil {
 		t.Fatalf("Error publishing: %s", token3.Error())
 	}
 
@@ -363,7 +363,7 @@ func TestAnnouncement(t *testing.T) {
 	}
 
 	b, _ = json.Marshal(updateService)
-	if token4 := manager.client.Publish("sr/v3/cud/reg/"+id, 1, false, b); token4.Wait() && token4.Error() != nil {
+	if token4 := manager.client.Publish("sc/v3/cud/reg/"+id, 1, false, b); token4.Wait() && token4.Error() != nil {
 		t.Fatalf("Error publishing: %s", token4.Error())
 	}
 
@@ -375,7 +375,7 @@ func TestAnnouncement(t *testing.T) {
 		t.Fatalf("timeout waiting for update announcement")
 	}
 
-	if token5 := manager.client.Publish("sr/v3/cud/dereg/"+id, 1, false, b); token5.Wait() && token5.Error() != nil {
+	if token5 := manager.client.Publish("sc/v3/cud/dereg/"+id, 1, false, b); token5.Wait() && token5.Error() != nil {
 		t.Fatalf("Error publishing: %s", token5.Error())
 	}
 
