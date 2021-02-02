@@ -1,5 +1,5 @@
 {
-  "description": "Service Catalog example. This configuration is used in integration tests.",
+  "description": "Service Catalog example. This configuration is used as default by docker container and integration tests.",
   "dnssdEnabled": false,
   "storage": {
     "type": "leveldb",
