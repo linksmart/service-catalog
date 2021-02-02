@@ -25,6 +25,7 @@ type MQTTConf struct {
 }
 
 type MQTTClientConf struct {
+	Disabled   bool     `json:"disabled"`
 	BrokerID   string   `json:"brokerID"`
 	BrokerURI  string   `json:"brokerURI"`
 	RegTopics  []string `json:"regTopics"`
@@ -40,7 +41,7 @@ type MQTTClientConf struct {
 func (c MQTTConf) Validate() error {
 
 	for _, client := range append(c.AdditionalClients, c.Client) {
-		if client.BrokerURI == "" {
+		if client.Disabled {
 			continue
 		}
 		_, err := url.Parse(client.BrokerURI)

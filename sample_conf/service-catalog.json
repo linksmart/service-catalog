@@ -11,8 +11,9 @@
   },
   "mqtt":{
     "client" : {
+      "disabled": true,
       "brokerID": "main-broker",
-      "brokerURI": "",
+      "brokerURI": "tcp://localhost:1883",
       "regTopics": [],
       "willTopics": [],
       "qos": 1,

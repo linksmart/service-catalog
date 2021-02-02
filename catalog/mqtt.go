@@ -46,7 +46,7 @@ func StartMQTTManager(controller *Controller, mqttConf MQTTConf, scID string) {
 	controller.AddListener(m)
 
 	for _, clientConf := range append(mqttConf.AdditionalClients, mqttConf.Client) {
-		if clientConf.BrokerURI == "" {
+		if clientConf.Disabled {
 			continue
 		}
 
