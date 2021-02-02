@@ -33,6 +33,7 @@ services:
       - broker
     environment:
       - SC_MQTT_CLIENT_BROKERURI=tcp://broker:1883
+      - SC_MQTT_CLIENT_DISABLED=false
 
   integration-test:
     build:
