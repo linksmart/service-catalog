@@ -1,5 +1,5 @@
 {
-  "description": "Service Catalog instance",
+  "description": "Service Catalog example. This configuration is used in integration tests.",
   "dnssdEnabled": false,
   "storage": {
     "type": "leveldb",
