@@ -14,7 +14,7 @@ LinkSmart Service Catalog is a registry enabling discovery of other web services
 The configuration is possible using a JSON file or by setting environment variables. It is described [here](https://github.com/linksmart/service-catalog/wiki/Configuration).
 
 ### Docker
-The following command runs the latest release of service catalog with the default configurations:
+The following command runs the latest release of Service Catalog with the default configurations:
 ```
 docker run -p 8082:8082 linksmart/sc
 ```
